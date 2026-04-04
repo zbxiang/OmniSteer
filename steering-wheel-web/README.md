@@ -1,6 +1,6 @@
-# car-keyboard-management-system
+# steering-wheel-web
 
-方向盘产品管理系统
+方向盘产品管理系统 - 前端
 
 ## 项目技术架构
 - vue3
