@@ -5,7 +5,6 @@ import { storeToRefs } from 'pinia';
 
 const store = useAppStore();
 const { systemName } = storeToRefs(store);
-
 </script>
 
 <template>
@@ -14,7 +13,9 @@ const { systemName } = storeToRefs(store);
       <el-card shadow="never" class="rounded-xl">
         <template #header>
           <div class="flex items-center justify-between">
-            <h1 class="text-xl font-semibold text-slate-800">{{ systemName }}</h1>
+            <h1 class="text-xl font-semibold text-slate-800">
+              {{ systemName }}
+            </h1>
             <el-tag type="success">Vue3 + Vite</el-tag>
           </div>
         </template>
@@ -30,7 +31,9 @@ const { systemName } = storeToRefs(store);
           <div class="rounded-lg bg-slate-50 p-4">路由: vue-router</div>
           <div class="rounded-lg bg-slate-50 p-4">状态: pinia</div>
           <div class="rounded-lg bg-slate-50 p-4">请求: axios</div>
-          <div class="rounded-lg bg-slate-50 p-4">UI: element-plus + tailwindcss</div>
+          <div class="rounded-lg bg-slate-50 p-4">
+            UI: element-plus + tailwindcss
+          </div>
         </div>
       </el-card>
     </div>

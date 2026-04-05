@@ -1,6 +1,6 @@
 declare module 'vite-plugin-eslint' {
-  import type { ESLint } from 'eslint'
-  import type { Plugin } from 'vite'
+  import type { ESLint } from 'eslint';
+  import type { Plugin } from 'vite';
 
   export interface Options extends ESLint.Options {
     eslintPath?: string
@@ -14,5 +14,5 @@ declare module 'vite-plugin-eslint' {
     failOnError?: boolean
   }
 
-  export default function eslintPlugin(rawOptions?: Options): Plugin
+  export default function eslintPlugin(rawOptions?: Options): Plugin;
 }

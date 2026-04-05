@@ -1,10 +1,12 @@
+/// <reference types="node" />
+
 import pluginVue from 'eslint-plugin-vue';
-import globals from "globals";
-import tseslint from "typescript-eslint";
-import parserVue from 'vue-eslint-parser'
-import js from "@eslint/js";
+import globals from 'globals';
+import tsParser from '@typescript-eslint/parser';
+import parserVue from 'vue-eslint-parser';
+import js from '@eslint/js';
 import n from 'eslint-plugin-n';
-import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
+import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 
 export default defineConfigWithVueTs(
   js.configs.recommended,
@@ -17,35 +19,13 @@ export default defineConfigWithVueTs(
         ...globals.es2020,
         ...globals.node,
         ActiveXObject: 'readonly',
-        ref: 'readonly',
-        reactive: 'readonly',
-        watchEffect: 'readonly',
-        watch: 'readonly',
-        onBeforeMount: 'readonly',
-        onMounted: 'readonly',
-        onBeforeUpdate: 'readonly',
-        onUpdated: 'readonly',
-        onBeforeUnmount: 'readonly',
-        onUnmounted: 'readonly',
-        onActivated: 'readonly',
-        onDeactivated: 'readonly',
-        provide: 'readonly',
-        inject: 'readonly',
-        nextTick: 'readonly',
+        /* Vue / vue-router / pinia：由源码中的 import 提供，勿在此声明为全局，否则会误判 import 未使用 */
         defineProps: 'readonly',
         defineEmits: 'readonly',
         defineExpose: 'readonly',
         withDefaults: 'readonly',
-        getCurrentInstance: 'readonly',
         defineComponent: 'readonly',
-        toRefs: 'readonly',
-        toRaw: 'readonly',
         resolveComponent: 'readonly',
-        useRoute: 'readonly',
-        useRouter: 'readonly',
-        defineStore: 'readonly',
-        storeToRefs: 'readonly',
-        createPinia: 'readonly',
         ElMessage: 'readonly',
         ElMessageBox: 'readonly',
         ElNotification: 'readonly',
@@ -54,14 +34,14 @@ export default defineConfigWithVueTs(
       ecmaVersion: 2020,
       parser: parserVue,
       parserOptions: {
-        parser: tseslint.parser,
+        parser: tsParser,
         ecmaFeatures: {
-          jsx: true
-        }
-      }
+          jsx: true,
+        },
+      },
     },
     plugins: {
-      n
+      n,
     },
     rules: {
       'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
@@ -73,10 +53,11 @@ export default defineConfigWithVueTs(
       'vue/no-deprecated-filter': 'warn',
       'vue/no-dupe-keys': 'warn',
       eqeqeq: ['warn', 'always', { null: 'ignore' }],
+      'quotes': ['error', 'single', { 'avoidEscape': true, 'allowTemplateLiterals': true }],
       camelcase: 'off',
       'no-unused-vars': ['warn', {
         argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_'
+        varsIgnorePattern: '^_',
       }],
       'no-tabs': 'warn',
       'no-mixed-spaces-and-tabs': 'warn',
@@ -111,22 +92,21 @@ export default defineConfigWithVueTs(
       '@typescript-eslint/no-unsafe-function-type': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
       'semi': ['error', 'always'],
-      'quotes': ['error', 'single'],
       'comma-dangle': ['error', 'always-multiline'],
       'space-before-function-paren': [
         'error',
         {
           anonymous: 'always',
           named: 'never',
-          asyncArrow: 'always'
-        }
-      ]
+          asyncArrow: 'always',
+        },
+      ],
     },
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts,vue}"]
+    files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'],
   },
   {
-    files: ["**/*.vue"],
-    languageOptions: { parserOptions: { parser: tseslint.parser } }
+    files: ['**/*.vue'],
+    languageOptions: { parserOptions: { parser: tsParser } },
   },
   // 忽略规则文件
   {
@@ -140,7 +120,7 @@ export default defineConfigWithVueTs(
       'build',
       '*.min.js',
       '.d.ts',
-      'html'
-    ]
-  }
-)
+      'html',
+    ],
+  },
+);
