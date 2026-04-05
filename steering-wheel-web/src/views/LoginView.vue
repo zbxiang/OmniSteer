@@ -135,7 +135,7 @@
         </div>
       </div>
 
-      <p class="login__demo">DEMO · 任意用户名 + 密码 ≥ 6 位</p>
+      <p class="login__demo">DEMO · 默认账号 admin / 123456（密码 ≥ 6 位）</p>
     </div>
   </div>
 </template>
@@ -143,6 +143,8 @@
 <script setup lang="ts">
 import * as Vue from 'vue';
 import * as VueRouter from 'vue-router';
+import { ElMessage } from 'element-plus';
+import { loginApi, loginErrorMessage } from '@/api';
 import { useAppStore } from '@/stores/app';
 import { useAuthStore } from '@/stores/auth';
 
@@ -174,15 +176,19 @@ const onSubmit = async () => {
     if (!valid) return;
     loading.value = true;
     try {
-      // TODO: 替换为真实登录接口，例如 await loginApi(form)
-      await new Promise((r) => setTimeout(r, 400));
-      authStore.setToken(`mock.${Date.now()}`, form.remember);
+      const res = await loginApi({
+        username: form.username,
+        password: form.password,
+      });
+      authStore.setToken(res.token, form.remember, res.username);
       const redirect =
         typeof route.query.redirect === 'string' &&
         route.query.redirect.startsWith('/')
           ? route.query.redirect
           : '/';
       await router.replace(redirect);
+    } catch (e) {
+      ElMessage.error(loginErrorMessage(e));
     } finally {
       loading.value = false;
     }
