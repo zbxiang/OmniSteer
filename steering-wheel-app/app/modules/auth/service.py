@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 
 from app.core.password import verify_password
 from app.core.security import create_access_token
+from app.db.user_ops import create_user
 from app.models.user import User
-from app.modules.auth.schemas import LoginRequest, LoginResponse
+from app.modules.auth.schemas import LoginRequest, LoginResponse, RegisterRequest, RegisterResponse
 
 
 def login(db: Session, body: LoginRequest) -> LoginResponse:
@@ -26,3 +27,18 @@ def login(db: Session, body: LoginRequest) -> LoginResponse:
         token=create_access_token(subject=username),
         username=user.username,
     )
+
+
+def register(db: Session, body: RegisterRequest) -> RegisterResponse:
+    """
+    注册新用户；密码由 create_user 使用 bcrypt 哈希后写入 password_hash，不存明文。
+    """
+    try:
+        user = create_user(db, body.username, body.password)
+    except ValueError as e:
+        msg = str(e)
+        if "已存在" in msg:
+            raise HTTPException(status_code=409, detail=msg) from e
+        raise HTTPException(status_code=422, detail=msg) from e
+
+    return RegisterResponse(id=user.id, username=user.username)

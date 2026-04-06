@@ -2,9 +2,6 @@
   <div
     ref="rootRef"
     class="login"
-    @pointermove="onRootPointerMove"
-    @pointerleave="onRootPointerLeave"
-    @pointerdown="onPointerDown"
   >
     <!-- 橙色座舱底 + 指针光晕 + 装饰层 -->
     <div class="login__warm-base" aria-hidden="true" />
@@ -23,6 +20,14 @@
       class="login__ripple"
       :class="{ 'login__ripple--on': rippleActive }"
       aria-hidden="true"
+    />
+    <div
+      class="login__fx-hitarea"
+      aria-hidden="true"
+      @pointerenter="onFxPointerEnter"
+      @pointermove="onFxPointerMove"
+      @pointerleave="onFxPointerLeave"
+      @pointerdown="onFxPointerDown"
     />
 
     <div class="login__wheel-wrap">
@@ -87,8 +92,6 @@
       <div
         ref="panelTiltRef"
         class="login__panel-3d"
-        @pointermove="onPanelPointerMove"
-        @pointerleave="onPanelPointerLeave"
       >
         <div class="login__panel">
           <el-form
@@ -144,7 +147,7 @@
 import * as Vue from 'vue';
 import * as VueRouter from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { loginApi, loginErrorMessage } from '@/api';
+import { cancelRequest, isRequestCanceled, loginApi, loginErrorMessage } from '@/api';
 import { useAppStore } from '@/stores/app';
 import { useAuthStore } from '@/stores/auth';
 
@@ -152,6 +155,7 @@ const router = VueRouter.useRouter();
 const route = VueRouter.useRoute();
 const appStore = useAppStore();
 const authStore = useAuthStore();
+const LOGIN_CANCEL_KEY = 'POST:/auth/login';
 
 const formRef = Vue.ref<import('element-plus').FormInstance>();
 const loading = Vue.ref(false);
@@ -172,53 +176,83 @@ const rules: import('element-plus').FormRules = {
 
 const onSubmit = async () => {
   if (!formRef.value) return;
-  await formRef.value.validate(async (valid) => {
-    if (!valid) return;
-    loading.value = true;
-    try {
-      const res = await loginApi({
-        username: form.username,
-        password: form.password,
-      });
-      authStore.setToken(res.token, form.remember, res.username);
-      const redirect =
-        typeof route.query.redirect === 'string' &&
-        route.query.redirect.startsWith('/')
-          ? route.query.redirect
-          : '/';
-      await router.replace(redirect);
-    } catch (e) {
-      ElMessage.error(loginErrorMessage(e));
-    } finally {
-      loading.value = false;
-    }
-  });
+  const isValid = await formRef.value.validate().catch(() => false);
+  if (!isValid) return;
+
+  loading.value = true;
+  try {
+    // 显式取消上一次未完成的登录请求，避免重复提交竞态
+    cancelRequest(LOGIN_CANCEL_KEY);
+    const res = await loginApi({
+      username: form.username,
+      password: form.password,
+    });
+    authStore.setToken(res.token, form.remember, res.username);
+    const redirect =
+      typeof route.query.redirect === 'string' &&
+      route.query.redirect.startsWith('/')
+        ? route.query.redirect
+        : '/';
+    await router.replace(redirect);
+  } catch (e) {
+    if (isRequestCanceled(e)) return;
+    ElMessage.error(loginErrorMessage(e));
+  } finally {
+    loading.value = false;
+  }
 };
 
 /** 根容器：指针光晕 --sx/--sy、装饰层视差 --mx/--my（-1…1） */
 const rootRef = Vue.ref<HTMLElement | null>(null);
 /** 登录卡片 3D 微倾斜（主流「磁吸卡片」交互） */
 const panelTiltRef = Vue.ref<HTMLElement | null>(null);
-const reduceMotion = Vue.ref(false);
 const rippleActive = Vue.ref(false);
 let rippleTimer: ReturnType<typeof setTimeout> | null = null;
+let fxRafId: number | null = null;
+const fxRect = Vue.ref<DOMRect | null>(null);
+const fxPending = Vue.reactive({
+  clientX: 0,
+  clientY: 0,
+});
 
-const onRootPointerMove = (e: PointerEvent) => {
-  if (reduceMotion.value) return;
+const refreshFxRect = () => {
   const el = rootRef.value;
   if (!el) return;
-  const r = el.getBoundingClientRect();
-  const sx = ((e.clientX - r.left) / r.width) * 100;
-  const sy = ((e.clientY - r.top) / r.height) * 100;
+  fxRect.value = el.getBoundingClientRect();
+};
+
+const applyFxPointer = () => {
+  fxRafId = null;
+  const el = rootRef.value;
+  const r = fxRect.value;
+  if (!el || !r || r.width <= 0 || r.height <= 0) return;
+  const sx = ((fxPending.clientX - r.left) / r.width) * 100;
+  const sy = ((fxPending.clientY - r.top) / r.height) * 100;
+  const nx = (((fxPending.clientX - r.left) / r.width) * 2) - 1;
+  const ny = (((fxPending.clientY - r.top) / r.height) * 2) - 1;
   el.style.setProperty('--sx', `${sx}%`);
   el.style.setProperty('--sy', `${sy}%`);
-  const nx = (((e.clientX - r.left) / r.width) * 2) - 1;
-  const ny = (((e.clientY - r.top) / r.height) * 2) - 1;
   el.style.setProperty('--mx', nx.toFixed(4));
   el.style.setProperty('--my', ny.toFixed(4));
 };
 
-const onRootPointerLeave = () => {
+const onFxPointerEnter = () => {
+  refreshFxRect();
+};
+
+const onFxPointerMove = (e: PointerEvent) => {
+  if (!fxRect.value) refreshFxRect();
+  fxPending.clientX = e.clientX;
+  fxPending.clientY = e.clientY;
+  if (fxRafId !== null) return;
+  fxRafId = requestAnimationFrame(applyFxPointer);
+};
+
+const onFxPointerLeave = () => {
+  if (fxRafId !== null) {
+    cancelAnimationFrame(fxRafId);
+    fxRafId = null;
+  }
   const el = rootRef.value;
   if (!el) return;
   el.style.setProperty('--sx', '50%');
@@ -227,32 +261,7 @@ const onRootPointerLeave = () => {
   el.style.setProperty('--my', '0');
 };
 
-const onPanelPointerMove = (e: PointerEvent) => {
-  if (reduceMotion.value) return;
-  const el = panelTiltRef.value;
-  if (!el) return;
-  const r = el.getBoundingClientRect();
-  const x = e.clientX - r.left;
-  const y = e.clientY - r.top;
-  const cx = r.width * 0.5;
-  const cy = r.height * 0.5;
-  const maxDeg = 5.5;
-  const rx = ((y - cy) / cy) * -maxDeg;
-  const ry = ((x - cx) / cx) * maxDeg;
-  el.style.setProperty('--panel-rx', `${rx.toFixed(2)}deg`);
-  el.style.setProperty('--panel-ry', `${ry.toFixed(2)}deg`);
-};
-
-const onPanelPointerLeave = () => {
-  const el = panelTiltRef.value;
-  if (!el) return;
-  el.style.setProperty('--panel-rx', '0deg');
-  el.style.setProperty('--panel-ry', '0deg');
-};
-
-const onPointerDown = (e: PointerEvent) => {
-  if (reduceMotion.value) return;
-  if ((e.target as HTMLElement).closest('.login__main')) return;
+const onFxPointerDown = (e: PointerEvent) => {
   const el = rootRef.value;
   if (!el) return;
   const r = el.getBoundingClientRect();
@@ -271,12 +280,16 @@ const onPointerDown = (e: PointerEvent) => {
 };
 
 Vue.onMounted(() => {
-  reduceMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  onRootPointerLeave();
+  refreshFxRect();
+  onFxPointerLeave();
+  window.addEventListener('resize', refreshFxRect);
 });
 
 Vue.onUnmounted(() => {
   if (rippleTimer) clearTimeout(rippleTimer);
+  if (fxRafId !== null) cancelAnimationFrame(fxRafId);
+  window.removeEventListener('resize', refreshFxRect);
+  cancelRequest(LOGIN_CANCEL_KEY);
 });
 </script>
 
@@ -515,6 +528,13 @@ Vue.onUnmounted(() => {
     user-select: none;
   }
 
+  &__fx-hitarea {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: auto;
+  }
+
   &__wheel-ring {
     position: relative;
     width: min(92vw, 520px);
@@ -540,14 +560,16 @@ Vue.onUnmounted(() => {
 
   &__main {
     position: relative;
-    z-index: 10;
+    z-index: 20;
     width: 100%;
     max-width: 420px;
+    pointer-events: auto;
   }
 
   &__panel-3d {
-    perspective: 1100px;
-    transform-style: preserve-3d;
+    perspective: none;
+    transform-style: flat;
+    pointer-events: auto;
   }
 
   &__header {
@@ -594,12 +616,13 @@ Vue.onUnmounted(() => {
     box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.45),
       0 24px 80px rgba(0, 0, 0, 0.5);
-    transform: rotateX(var(--panel-rx, 0deg)) rotateY(var(--panel-ry, 0deg));
-    transform-style: preserve-3d;
+    transform: none;
+    transform-style: flat;
     transition:
-      transform 0.14s ease-out,
       border-color 0.35s ease,
       box-shadow 0.35s ease;
+    pointer-events: auto;
+    z-index: 30;
 
     &:hover {
       border-color: rgba(v.$primary-amber, 0.36);

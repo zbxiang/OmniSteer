@@ -14,3 +14,13 @@ class LoginResponse(BaseModel):
     token: str
     username: str
     token_type: str = "bearer"
+
+
+class RegisterRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=128)
+    password: str = Field(min_length=6, max_length=256)
+
+
+class RegisterResponse(BaseModel):
+    id: int
+    username: str
