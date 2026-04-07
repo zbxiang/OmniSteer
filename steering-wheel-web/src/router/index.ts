@@ -13,7 +13,25 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('@/views/HomeView.vue'),
+      component: () => import('@/views/ProductList.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/products/new',
+      name: 'product-create',
+      component: () => import('@/views/ProductFormView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/products/:id/edit',
+      name: 'product-edit',
+      component: () => import('@/views/ProductFormView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/products/:id',
+      name: 'product-detail',
+      component: () => import('@/views/ProductDetailView.vue'),
       meta: { requiresAuth: true },
     },
   ],

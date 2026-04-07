@@ -8,3 +8,9 @@ export type LoginResult = {
   username: string;
   token_type?: string;
 };
+
+export type ProductLite = {
+  name: string;
+  brand: string;
+  model: string;
+};

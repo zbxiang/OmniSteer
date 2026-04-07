@@ -67,19 +67,42 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            if (id.includes('node_modules')) {
-              return id.toString().split('node_modules/')[1].split('/')[0].toString();
+            if (['vue-router', 'pinia'].some(chunk => id.includes(chunk))) {
+              return 'chunk-vendor';
+            } else if (id.includes('element-plus')) {
+              return 'chunk-element-plus';
+            } else {
+              if (id.includes('node_modules')) {
+                return id.toString().split('node_modules/')[1].split('/')[0].toString();
+              } else {
+                return 'chunk-app';
+              }
             }
           },
+          assetFileNames: (assetInfo) => {
+            let extType = assetInfo.name?.split('.')[1] || '';
+            if (/png|jpeg|svg|jpg|gif|webp|ico/i.test(extType)) {
+              extType = 'img'
+            }
+            return `static/${extType}/[name]-[hash].[ext]`;  
+          },
+          chunkFileNames: (chunkInfo) => {
+            const name = chunkInfo.name
+            if (name.includes('chunk-monaco')) {
+              return `static/js/monaco/${name}.js`;
+            }
+            return `static/js/[name]-[hash].js`;
+          },
           entryFileNames: 'static/js/[name]-[hash].js',
-          chunkFileNames: 'assets/js/[name]-[hash].js',
-          assetFileNames: 'assets/[ext]/[name]-[hash][extname]',
+          maxSize: '1000Kb'
         },
       },
       esbuild: {
         drop: ['console', 'debugger'],
         pure: ['console.log', 'debugger'],
-      }
+      },
+      // 超过1024提示
+      chunkSizeWarningLimit: 1024,
     },
     resolve: {
       alias: {
