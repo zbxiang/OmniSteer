@@ -26,7 +26,7 @@ def load_settings() -> Settings:
     return Settings(
         jwt_secret=os.environ.get("JWT_SECRET", "dev-only-change-JWT_SECRET-in-production"),
         jwt_algorithm="HS256",
-        access_token_expire_minutes=int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "10080")),
+        access_token_expire_minutes=int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "30")),
         cors_origins_raw=os.environ.get(
             "CORS_ORIGINS",
             "http://localhost:9000,http://127.0.0.1:9000",

@@ -12,11 +12,24 @@ function readUsername(): string {
   return localStorage.getItem(USERNAME_KEY) ?? sessionStorage.getItem(USERNAME_KEY) ?? '';
 }
 
+function isTokenExpired(token: string): boolean {
+  if (!token) return true;
+  const parts = token.split('.');
+  if (parts.length < 2) return true;
+  try {
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))) as { exp?: number };
+    if (!payload.exp) return true;
+    return payload.exp * 1000 <= Date.now();
+  } catch {
+    return true;
+  }
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(readToken());
   const username = ref(readUsername());
 
-  const isLoggedIn = computed(() => Boolean(token.value));
+  const isLoggedIn = computed(() => Boolean(token.value) && !isTokenExpired(token.value));
 
   const setToken = (value: string, persist: boolean, displayName?: string) => {
     token.value = value;
@@ -40,11 +53,19 @@ export const useAuthStore = defineStore('auth', () => {
     setToken('', false);
   };
 
+  const ensureValidSession = () => {
+    if (!token.value) return;
+    if (isTokenExpired(token.value)) {
+      setToken('', false);
+    }
+  };
+
   return {
     token,
     username,
     isLoggedIn,
     setToken,
     logout,
+    ensureValidSession,
   };
 });

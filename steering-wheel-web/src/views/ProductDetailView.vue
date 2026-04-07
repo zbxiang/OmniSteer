@@ -99,6 +99,12 @@ const product = Vue.computed(() => products.find((p) => p.id === Number(route.pa
           </div>
         </div>
       </div>
+
+      <div class="product-detail__empty" v-else>
+        <h2>暂无详情</h2>
+        <p>未找到该产品信息，可能已下架或数据尚未同步。</p>
+        <router-link to="/" class="btn btn-outline">返回列表</router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -211,6 +217,25 @@ const product = Vue.computed(() => products.find((p) => p.id === Number(route.pa
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
+  }
+
+  &__empty {
+    border-radius: 12px;
+    border: 1px solid rgba(v.$primary-amber, 0.24);
+    background: linear-gradient(145deg, v.$panel-bg 0%, rgba(v.$cockpit-bg-mid, 0.96) 100%);
+    padding: 1.5rem;
+    text-align: center;
+
+    h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      color: v.$zinc-text;
+    }
+
+    p {
+      margin: 0.8rem 0 1rem;
+      color: v.$zinc-label;
+    }
   }
 }
 
