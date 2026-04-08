@@ -16,6 +16,7 @@ from app.db.base import Base
 from app.db.seed import ensure_demo_user
 from app.db.session import SessionLocal, engine
 from app.modules.auth import auth_router
+from app.modules.product import product_router
 import app.models  # noqa: F401 — 注册 ORM 模型到 Base.metadata
 
 
@@ -40,6 +41,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(product_router)
 
 
 @app.get("/health")

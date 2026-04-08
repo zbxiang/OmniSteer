@@ -2,6 +2,7 @@ export type ProductLite = {
   name: string;
   brand: string;
   model: string;
+  imageUrl?: string;
 };
 
 export type ProductItem = {
@@ -11,6 +12,7 @@ export type ProductItem = {
   model: string;
   price: number;
   status: 'on' | 'off';
+  imageUrl?: string;
 };
 
 export type ProductFormData = {
@@ -50,6 +52,12 @@ export type ProductCreateBody = {
   images: string[];
 };
 
+export type ProductUpdateBody = ProductCreateBody;
+
+export type ProductStatusUpdateBody = {
+  status: 'on' | 'off';
+};
+
 export type ProductOut = {
   id: number;
   name: string;
@@ -64,4 +72,27 @@ export type ProductOut = {
   description: string | null;
   images: string[];
   created_at: string;
+};
+
+export type ProductListQuery = {
+  keyword?: string;
+  page?: number;
+  page_size?: number;
+};
+
+export type ProductListResult = {
+  items: ProductOut[];
+  total: number;
+  page: number;
+  page_size: number;
+};
+
+export type ProductImageSearchBody = {
+  image: string;
+  limit?: number;
+};
+
+export type ProductImageSearchResult = {
+  items: ProductOut[];
+  total: number;
 };

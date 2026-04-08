@@ -12,7 +12,8 @@
 
       <div class="product-detail__layout" v-if="product">
         <div class="product-detail__img">
-          <div class="product-detail__img-placeholder">⚙</div>
+          <img v-if="product.images?.[0]" :src="product.images[0]" :alt="product.name">
+          <div v-else class="product-detail__img-placeholder">⚙</div>
         </div>
 
         <div class="product-detail__info">
@@ -23,7 +24,7 @@
             {{ product.status === 'on' ? '在售' : '下架' }}
           </span>
 
-          <p class="product-detail__desc">{{ product.desc }}</p>
+          <p class="product-detail__desc">{{ product.description || '暂无描述' }}</p>
 
           <ul class="product-detail__attrs">
             <li><span>品牌</span><span>{{ product.brand }}</span></li>
@@ -32,69 +33,98 @@
             <li><span>直径</span><span>{{ product.diameter }}mm</span></li>
             <li><span>重量</span><span>{{ product.weight }}g</span></li>
             <li><span>安装方式</span><span>{{ product.mount }}</span></li>
-            <li><span>上架时间</span><span>{{ product.date }}</span></li>
+            <li><span>上架时间</span><span>{{ createdDateText }}</span></li>
           </ul>
 
           <div class="product-detail__actions">
             <router-link :to="`/products/${product.id}/edit`" class="btn btn-primary">编辑</router-link>
-            <button class="btn btn-danger">下架</button>
+            <button class="btn btn-danger" :disabled="statusUpdating || product.status === 'off'" @click="offShelf">
+              {{ statusUpdating ? '处理中...' : '下架' }}
+            </button>
             <router-link to="/" class="btn btn-outline">返回列表</router-link>
           </div>
         </div>
       </div>
 
-      <div class="product-detail__empty" v-else>
+      <div class="product-detail__empty" v-else-if="!loading">
         <h2>暂无详情</h2>
         <p>未找到该产品信息，可能已下架或数据尚未同步。</p>
         <router-link to="/" class="btn btn-outline">返回列表</router-link>
+      </div>
+      <div class="product-detail__empty" v-else>
+        <h2>加载中...</h2>
+        <p>正在获取产品详情，请稍候。</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import type { ProductDetailItem } from '@/types';
+import { ElMessage } from 'element-plus';
+import type { ProductOut } from '@/types';
+import { getProductDetailApi, updateProductStatusApi } from '@/api/product';
+import { isRequestCanceled, RequestError } from '@/api/request';
 import { useAppStore } from '@/stores/app';
 
 const appStore = useAppStore();
 const route = useRoute();
+const product = ref<ProductOut | null>(null);
+const loading = ref<boolean>(false);
+const statusUpdating = ref<boolean>(false);
 
-const products: ProductDetailItem[] = [
-  {
-    id: 1,
-    name: '智能方向盘 Pro',
-    brand: 'OmniSteer',
-    model: 'OS-PRO-01',
-    material: '碳纤维 + 真皮',
-    diameter: 350,
-    weight: 680,
-    mount: '通用六孔 + 快拆',
-    date: '2026-03-18',
-    desc: '旗舰款智能方向盘，支持多功能按键与自定义灯效，兼顾操控与舒适。',
-    price: 3299,
-    status: 'on',
-  },
-  {
-    id: 2,
-    name: '运动方向盘 GT',
-    brand: 'OmniSteer',
-    model: 'OS-GT-02',
-    material: '铝合金 + 打孔皮',
-    diameter: 340,
-    weight: 720,
-    mount: '快拆基座',
-    date: '2026-02-10',
-    desc: '偏竞技风格，握感扎实，适用于街道和赛道双场景。',
-    price: 4599,
-    status: 'on',
-  },
-];
+const createdDateText = computed<string>(() => {
+  if (!product.value?.created_at) return '-';
+  const date = new Date(product.value.created_at);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString();
+});
 
-const product = computed<ProductDetailItem | undefined>(
-  (): ProductDetailItem | undefined => products.find((p) => p.id === Number(route.params.id)),
-);
+const fetchDetail = async (): Promise<void> => {
+  const productId = Number(route.params.id);
+  if (!Number.isFinite(productId) || productId <= 0) {
+    product.value = null;
+    return;
+  }
+  loading.value = true;
+  try {
+    product.value = await getProductDetailApi(productId);
+  } catch (e) {
+    if (isRequestCanceled(e)) return;
+    if (e instanceof RequestError && e.status === 404) {
+      product.value = null;
+      return;
+    }
+    const msg = e instanceof RequestError ? e.message : '加载产品详情失败，请稍后重试';
+    ElMessage.error(msg);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const offShelf = async (): Promise<void> => {
+  if (!product.value) return;
+  if (product.value.status === 'off') {
+    ElMessage.info('该产品已下架');
+    return;
+  }
+  statusUpdating.value = true;
+  try {
+    const next = await updateProductStatusApi(product.value.id, { status: 'off' });
+    product.value = next;
+    ElMessage.success('产品已下架');
+  } catch (e) {
+    if (isRequestCanceled(e)) return;
+    const msg = e instanceof RequestError ? e.message : '下架失败，请稍后重试';
+    ElMessage.error(msg);
+  } finally {
+    statusUpdating.value = false;
+  }
+};
+
+onMounted((): void => {
+  void fetchDetail();
+});
 </script>
 
 <style scoped lang="scss">
@@ -151,6 +181,14 @@ const product = computed<ProductDetailItem | undefined>(
     min-height: 360px;
     display: grid;
     place-items: center;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
   }
 
   &__img-placeholder {
@@ -265,5 +303,10 @@ const product = computed<ProductDetailItem | undefined>(
   background: rgba(185, 28, 28, 0.2);
   color: #fecaca;
   border-color: rgba(248, 113, 113, 0.4);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

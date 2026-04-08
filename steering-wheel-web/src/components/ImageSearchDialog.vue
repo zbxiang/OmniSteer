@@ -44,7 +44,9 @@
 <script setup lang="ts">
 import { computed, ref, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import type { ProductLite } from '@/types';
+import type { ProductLite, ProductOut } from '@/types';
+import { imageSearchProductsApi } from '@/api/product';
+import { isRequestCanceled, RequestError } from '@/api/request';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -53,7 +55,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
-  searched: [keyword: string];
+  searched: [items: ProductOut[]];
 }>();
 
 const visible = computed({
@@ -63,12 +65,22 @@ const visible = computed({
 
 const imageSearchPreview = ref<string>('');
 const imageSearchFileName = ref<string>('');
+const imageSearchDataUrl = ref<string>('');
 const imageSearching = ref<boolean>(false);
 let previewObjectUrl: string | null = null;
+
+const readFileAsDataUrl = (file: File): Promise<string> =>
+  new Promise<string>((resolve, reject): void => {
+    const reader = new FileReader();
+    reader.onload = (): void => resolve(String(reader.result || ''));
+    reader.onerror = (): void => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 
 const resetState = (): void => {
   imageSearchFileName.value = '';
   imageSearchPreview.value = '';
+  imageSearchDataUrl.value = '';
   imageSearching.value = false;
   if (previewObjectUrl) {
     URL.revokeObjectURL(previewObjectUrl);
@@ -76,7 +88,7 @@ const resetState = (): void => {
   }
 };
 
-const onImageSelect = (e: Event): void => {
+const onImageSelect = async (e: Event): Promise<void> => {
   const input = e.target as HTMLInputElement;
   const file = input.files?.[0];
   if (!file) return;
@@ -92,6 +104,13 @@ const onImageSelect = (e: Event): void => {
     input.value = '';
     return;
   }
+  try {
+    imageSearchDataUrl.value = await readFileAsDataUrl(file);
+  } catch {
+    ElMessage.error('读取图片失败，请重试');
+    input.value = '';
+    return;
+  }
   if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
   previewObjectUrl = URL.createObjectURL(file);
   imageSearchFileName.value = file.name;
@@ -99,23 +118,26 @@ const onImageSelect = (e: Event): void => {
 };
 
 const runImageSearch = async (): Promise<void> => {
-  if (!imageSearchFileName.value) {
+  if (!imageSearchFileName.value || !imageSearchDataUrl.value) {
     ElMessage.warning('请先上传图片');
     return;
   }
   imageSearching.value = true;
-  // TODO: 接入后端以图搜图接口
-  await new Promise((resolve) => setTimeout(resolve, 450));
-
-  const key = imageSearchFileName.value.toLowerCase().replace(/\s+/g, '');
-  const hit = props.products.find((p) =>
-    [p.name, p.brand, p.model].some((x) =>
-      key.includes(x.toLowerCase().replace(/\s+/g, '')),
-    ),
-  );
-  emit('searched', hit ? `${hit.brand} ${hit.model}` : 'OmniSteer');
-  visible.value = false;
-  resetState();
+  try {
+    const res = await imageSearchProductsApi({
+      image: imageSearchDataUrl.value,
+      limit: 8,
+    });
+    emit('searched', res.items);
+    visible.value = false;
+    resetState();
+  } catch (e) {
+    if (isRequestCanceled(e)) return;
+    const msg = e instanceof RequestError ? e.message : '以图搜图失败，请稍后重试';
+    ElMessage.error(msg);
+  } finally {
+    imageSearching.value = false;
+  }
 };
 
 const onClose = (): void => {

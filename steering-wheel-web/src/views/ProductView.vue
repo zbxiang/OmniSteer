@@ -23,8 +23,15 @@
       </section>
 
       <section class="product-grid">
-        <div v-for="p in paged" :key="p.id" class="product-card">
-          <div class="product-card__img">⚙</div>
+        <div
+          v-for="p in paged"
+          :key="p.id"
+          :class="['product-card', { 'product-card--off': p.status === 'off' }]"
+        >
+          <div class="product-card__img">
+            <img v-if="p.imageUrl" :src="p.imageUrl" :alt="p.name">
+            <span v-else>⚙</span>
+          </div>
           <h3>{{ p.name }}</h3>
           <p class="product-card__price">¥{{ p.price.toLocaleString() }}</p>
           <p class="product-card__meta">
@@ -35,15 +42,32 @@
           </span>
           <div class="product-card__actions">
             <router-link class="btn btn-primary" :to="`/products/${p.id}`">详情</router-link>
+            <button
+              :class="['btn', 'btn-danger', { 'btn-danger--pending': Boolean(statusUpdatingMap[p.id]) }]"
+              :disabled="Boolean(statusUpdatingMap[p.id]) || p.status === 'off'"
+              @click="quickOffShelf(p.id)"
+            >
+              {{ statusUpdatingMap[p.id] ? '处理中...' : (p.status === 'off' ? '已下架' : '下架') }}
+            </button>
             <router-link class="btn btn-outline" :to="`/products/${p.id}/edit`">编辑</router-link>
           </div>
         </div>
       </section>
+      <p v-if="!loading && paged.length === 0" class="product-list__empty">暂无产品数据</p>
 
       <div class="pagination" v-if="totalPages > 1">
-        <button class="page-btn" @click="currentPage > 1 && currentPage--">&lt;</button>
-        <button v-for="n in totalPages" :key="n" class="page-btn" :class="{ active: n === currentPage }" @click="currentPage = n">{{ n }}</button>
-        <button class="page-btn" @click="currentPage < totalPages && currentPage++">&gt;</button>
+        <button class="page-btn" :disabled="loading || currentPage <= 1" @click="prevPage">&lt;</button>
+        <button
+          v-for="n in totalPages"
+          :key="n"
+          class="page-btn"
+          :class="{ active: n === currentPage }"
+          :disabled="loading"
+          @click="jumpPage(n)"
+        >
+          {{ n }}
+        </button>
+        <button class="page-btn" :disabled="loading || currentPage >= totalPages" @click="nextPage">&gt;</button>
       </div>
     </div>
 
@@ -53,7 +77,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import type { ProductItem } from '@/types';
+import type { ProductItem, ProductOut } from '@/types';
+import { listProductsApi, updateProductStatusApi } from '@/api/product';
+import { isRequestCanceled, RequestError } from '@/api/request';
+import { ElMessage } from 'element-plus';
 import { useAppStore } from '@/stores/app';
 import ImageSearchDialog from '@/components/ImageSearchDialog.vue';
 
@@ -62,44 +89,111 @@ const keyword = ref<string>('');
 const showModal = ref<boolean>(false);
 const currentPage = ref<number>(1);
 const pageSize = 8;
+const loading = ref<boolean>(false);
+const total = ref<number>(0);
+const statusUpdatingMap = ref<Record<number, boolean>>({});
 
-const products: ProductItem[] = [
-  { id: 1, name: '智能方向盘 Pro', brand: 'OmniSteer', model: 'OS-PRO-01', price: 3299, status: 'on' },
-  { id: 2, name: '运动方向盘 GT', brand: 'OmniSteer', model: 'OS-GT-02', price: 4599, status: 'on' },
-  { id: 3, name: '经典真皮方向盘', brand: 'DriveMax', model: 'DM-LTH-03', price: 2899, status: 'on' },
-  { id: 4, name: '轻量化碳纤方向盘', brand: 'RaceCore', model: 'RC-CF-04', price: 5299, status: 'off' },
-  { id: 5, name: '城市舒适方向盘', brand: 'UrbanGo', model: 'UG-CM-05', price: 1999, status: 'on' },
-  { id: 6, name: '多功能控制方向盘', brand: 'OmniSteer', model: 'OS-MF-06', price: 3799, status: 'on' },
-  { id: 7, name: '赛车竞技方向盘', brand: 'RaceCore', model: 'RC-RS-07', price: 6099, status: 'off' },
-  { id: 8, name: '商务豪华方向盘', brand: 'LuxAuto', model: 'LA-BZ-08', price: 4899, status: 'on' },
-  { id: 9, name: '越野耐用方向盘', brand: 'TrailX', model: 'TX-OF-09', price: 2699, status: 'on' },
-  { id: 10, name: '触控智能方向盘', brand: 'OmniSteer', model: 'OS-TC-10', price: 5599, status: 'on' },
-];
+const products = ref<ProductItem[]>([]);
 
-const filtered = computed<ProductItem[]>(() => {
-  if (!keyword.value) return products;
-  const k = keyword.value.toLowerCase();
-  return products.filter((p) =>
-    p.name.toLowerCase().includes(k) ||
-    p.brand.toLowerCase().includes(k) ||
-    p.model.toLowerCase().includes(k),
-  );
-});
+const totalPages = computed<number>(() => Math.ceil(total.value / pageSize) || 1);
+const paged = computed<ProductItem[]>(() => products.value);
 
-const totalPages = computed<number>(() => Math.ceil(filtered.value.length / pageSize) || 1);
-const paged = computed<ProductItem[]>(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  return filtered.value.slice(start, start + pageSize);
-});
+const fetchProducts = async (): Promise<void> => {
+  loading.value = true;
+  try {
+    const res = await listProductsApi({
+      keyword: keyword.value.trim() || undefined,
+      page: currentPage.value,
+      page_size: pageSize,
+    });
+    products.value = res.items.map((x): ProductItem => ({
+      id: x.id,
+      name: x.name,
+      brand: x.brand,
+      model: x.model,
+      price: x.price,
+      status: x.status === 'off' ? 'off' : 'on',
+      imageUrl: x.images[0] || undefined,
+    }));
+    total.value = res.total;
+  } catch (e) {
+    if (isRequestCanceled(e)) return;
+    const msg = e instanceof RequestError ? e.message : '产品列表加载失败，请稍后重试';
+    ElMessage.error(msg);
+  } finally {
+    loading.value = false;
+  }
+};
 
 const search = (): void => {
   currentPage.value = 1;
+  void fetchProducts();
 };
 
-const onImageSearched = (nextKeyword: string): void => {
-  keyword.value = nextKeyword;
-  search();
+const onImageSearched = (items: ProductOut[]): void => {
+  currentPage.value = 1;
+  total.value = items.length;
+  products.value = items.map((x): ProductItem => ({
+    id: x.id,
+    name: x.name,
+    brand: x.brand,
+    model: x.model,
+    price: x.price,
+    status: x.status === 'off' ? 'off' : 'on',
+    imageUrl: x.images[0] || undefined,
+  }));
 };
+
+const quickOffShelf = async (productId: number): Promise<void> => {
+  const item = products.value.find((x): boolean => x.id === productId);
+  if (!item) return;
+  if (item.status === 'off') {
+    ElMessage.info('该产品已下架');
+    return;
+  }
+  statusUpdatingMap.value = {
+    ...statusUpdatingMap.value,
+    [productId]: true,
+  };
+  try {
+    const next = await updateProductStatusApi(productId, { status: 'off' });
+    products.value = products.value.map((x): ProductItem => (x.id === productId
+      ? {
+          ...x,
+          status: next.status === 'off' ? 'off' : 'on',
+        }
+      : x));
+    ElMessage.success('产品已下架');
+  } catch (e) {
+    if (isRequestCanceled(e)) return;
+    const msg = e instanceof RequestError ? e.message : '下架失败，请稍后重试';
+    ElMessage.error(msg);
+  } finally {
+    const rest = { ...statusUpdatingMap.value };
+    delete rest[productId];
+    statusUpdatingMap.value = rest;
+  }
+};
+
+const prevPage = (): void => {
+  if (currentPage.value <= 1 || loading.value) return;
+  currentPage.value -= 1;
+  void fetchProducts();
+};
+
+const nextPage = (): void => {
+  if (currentPage.value >= totalPages.value || loading.value) return;
+  currentPage.value += 1;
+  void fetchProducts();
+};
+
+const jumpPage = (page: number): void => {
+  if (page === currentPage.value || loading.value) return;
+  currentPage.value = page;
+  void fetchProducts();
+};
+
+void fetchProducts();
 </script>
 
 <style scoped lang="scss">
@@ -168,6 +262,12 @@ const onImageSearched = (nextKeyword: string): void => {
     background: v.$input-bg;
     outline: none;
   }
+
+  &__empty {
+    margin-top: 1rem;
+    text-align: center;
+    color: v.$zinc-muted;
+  }
 }
 
 .btn {
@@ -194,6 +294,23 @@ const onImageSearched = (nextKeyword: string): void => {
   border-color: rgba(v.$primary-amber, 0.35);
 }
 
+.btn-danger {
+  background: rgba(185, 28, 28, 0.2);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.btn-danger--pending {
+  background: rgba(153, 27, 27, 0.3);
+  border-color: rgba(248, 113, 113, 0.55);
+  color: #fee2e2;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -210,13 +327,34 @@ const onImageSearched = (nextKeyword: string): void => {
   background: linear-gradient(145deg, v.$panel-bg 0%, rgba(v.$cockpit-bg-mid, 0.96) 100%);
 
   &__img {
-    height: 100px;
+    height: 150px;
     border-radius: 8px;
-    display: grid;
-    place-items: center;
-    font-size: 30px;
-    background: rgba(v.$primary-amber, 0.1);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(v.$primary-amber, 0.16) 0%, rgba(v.$primary-amber, 0.06) 42%, transparent 80%),
+      rgba(10, 10, 10, 0.28);
+    border: 1px solid rgba(v.$primary-amber, 0.2);
     margin-bottom: 0.75rem;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.25s ease;
+    }
+
+    span {
+      font-size: 34px;
+      opacity: 0.75;
+    }
+  }
+
+  &:hover &__img img {
+    transform: scale(1.03);
   }
 
   h3 {
@@ -238,6 +376,32 @@ const onImageSearched = (nextKeyword: string): void => {
     margin-top: 0.75rem;
     display: flex;
     justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}
+
+.product-card--off {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: linear-gradient(145deg, rgba(39, 39, 42, 0.9) 0%, rgba(24, 24, 27, 0.9) 100%);
+
+  h3,
+  .product-card__price {
+    color: rgba(244, 244, 245, 0.86);
+  }
+
+  .product-card__meta {
+    color: rgba(161, 161, 170, 0.85);
+  }
+
+  .product-card__img {
+    border-color: rgba(148, 163, 184, 0.2);
+    filter: saturate(0.72) brightness(0.92);
+  }
+
+  .btn-danger {
+    background: rgba(82, 82, 91, 0.3);
+    border-color: rgba(161, 161, 170, 0.38);
+    color: #d4d4d8;
   }
 }
 
@@ -249,7 +413,11 @@ const onImageSearched = (nextKeyword: string): void => {
 }
 
 .badge-on { background: rgba(34, 197, 94, 0.2); color: #86efac; }
-.badge-off { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+.badge-off {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.42);
+}
 
 .pagination {
   display: flex;
@@ -265,6 +433,11 @@ const onImageSearched = (nextKeyword: string): void => {
   border: 1px solid rgba(v.$primary-amber, 0.3);
   background: rgba(0, 0, 0, 0.2);
   color: v.$zinc-text;
+}
+
+.page-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .page-btn.active {

@@ -46,6 +46,13 @@ $env:SEED_DEMO_USER = "false"
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 3000
 ```
 
+如果你要明确使用本地 MySQL（而不是默认 SQLite），可在同一终端先设置后再启动：
+
+```powershell
+$env:DATABASE_URL="mysql+pymysql://root:123456@127.0.0.1:3306/omnisteer?charset=utf8mb4"
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 3000
+```
+
 - 默认监听 **3000**，与前端开发代理 `VITE_API_PROXY_TARGET=http://localhost:3000` 一致。
 - `--reload`：代码变更自动重载；生产部署请去掉该参数并改用多进程/进程管理器。
 

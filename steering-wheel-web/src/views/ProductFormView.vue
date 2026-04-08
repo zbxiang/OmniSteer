@@ -93,6 +93,7 @@
               :before-upload="beforeImageUpload"
               :on-change="onUploadChange"
               :on-remove="onUploadRemove"
+              :on-preview="onUploadPreview"
             >
               <el-icon><Plus /></el-icon>
             </el-upload>
@@ -105,6 +106,15 @@
         </el-form>
       </div>
     </div>
+    <el-dialog
+      v-model="previewVisible"
+      title="图片预览"
+      width="720px"
+      :close-on-click-modal="true"
+      append-to-body
+    >
+      <img v-if="previewImageUrl" :src="previewImageUrl" class="product-create__preview-image" alt="产品图片预览">
+    </el-dialog>
   </div>
 </template>
 
@@ -115,7 +125,7 @@ import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules, UploadProps, UploadUserFile } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
 import type { ProductEditSeed, ProductFormData } from '@/types';
-import { createProductApi } from '@/api/product';
+import { createProductApi, getProductDetailApi, updateProductApi } from '@/api/product';
 import { isRequestCanceled, RequestError } from '@/api/request';
 import { useAppStore } from '@/stores/app';
 
@@ -156,39 +166,61 @@ const rules: FormRules = {
 
 const uploadFiles = ref<UploadUserFile[]>([]);
 const imageObjectUrls = new Set<string>();
+const previewVisible = ref<boolean>(false);
+const previewImageUrl = ref<string>('');
 
-const mockProductsForEdit: ProductEditSeed[] = [
-  {
-    id: 1,
-    name: '智能方向盘 Pro',
-    brand: 'OmniSteer',
-    model: 'OS-PRO-01',
-    price: 3299,
-    status: 'on',
-    material: '碳纤维 + 真皮',
-    diameter: 350,
-    weight: 680,
-    mount: '通用六孔 + 快拆',
-    description: '旗舰款智能方向盘，支持多功能按键与自定义灯效。',
-  },
-];
-
-onMounted((): void => {
-  if (!isEdit.value) return;
-  const id = Number(route.params.id);
-  const p = mockProductsForEdit.find((x) => x.id === id);
-  if (!p) return;
+const fillFormByDetail = (p: ProductEditSeed & { images?: string[] }): void => {
   form.name = p.name;
   form.brand = p.brand;
   form.model = p.model;
   form.price = p.price;
-  form.status = p.status as 'on' | 'off';
+  form.status = p.status;
   form.material = p.material;
   form.diameter = p.diameter;
   form.weight = p.weight;
   form.mount = p.mount;
   form.description = p.description;
-});
+  uploadFiles.value = (p.images || []).map((url, idx): UploadUserFile => ({
+    name: `image-${idx + 1}`,
+    url,
+  }));
+  syncFormImages();
+};
+
+const loadEditDetail = async (): Promise<void> => {
+  if (!isEdit.value) return;
+  const id = Number(route.params.id);
+  if (!Number.isFinite(id) || id <= 0) {
+    ElMessage.error('产品 ID 无效');
+    void router.replace('/');
+    return;
+  }
+  loading.value = true;
+  try {
+    const p = await getProductDetailApi(id);
+    fillFormByDetail({
+      id: p.id,
+      name: p.name,
+      brand: p.brand,
+      model: p.model,
+      price: p.price,
+      status: p.status === 'off' ? 'off' : 'on',
+      material: p.material || '',
+      diameter: p.diameter ?? undefined,
+      weight: p.weight ?? undefined,
+      mount: p.mount || '',
+      description: p.description || '',
+      images: p.images,
+    });
+  } catch (e) {
+    if (isRequestCanceled(e)) return;
+    const msg = e instanceof RequestError ? e.message : '加载产品失败，请稍后重试';
+    ElMessage.error(msg);
+    void router.replace('/');
+  } finally {
+    loading.value = false;
+  }
+};
 
 const syncFormImages = (): void => {
   form.images = uploadFiles.value
@@ -229,6 +261,15 @@ const onUploadRemove: UploadProps['onRemove'] = (uploadFile) => {
   syncFormImages();
 };
 
+const onUploadPreview: UploadProps['onPreview'] = (uploadFile): void => {
+  if (!uploadFile.url) {
+    ElMessage.warning('当前图片暂不可预览');
+    return;
+  }
+  previewImageUrl.value = uploadFile.url;
+  previewVisible.value = true;
+};
+
 const readFileAsDataUrl = (file: File): Promise<string> =>
   new Promise<string>((resolve, reject): void => {
     const reader = new FileReader();
@@ -242,7 +283,9 @@ const collectImagesForSubmit = async (): Promise<string[]> => {
   for (const f of uploadFiles.value) {
     if (f.raw) {
       urls.push(await readFileAsDataUrl(f.raw));
+      continue;
     }
+    if (f.url) urls.push(f.url);
   }
   return urls;
 };
@@ -253,13 +296,26 @@ const submit = async (): Promise<void> => {
   if (!valid) return;
   loading.value = true;
   try {
+    const images = await collectImagesForSubmit();
     if (isEdit.value) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      ElMessage.success('产品修改成功（演示）');
+      const id = Number(route.params.id);
+      await updateProductApi(id, {
+        name: form.name,
+        brand: form.brand,
+        model: form.model,
+        price: form.price,
+        status: form.status,
+        material: form.material || undefined,
+        diameter: form.diameter,
+        weight: form.weight,
+        mount: form.mount || undefined,
+        description: form.description || undefined,
+        images,
+      });
+      ElMessage.success('产品修改成功');
       await router.push('/');
       return;
     }
-    const images = await collectImagesForSubmit();
     await createProductApi({
       name: form.name,
       brand: form.brand,
@@ -277,12 +333,24 @@ const submit = async (): Promise<void> => {
     await router.push('/');
   } catch (e) {
     if (isRequestCanceled(e)) return;
+    if (e instanceof RequestError && e.status === 401) {
+      ElMessage.warning('登录已过期，请重新登录');
+      await router.replace({
+        name: 'login',
+        query: { redirect: route.fullPath },
+      });
+      return;
+    }
     const msg = e instanceof RequestError ? e.message : '提交失败，请稍后重试';
     ElMessage.error(msg);
   } finally {
     loading.value = false;
   }
 };
+
+onMounted((): void => {
+  void loadEditDetail();
+});
 
 onUnmounted((): void => {
   imageObjectUrls.forEach((url) => URL.revokeObjectURL(url));
@@ -352,6 +420,16 @@ onUnmounted((): void => {
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
+  }
+
+  &__preview-image {
+    width: 100%;
+    max-height: 72vh;
+    object-fit: contain;
+    display: block;
+    border-radius: 10px;
+    border: 1px solid rgba(v.$primary-amber, 0.2);
+    background: rgba(0, 0, 0, 0.2);
   }
 }
 

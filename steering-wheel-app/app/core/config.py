@@ -15,6 +15,7 @@ class Settings:
     database_url: str
     database_echo: bool
     seed_demo_user: bool
+    password_secret: str
 
     @property
     def cors_origins(self) -> list[str]:
@@ -34,6 +35,7 @@ def load_settings() -> Settings:
         database_url=os.environ.get("DATABASE_URL", "sqlite:///./omnisteer.db"),
         database_echo=os.environ.get("DATABASE_ECHO", "").lower() in ("1", "true", "yes"),
         seed_demo_user=os.environ.get("SEED_DEMO_USER", "").lower() in ("1", "true", "yes"),
+        password_secret=os.environ.get("PASSWORD_SECRET", "omnisteer-password-key"),
     )
 
 
