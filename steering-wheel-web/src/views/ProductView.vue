@@ -1,62 +1,3 @@
-<script setup lang="ts">
-import * as Vue from 'vue';
-import { useAppStore } from '@/stores/app';
-import ImageSearchDialog from '@/components/ImageSearchDialog.vue';
-
-type ProductItem = {
-  id: number;
-  name: string;
-  brand: string;
-  model: string;
-  price: number;
-  status: 'on' | 'off';
-};
-
-const appStore = useAppStore();
-const keyword = Vue.ref('');
-const showModal = Vue.ref(false);
-const currentPage = Vue.ref(1);
-const pageSize = 8;
-
-const products: ProductItem[] = [
-  { id: 1, name: '智能方向盘 Pro', brand: 'OmniSteer', model: 'OS-PRO-01', price: 3299, status: 'on' },
-  { id: 2, name: '运动方向盘 GT', brand: 'OmniSteer', model: 'OS-GT-02', price: 4599, status: 'on' },
-  { id: 3, name: '经典真皮方向盘', brand: 'DriveMax', model: 'DM-LTH-03', price: 2899, status: 'on' },
-  { id: 4, name: '轻量化碳纤方向盘', brand: 'RaceCore', model: 'RC-CF-04', price: 5299, status: 'off' },
-  { id: 5, name: '城市舒适方向盘', brand: 'UrbanGo', model: 'UG-CM-05', price: 1999, status: 'on' },
-  { id: 6, name: '多功能控制方向盘', brand: 'OmniSteer', model: 'OS-MF-06', price: 3799, status: 'on' },
-  { id: 7, name: '赛车竞技方向盘', brand: 'RaceCore', model: 'RC-RS-07', price: 6099, status: 'off' },
-  { id: 8, name: '商务豪华方向盘', brand: 'LuxAuto', model: 'LA-BZ-08', price: 4899, status: 'on' },
-  { id: 9, name: '越野耐用方向盘', brand: 'TrailX', model: 'TX-OF-09', price: 2699, status: 'on' },
-  { id: 10, name: '触控智能方向盘', brand: 'OmniSteer', model: 'OS-TC-10', price: 5599, status: 'on' },
-];
-
-const filtered = Vue.computed(() => {
-  if (!keyword.value) return products;
-  const k = keyword.value.toLowerCase();
-  return products.filter((p) =>
-    p.name.toLowerCase().includes(k) ||
-    p.brand.toLowerCase().includes(k) ||
-    p.model.toLowerCase().includes(k),
-  );
-});
-
-const totalPages = Vue.computed(() => Math.ceil(filtered.value.length / pageSize) || 1);
-const paged = Vue.computed(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  return filtered.value.slice(start, start + pageSize);
-});
-
-const search = () => {
-  currentPage.value = 1;
-};
-
-const onImageSearched = (nextKeyword: string) => {
-  keyword.value = nextKeyword;
-  search();
-};
-</script>
-
 <template>
   <div class="product-list">
     <div class="product-list__warm-base" aria-hidden="true" />
@@ -109,6 +50,57 @@ const onImageSearched = (nextKeyword: string) => {
     <ImageSearchDialog v-model="showModal" :products="products" @searched="onImageSearched" />
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed, ref } from 'vue';
+import type { ProductItem } from '@/types';
+import { useAppStore } from '@/stores/app';
+import ImageSearchDialog from '@/components/ImageSearchDialog.vue';
+
+const appStore = useAppStore();
+const keyword = ref<string>('');
+const showModal = ref<boolean>(false);
+const currentPage = ref<number>(1);
+const pageSize = 8;
+
+const products: ProductItem[] = [
+  { id: 1, name: '智能方向盘 Pro', brand: 'OmniSteer', model: 'OS-PRO-01', price: 3299, status: 'on' },
+  { id: 2, name: '运动方向盘 GT', brand: 'OmniSteer', model: 'OS-GT-02', price: 4599, status: 'on' },
+  { id: 3, name: '经典真皮方向盘', brand: 'DriveMax', model: 'DM-LTH-03', price: 2899, status: 'on' },
+  { id: 4, name: '轻量化碳纤方向盘', brand: 'RaceCore', model: 'RC-CF-04', price: 5299, status: 'off' },
+  { id: 5, name: '城市舒适方向盘', brand: 'UrbanGo', model: 'UG-CM-05', price: 1999, status: 'on' },
+  { id: 6, name: '多功能控制方向盘', brand: 'OmniSteer', model: 'OS-MF-06', price: 3799, status: 'on' },
+  { id: 7, name: '赛车竞技方向盘', brand: 'RaceCore', model: 'RC-RS-07', price: 6099, status: 'off' },
+  { id: 8, name: '商务豪华方向盘', brand: 'LuxAuto', model: 'LA-BZ-08', price: 4899, status: 'on' },
+  { id: 9, name: '越野耐用方向盘', brand: 'TrailX', model: 'TX-OF-09', price: 2699, status: 'on' },
+  { id: 10, name: '触控智能方向盘', brand: 'OmniSteer', model: 'OS-TC-10', price: 5599, status: 'on' },
+];
+
+const filtered = computed<ProductItem[]>(() => {
+  if (!keyword.value) return products;
+  const k = keyword.value.toLowerCase();
+  return products.filter((p) =>
+    p.name.toLowerCase().includes(k) ||
+    p.brand.toLowerCase().includes(k) ||
+    p.model.toLowerCase().includes(k),
+  );
+});
+
+const totalPages = computed<number>(() => Math.ceil(filtered.value.length / pageSize) || 1);
+const paged = computed<ProductItem[]>(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  return filtered.value.slice(start, start + pageSize);
+});
+
+const search = (): void => {
+  currentPage.value = 1;
+};
+
+const onImageSearched = (nextKeyword: string): void => {
+  keyword.value = nextKeyword;
+  search();
+};
+</script>
 
 <style scoped lang="scss">
 .product-list {

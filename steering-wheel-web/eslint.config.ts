@@ -88,9 +88,21 @@ export default defineConfigWithVueTs(
       'vue/mustache-interpolation-spacing': 'off',
       'vue/html-quotes': 'off',
       'vue/html-closing-bracket-spacing': 'off',
+      'vue/block-order': ['error', {
+        order: ['template', 'script', 'style'],
+      }],
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-function-type': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/consistent-type-imports': ['error', {
+        prefer: 'type-imports',
+        disallowTypeAnnotations: false,
+      }],
+      '@typescript-eslint/explicit-function-return-type': ['error', {
+        allowExpressions: false,
+        allowTypedFunctionExpressions: true,
+        allowHigherOrderFunctions: true,
+      }],
       'semi': ['error', 'always'],
       'comma-dangle': ['error', 'always-multiline'],
       'space-before-function-paren': [

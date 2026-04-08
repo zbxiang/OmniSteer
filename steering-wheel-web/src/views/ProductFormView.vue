@@ -1,142 +1,3 @@
-<script setup lang="ts">
-import * as Vue from 'vue';
-import * as VueRouter from 'vue-router';
-import { ElMessage } from 'element-plus';
-import type { UploadProps, UploadUserFile } from 'element-plus';
-import { Plus } from '@element-plus/icons-vue';
-import { useAppStore } from '@/stores/app';
-
-const appStore = useAppStore();
-const router = VueRouter.useRouter();
-const route = VueRouter.useRoute();
-
-const formRef = Vue.ref<import('element-plus').FormInstance>();
-const loading = Vue.ref(false);
-const isEdit = Vue.computed(() => Boolean(route.params.id));
-const pageTitle = Vue.computed(() => (isEdit.value ? '编辑产品' : '上架新产品'));
-const submitText = Vue.computed(() => (isEdit.value ? '保存修改' : '提交上架'));
-
-const form = Vue.reactive({
-  name: '',
-  brand: '',
-  model: '',
-  price: 0,
-  status: 'on',
-  material: '',
-  diameter: undefined as number | undefined,
-  weight: undefined as number | undefined,
-  mount: '',
-  description: '',
-  images: [] as string[],
-});
-
-const rules: import('element-plus').FormRules = {
-  name: [{ required: true, message: '请输入产品名称', trigger: 'blur' }],
-  brand: [{ required: true, message: '请输入品牌', trigger: 'blur' }],
-  model: [{ required: true, message: '请输入型号', trigger: 'blur' }],
-  price: [
-    { required: true, message: '请输入价格', trigger: 'blur' },
-    { type: 'number', min: 1, message: '价格必须大于 0', trigger: 'blur' },
-  ],
-  images: [{ type: 'array', required: true, min: 1, message: '请至少上传 1 张产品图片', trigger: 'change' }],
-};
-
-const uploadFiles = Vue.ref<UploadUserFile[]>([]);
-const imageObjectUrls = new Set<string>();
-
-const mockProductsForEdit = [
-  {
-    id: 1,
-    name: '智能方向盘 Pro',
-    brand: 'OmniSteer',
-    model: 'OS-PRO-01',
-    price: 3299,
-    status: 'on',
-    material: '碳纤维 + 真皮',
-    diameter: 350,
-    weight: 680,
-    mount: '通用六孔 + 快拆',
-    description: '旗舰款智能方向盘，支持多功能按键与自定义灯效。',
-  },
-];
-
-Vue.onMounted(() => {
-  if (!isEdit.value) return;
-  const id = Number(route.params.id);
-  const p = mockProductsForEdit.find((x) => x.id === id);
-  if (!p) return;
-  form.name = p.name;
-  form.brand = p.brand;
-  form.model = p.model;
-  form.price = p.price;
-  form.status = p.status as 'on' | 'off';
-  form.material = p.material;
-  form.diameter = p.diameter;
-  form.weight = p.weight;
-  form.mount = p.mount;
-  form.description = p.description;
-});
-
-const syncFormImages = () => {
-  form.images = uploadFiles.value
-    .map((f) => f.url)
-    .filter((url): url is string => Boolean(url));
-};
-
-const beforeImageUpload: UploadProps['beforeUpload'] = (rawFile) => {
-  const isImage = ['image/jpeg', 'image/png', 'image/webp'].includes(rawFile.type);
-  if (!isImage) {
-    ElMessage.error('仅支持 JPG / PNG / WEBP 图片');
-    return false;
-  }
-  const isLt5M = rawFile.size / 1024 / 1024 < 5;
-  if (!isLt5M) {
-    ElMessage.error('单张图片不能超过 5MB');
-    return false;
-  }
-  return true;
-};
-
-const onUploadChange: UploadProps['onChange'] = (uploadFile) => {
-  if (!uploadFile.raw) {
-    syncFormImages();
-    return;
-  }
-  const objectUrl = URL.createObjectURL(uploadFile.raw);
-  imageObjectUrls.add(objectUrl);
-  uploadFile.url = objectUrl;
-  syncFormImages();
-};
-
-const onUploadRemove: UploadProps['onRemove'] = (uploadFile) => {
-  if (uploadFile.url && imageObjectUrls.has(uploadFile.url)) {
-    URL.revokeObjectURL(uploadFile.url);
-    imageObjectUrls.delete(uploadFile.url);
-  }
-  syncFormImages();
-};
-
-const submit = async () => {
-  if (!formRef.value) return;
-  const valid = await formRef.value.validate().catch(() => false);
-  if (!valid) return;
-  loading.value = true;
-  try {
-    // TODO: 接入后端新增/编辑产品接口
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    ElMessage.success(isEdit.value ? '产品修改成功（演示）' : '产品创建成功（演示）');
-    await router.push('/');
-  } finally {
-    loading.value = false;
-  }
-};
-
-Vue.onUnmounted(() => {
-  imageObjectUrls.forEach((url) => URL.revokeObjectURL(url));
-  imageObjectUrls.clear();
-});
-</script>
-
 <template>
   <div class="product-create">
     <div class="product-create__warm-base" aria-hidden="true" />
@@ -246,6 +107,188 @@ Vue.onUnmounted(() => {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
+import type { FormInstance, FormRules, UploadProps, UploadUserFile } from 'element-plus';
+import { Plus } from '@element-plus/icons-vue';
+import type { ProductEditSeed, ProductFormData } from '@/types';
+import { createProductApi } from '@/api/product';
+import { isRequestCanceled, RequestError } from '@/api/request';
+import { useAppStore } from '@/stores/app';
+
+const appStore = useAppStore();
+const router = useRouter();
+const route = useRoute();
+
+const formRef = ref<FormInstance>();
+const loading = ref<boolean>(false);
+const isEdit = computed<boolean>(() => Boolean(route.params.id));
+const pageTitle = computed<string>(() => (isEdit.value ? '编辑产品' : '上架新产品'));
+const submitText = computed<string>(() => (isEdit.value ? '保存修改' : '提交上架'));
+
+const form = reactive<ProductFormData>({
+  name: '',
+  brand: '',
+  model: '',
+  price: 0,
+  status: 'on',
+  material: '',
+  diameter: undefined as number | undefined,
+  weight: undefined as number | undefined,
+  mount: '',
+  description: '',
+  images: [] as string[],
+});
+
+const rules: FormRules = {
+  name: [{ required: true, message: '请输入产品名称', trigger: 'blur' }],
+  brand: [{ required: true, message: '请输入品牌', trigger: 'blur' }],
+  model: [{ required: true, message: '请输入型号', trigger: 'blur' }],
+  price: [
+    { required: true, message: '请输入价格', trigger: 'blur' },
+    { type: 'number', min: 1, message: '价格必须大于 0', trigger: 'blur' },
+  ],
+  images: [{ type: 'array', required: true, min: 1, message: '请至少上传 1 张产品图片', trigger: 'change' }],
+};
+
+const uploadFiles = ref<UploadUserFile[]>([]);
+const imageObjectUrls = new Set<string>();
+
+const mockProductsForEdit: ProductEditSeed[] = [
+  {
+    id: 1,
+    name: '智能方向盘 Pro',
+    brand: 'OmniSteer',
+    model: 'OS-PRO-01',
+    price: 3299,
+    status: 'on',
+    material: '碳纤维 + 真皮',
+    diameter: 350,
+    weight: 680,
+    mount: '通用六孔 + 快拆',
+    description: '旗舰款智能方向盘，支持多功能按键与自定义灯效。',
+  },
+];
+
+onMounted((): void => {
+  if (!isEdit.value) return;
+  const id = Number(route.params.id);
+  const p = mockProductsForEdit.find((x) => x.id === id);
+  if (!p) return;
+  form.name = p.name;
+  form.brand = p.brand;
+  form.model = p.model;
+  form.price = p.price;
+  form.status = p.status as 'on' | 'off';
+  form.material = p.material;
+  form.diameter = p.diameter;
+  form.weight = p.weight;
+  form.mount = p.mount;
+  form.description = p.description;
+});
+
+const syncFormImages = (): void => {
+  form.images = uploadFiles.value
+    .map((f) => f.url)
+    .filter((url): url is string => Boolean(url));
+};
+
+const beforeImageUpload: UploadProps['beforeUpload'] = (rawFile) => {
+  const isImage = ['image/jpeg', 'image/png', 'image/webp'].includes(rawFile.type);
+  if (!isImage) {
+    ElMessage.error('仅支持 JPG / PNG / WEBP 图片');
+    return false;
+  }
+  const isLt5M = rawFile.size / 1024 / 1024 < 5;
+  if (!isLt5M) {
+    ElMessage.error('单张图片不能超过 5MB');
+    return false;
+  }
+  return true;
+};
+
+const onUploadChange: UploadProps['onChange'] = (uploadFile) => {
+  if (!uploadFile.raw) {
+    syncFormImages();
+    return;
+  }
+  const objectUrl = URL.createObjectURL(uploadFile.raw);
+  imageObjectUrls.add(objectUrl);
+  uploadFile.url = objectUrl;
+  syncFormImages();
+};
+
+const onUploadRemove: UploadProps['onRemove'] = (uploadFile) => {
+  if (uploadFile.url && imageObjectUrls.has(uploadFile.url)) {
+    URL.revokeObjectURL(uploadFile.url);
+    imageObjectUrls.delete(uploadFile.url);
+  }
+  syncFormImages();
+};
+
+const readFileAsDataUrl = (file: File): Promise<string> =>
+  new Promise<string>((resolve, reject): void => {
+    const reader = new FileReader();
+    reader.onload = (): void => resolve(String(reader.result));
+    reader.onerror = (): void => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
+const collectImagesForSubmit = async (): Promise<string[]> => {
+  const urls: string[] = [];
+  for (const f of uploadFiles.value) {
+    if (f.raw) {
+      urls.push(await readFileAsDataUrl(f.raw));
+    }
+  }
+  return urls;
+};
+
+const submit = async (): Promise<void> => {
+  if (!formRef.value) return;
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
+  loading.value = true;
+  try {
+    if (isEdit.value) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      ElMessage.success('产品修改成功（演示）');
+      await router.push('/');
+      return;
+    }
+    const images = await collectImagesForSubmit();
+    await createProductApi({
+      name: form.name,
+      brand: form.brand,
+      model: form.model,
+      price: form.price,
+      status: form.status as 'on' | 'off',
+      material: form.material || undefined,
+      diameter: form.diameter,
+      weight: form.weight,
+      mount: form.mount || undefined,
+      description: form.description || undefined,
+      images,
+    });
+    ElMessage.success('产品创建成功');
+    await router.push('/');
+  } catch (e) {
+    if (isRequestCanceled(e)) return;
+    const msg = e instanceof RequestError ? e.message : '提交失败，请稍后重试';
+    ElMessage.error(msg);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onUnmounted((): void => {
+  imageObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+  imageObjectUrls.clear();
+});
+</script>
 
 <style scoped lang="scss">
 .product-create {

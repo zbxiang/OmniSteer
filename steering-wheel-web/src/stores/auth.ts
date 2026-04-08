@@ -31,7 +31,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoggedIn = computed(() => Boolean(token.value) && !isTokenExpired(token.value));
 
-  const setToken = (value: string, persist: boolean, displayName?: string) => {
+  const setToken = (value: string, persist: boolean, displayName?: string): void => {
     token.value = value;
     localStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(TOKEN_KEY);
@@ -49,11 +49,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
-  const logout = () => {
+  const logout = (): void => {
     setToken('', false);
   };
 
-  const ensureValidSession = () => {
+  const ensureValidSession = (): void => {
     if (!token.value) return;
     if (isTokenExpired(token.value)) {
       setToken('', false);

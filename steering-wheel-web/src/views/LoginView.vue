@@ -1,8 +1,5 @@
 <template>
-  <div
-    ref="rootRef"
-    class="login"
-  >
+  <div ref="rootRef" class="login">
     <!-- 橙色座舱底 + 指针光晕 + 装饰层 -->
     <div class="login__warm-base" aria-hidden="true" />
     <div class="login__pointer-glow" aria-hidden="true" />
@@ -42,8 +39,16 @@
           <defs>
             <linearGradient id="wheelMetal" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stop-color="currentColor" stop-opacity="0.45" />
-              <stop offset="50%" stop-color="currentColor" stop-opacity="0.18" />
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0.38" />
+              <stop
+                offset="50%"
+                stop-color="currentColor"
+                stop-opacity="0.18"
+              />
+              <stop
+                offset="100%"
+                stop-color="currentColor"
+                stop-opacity="0.38"
+              />
             </linearGradient>
             <linearGradient id="wheelRim" x1="0%" y1="100%" x2="100%" y2="0%">
               <stop offset="0%" stop-color="#7c2d12" stop-opacity="0.52" />
@@ -52,8 +57,21 @@
               <stop offset="100%" stop-color="#fed7aa" stop-opacity="0.28" />
             </linearGradient>
           </defs>
-          <circle cx="120" cy="120" r="108" stroke="url(#wheelRim)" stroke-width="3" opacity="0.9" />
-          <circle cx="120" cy="120" r="108" stroke="url(#wheelMetal)" stroke-width="10" />
+          <circle
+            cx="120"
+            cy="120"
+            r="108"
+            stroke="url(#wheelRim)"
+            stroke-width="3"
+            opacity="0.9"
+          />
+          <circle
+            cx="120"
+            cy="120"
+            r="108"
+            stroke="url(#wheelMetal)"
+            stroke-width="10"
+          />
           <circle
             cx="120"
             cy="120"
@@ -89,10 +107,7 @@
         <p class="login__hint">请验证身份以进入控制台</p>
       </header>
 
-      <div
-        ref="panelTiltRef"
-        class="login__panel-3d"
-      >
+      <div ref="panelTiltRef" class="login__panel-3d">
         <div class="login__panel">
           <el-form
             ref="formRef"
@@ -101,40 +116,42 @@
             label-position="top"
             class="login-form"
           >
-          <el-form-item label="用户名" prop="username">
-            <el-input
-              v-model="form.username"
-              placeholder="驾驶员 ID"
+            <el-form-item label="用户名" prop="username">
+              <el-input
+                v-model="form.username"
+                placeholder="驾驶员 ID"
+                size="large"
+                clearable
+                autocomplete="username"
+              />
+            </el-form-item>
+            <el-form-item label="密码" prop="password">
+              <el-input
+                v-model="form.password"
+                type="password"
+                placeholder="访问密钥"
+                size="large"
+                show-password
+                clearable
+                autocomplete="current-password"
+                @keyup.enter="onSubmit"
+              />
+            </el-form-item>
+            <div class="login__form-row">
+              <el-checkbox v-model="form.remember" class="remember-check"
+                >保持会话</el-checkbox
+              >
+            </div>
+            <el-button
+              type="primary"
               size="large"
-              clearable
-              autocomplete="username"
-            />
-          </el-form-item>
-          <el-form-item label="密码" prop="password">
-            <el-input
-              v-model="form.password"
-              type="password"
-              placeholder="访问密钥"
-              size="large"
-              show-password
-              clearable
-              autocomplete="current-password"
-              @keyup.enter="onSubmit"
-            />
-          </el-form-item>
-          <div class="login__form-row">
-            <el-checkbox v-model="form.remember" class="remember-check">保持会话</el-checkbox>
-          </div>
-          <el-button
-            type="primary"
-            size="large"
-            class="login-cta login__submit"
-            :loading="loading"
-            @click="onSubmit"
-          >
-            启动系统
-          </el-button>
-        </el-form>
+              class="login-cta login__submit"
+              :loading="loading"
+              @click="onSubmit"
+            >
+              启动系统
+            </el-button>
+          </el-form>
         </div>
       </div>
 
@@ -144,29 +161,32 @@
 </template>
 
 <script setup lang="ts">
-import * as Vue from 'vue';
-import * as VueRouter from 'vue-router';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { cancelRequest, isRequestCanceled, loginApi, loginErrorMessage } from '@/api';
+import type { FormInstance, FormRules } from 'element-plus';
+import type { LoginForm } from '@/types';
+import { loginApi, loginErrorMessage } from '@/api/auth';
+import { cancelRequest, isRequestCanceled } from '@/api/request';
 import { useAppStore } from '@/stores/app';
 import { useAuthStore } from '@/stores/auth';
 
-const router = VueRouter.useRouter();
-const route = VueRouter.useRoute();
+const router = useRouter();
+const route = useRoute();
 const appStore = useAppStore();
 const authStore = useAuthStore();
 const LOGIN_CANCEL_KEY = 'POST:/auth/login';
 
-const formRef = Vue.ref<import('element-plus').FormInstance>();
-const loading = Vue.ref(false);
+const formRef = ref<FormInstance>();
+const loading = ref<boolean>(false);
 
-const form = Vue.reactive({
+const form = reactive<LoginForm>({
   username: '',
   password: '',
   remember: true,
 });
 
-const rules: import('element-plus').FormRules = {
+const rules: FormRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
@@ -174,7 +194,12 @@ const rules: import('element-plus').FormRules = {
   ],
 };
 
-const onSubmit = async () => {
+type PointerState = {
+  clientX: number;
+  clientY: number;
+};
+
+const onSubmit = async (): Promise<void> => {
   if (!formRef.value) return;
   const isValid = await formRef.value.validate().catch(() => false);
   if (!isValid) return;
@@ -203,25 +228,25 @@ const onSubmit = async () => {
 };
 
 /** 根容器：指针光晕 --sx/--sy、装饰层视差 --mx/--my（-1…1） */
-const rootRef = Vue.ref<HTMLElement | null>(null);
+const rootRef = ref<HTMLElement | null>(null);
 /** 登录卡片 3D 微倾斜（主流「磁吸卡片」交互） */
-const panelTiltRef = Vue.ref<HTMLElement | null>(null);
-const rippleActive = Vue.ref(false);
+const panelTiltRef = ref<HTMLElement | null>(null);
+const rippleActive = ref<boolean>(false);
 let rippleTimer: ReturnType<typeof setTimeout> | null = null;
 let fxRafId: number | null = null;
-const fxRect = Vue.ref<DOMRect | null>(null);
-const fxPending = Vue.reactive({
+const fxRect = ref<DOMRect | null>(null);
+const fxPending = reactive<PointerState>({
   clientX: 0,
   clientY: 0,
 });
 
-const refreshFxRect = () => {
+const refreshFxRect = (): void => {
   const el = rootRef.value;
   if (!el) return;
   fxRect.value = el.getBoundingClientRect();
 };
 
-const applyFxPointer = () => {
+const applyFxPointer = (): void => {
   fxRafId = null;
   const el = rootRef.value;
   const r = fxRect.value;
@@ -236,11 +261,11 @@ const applyFxPointer = () => {
   el.style.setProperty('--my', ny.toFixed(4));
 };
 
-const onFxPointerEnter = () => {
+const onFxPointerEnter = (): void => {
   refreshFxRect();
 };
 
-const onFxPointerMove = (e: PointerEvent) => {
+const onFxPointerMove = (e: PointerEvent): void => {
   if (!fxRect.value) refreshFxRect();
   fxPending.clientX = e.clientX;
   fxPending.clientY = e.clientY;
@@ -248,7 +273,7 @@ const onFxPointerMove = (e: PointerEvent) => {
   fxRafId = requestAnimationFrame(applyFxPointer);
 };
 
-const onFxPointerLeave = () => {
+const onFxPointerLeave = (): void => {
   if (fxRafId !== null) {
     cancelAnimationFrame(fxRafId);
     fxRafId = null;
@@ -261,7 +286,7 @@ const onFxPointerLeave = () => {
   el.style.setProperty('--my', '0');
 };
 
-const onFxPointerDown = (e: PointerEvent) => {
+const onFxPointerDown = (e: PointerEvent): void => {
   const el = rootRef.value;
   if (!el) return;
   const r = el.getBoundingClientRect();
@@ -279,13 +304,13 @@ const onFxPointerDown = (e: PointerEvent) => {
   });
 };
 
-Vue.onMounted(() => {
+onMounted(() => {
   refreshFxRect();
   onFxPointerLeave();
   window.addEventListener('resize', refreshFxRect);
 });
 
-Vue.onUnmounted(() => {
+onUnmounted(() => {
   if (rippleTimer) clearTimeout(rippleTimer);
   if (fxRafId !== null) cancelAnimationFrame(fxRafId);
   window.removeEventListener('resize', refreshFxRect);
@@ -319,11 +344,32 @@ Vue.onUnmounted(() => {
     inset: 0;
     z-index: 0;
     background:
-      radial-gradient(ellipse 120% 70% at 50% 115%, rgba(249, 115, 22, 0.22) 0%, transparent 52%),
-      radial-gradient(ellipse 90% 50% at 50% 108%, rgba(251, 146, 60, 0.09) 0%, transparent 48%),
-      radial-gradient(ellipse 55% 45% at 10% 15%, rgba(249, 115, 22, 0.12) 0%, transparent 55%),
-      radial-gradient(ellipse 50% 40% at 92% 8%, rgba(253, 186, 116, 0.1) 0%, transparent 50%),
-      linear-gradient(168deg, v.$cockpit-bg-top 0%, v.$cockpit-bg-mid 48%, v.$cockpit-bg-bottom 100%);
+      radial-gradient(
+        ellipse 120% 70% at 50% 115%,
+        rgba(249, 115, 22, 0.22) 0%,
+        transparent 52%
+      ),
+      radial-gradient(
+        ellipse 90% 50% at 50% 108%,
+        rgba(251, 146, 60, 0.09) 0%,
+        transparent 48%
+      ),
+      radial-gradient(
+        ellipse 55% 45% at 10% 15%,
+        rgba(249, 115, 22, 0.12) 0%,
+        transparent 55%
+      ),
+      radial-gradient(
+        ellipse 50% 40% at 92% 8%,
+        rgba(253, 186, 116, 0.1) 0%,
+        transparent 50%
+      ),
+      linear-gradient(
+        168deg,
+        v.$cockpit-bg-top 0%,
+        v.$cockpit-bg-mid 48%,
+        v.$cockpit-bg-bottom 100%
+      );
   }
 
   &__pointer-glow {
@@ -349,7 +395,8 @@ Vue.onUnmounted(() => {
     inset: 0;
     z-index: 2;
     background: radial-gradient(
-      circle min(58vw, 500px) at calc(50% + var(--mx) * 16%) calc(44% + var(--my) * 12%),
+      circle min(58vw, 500px) at calc(50% + var(--mx) * 16%)
+        calc(44% + var(--my) * 12%),
       rgba(v.$accent-warm, 0.11) 0%,
       rgba(v.$primary-amber, 0.09) 45%,
       transparent 70%
@@ -440,7 +487,11 @@ Vue.onUnmounted(() => {
       rgba(255, 255, 255, 0.02) 3px
     );
     background-size: 14px 14px;
-    mask-image: radial-gradient(ellipse 90% 80% at 50% 50%, black 20%, transparent 75%);
+    mask-image: radial-gradient(
+      ellipse 90% 80% at 50% 50%,
+      black 20%,
+      transparent 75%
+    );
     animation: login-motion-drift 10s linear infinite;
   }
 
@@ -458,7 +509,11 @@ Vue.onUnmounted(() => {
       linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
     background-size: 40px 40px;
     background-position: center center;
-    mask-image: radial-gradient(ellipse 95% 90% at 50% 45%, black 35%, transparent 78%);
+    mask-image: radial-gradient(
+      ellipse 95% 90% at 50% 45%,
+      black 35%,
+      transparent 78%
+    );
     animation: login-grid-pulse 14s ease-in-out infinite;
   }
 
@@ -513,7 +568,8 @@ Vue.onUnmounted(() => {
     mix-blend-mode: screen;
 
     &--on {
-      animation: login-ripple-flash 0.62s cubic-bezier(0.22, 0.82, 0.28, 1) forwards;
+      animation: login-ripple-flash 0.62s cubic-bezier(0.22, 0.82, 0.28, 1)
+        forwards;
     }
   }
 
@@ -523,7 +579,10 @@ Vue.onUnmounted(() => {
     z-index: 9;
     left: 50%;
     top: 50%;
-    transform: translate(calc(-50% + var(--mx) * -26px), calc(-58% + var(--my) * -20px));
+    transform: translate(
+      calc(-50% + var(--mx) * -26px),
+      calc(-58% + var(--my) * -20px)
+    );
     will-change: transform;
     user-select: none;
   }
@@ -611,7 +670,11 @@ Vue.onUnmounted(() => {
     border-radius: 1rem;
     border: 1px solid rgba(v.$primary-amber, 0.26);
     padding: 2rem;
-    background: linear-gradient(145deg, v.$panel-bg 0%, rgba(v.$cockpit-bg-mid, 0.96) 100%);
+    background: linear-gradient(
+      145deg,
+      v.$panel-bg 0%,
+      rgba(v.$cockpit-bg-mid, 0.96) 100%
+    );
     backdrop-filter: blur(20px);
     box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.45),
@@ -838,7 +901,9 @@ Vue.onUnmounted(() => {
 
   .login__panel {
     transform: none !important;
-    transition: border-color 0.35s ease, box-shadow 0.35s ease !important;
+    transition:
+      border-color 0.35s ease,
+      box-shadow 0.35s ease !important;
   }
 
   .login__blobs,

@@ -1,60 +1,3 @@
-<script setup lang="ts">
-import * as Vue from 'vue';
-import * as VueRouter from 'vue-router';
-import { useAppStore } from '@/stores/app';
-
-type ProductDetail = {
-  id: number;
-  name: string;
-  brand: string;
-  model: string;
-  material: string;
-  diameter: number;
-  weight: number;
-  mount: string;
-  date: string;
-  desc: string;
-  price: number;
-  status: 'on' | 'off';
-};
-
-const appStore = useAppStore();
-const route = VueRouter.useRoute();
-
-const products: ProductDetail[] = [
-  {
-    id: 1,
-    name: '智能方向盘 Pro',
-    brand: 'OmniSteer',
-    model: 'OS-PRO-01',
-    material: '碳纤维 + 真皮',
-    diameter: 350,
-    weight: 680,
-    mount: '通用六孔 + 快拆',
-    date: '2026-03-18',
-    desc: '旗舰款智能方向盘，支持多功能按键与自定义灯效，兼顾操控与舒适。',
-    price: 3299,
-    status: 'on',
-  },
-  {
-    id: 2,
-    name: '运动方向盘 GT',
-    brand: 'OmniSteer',
-    model: 'OS-GT-02',
-    material: '铝合金 + 打孔皮',
-    diameter: 340,
-    weight: 720,
-    mount: '快拆基座',
-    date: '2026-02-10',
-    desc: '偏竞技风格，握感扎实，适用于街道和赛道双场景。',
-    price: 4599,
-    status: 'on',
-  },
-];
-
-const product = Vue.computed(() => products.find((p) => p.id === Number(route.params.id)));
-</script>
-
 <template>
   <div class="product-detail">
     <div class="product-detail__warm-base" aria-hidden="true" />
@@ -108,6 +51,51 @@ const product = Vue.computed(() => products.find((p) => p.id === Number(route.pa
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+import type { ProductDetailItem } from '@/types';
+import { useAppStore } from '@/stores/app';
+
+const appStore = useAppStore();
+const route = useRoute();
+
+const products: ProductDetailItem[] = [
+  {
+    id: 1,
+    name: '智能方向盘 Pro',
+    brand: 'OmniSteer',
+    model: 'OS-PRO-01',
+    material: '碳纤维 + 真皮',
+    diameter: 350,
+    weight: 680,
+    mount: '通用六孔 + 快拆',
+    date: '2026-03-18',
+    desc: '旗舰款智能方向盘，支持多功能按键与自定义灯效，兼顾操控与舒适。',
+    price: 3299,
+    status: 'on',
+  },
+  {
+    id: 2,
+    name: '运动方向盘 GT',
+    brand: 'OmniSteer',
+    model: 'OS-GT-02',
+    material: '铝合金 + 打孔皮',
+    diameter: 340,
+    weight: 720,
+    mount: '快拆基座',
+    date: '2026-02-10',
+    desc: '偏竞技风格，握感扎实，适用于街道和赛道双场景。',
+    price: 4599,
+    status: 'on',
+  },
+];
+
+const product = computed<ProductDetailItem | undefined>(
+  (): ProductDetailItem | undefined => products.find((p) => p.id === Number(route.params.id)),
+);
+</script>
 
 <style scoped lang="scss">
 .product-detail {

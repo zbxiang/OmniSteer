@@ -1,5 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import type { NavigationGuardReturn, RouteLocationNormalized } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+
+const LoginView = (): Promise<typeof import('@/views/LoginView.vue')> => import('@/views/LoginView.vue');
+const ProductView = (): Promise<typeof import('@/views/ProductView.vue')> => import('@/views/ProductView.vue');
+const ProductFormView = (): Promise<typeof import('@/views/ProductFormView.vue')> =>
+  import('@/views/ProductFormView.vue');
+const ProductDetailView = (): Promise<typeof import('@/views/ProductDetailView.vue')> =>
+  import('@/views/ProductDetailView.vue');
 
 const router = createRouter({
   history: createWebHistory(),
@@ -7,37 +15,37 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/views/LoginView.vue'),
+      component: LoginView,
       meta: { public: true },
     },
     {
       path: '/',
       name: 'home',
-      component: () => import('@/views/ProductList.vue'),
+      component: ProductView,
       meta: { requiresAuth: true },
     },
     {
       path: '/products/new',
-      name: 'product-create',
-      component: () => import('@/views/ProductFormView.vue'),
+      name: 'productCreate',
+      component: ProductFormView,
       meta: { requiresAuth: true },
     },
     {
       path: '/products/:id/edit',
-      name: 'product-edit',
-      component: () => import('@/views/ProductFormView.vue'),
+      name: 'productEdit',
+      component: ProductFormView,
       meta: { requiresAuth: true },
     },
     {
       path: '/products/:id',
-      name: 'product-detail',
-      component: () => import('@/views/ProductDetailView.vue'),
+      name: 'productDetail',
+      component: ProductDetailView,
       meta: { requiresAuth: true },
     },
   ],
 });
 
-router.beforeEach((to) => {
+router.beforeEach((to: RouteLocationNormalized): NavigationGuardReturn => {
   const auth = useAuthStore();
   auth.ensureValidSession();
   if (to.meta.requiresAuth && !auth.isLoggedIn) {

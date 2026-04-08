@@ -9,8 +9,8 @@ export type LoginResult = {
   token_type?: string;
 };
 
-export type ProductLite = {
-  name: string;
-  brand: string;
-  model: string;
+export type LoginForm = {
+  username: string;
+  password: string;
+  remember: boolean;
 };

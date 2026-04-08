@@ -1,5 +1,48 @@
+<template>
+  <el-dialog
+    v-model="visible"
+    class="image-search-dialog"
+    title="以图搜图"
+    width="560px"
+    :close-on-click-modal="false"
+    @closed="resetState"
+  >
+    <p class="image-search__hint">上传一张方向盘图片，系统将搜索相似产品</p>
+    <label class="upload-area">
+      <input
+        class="upload-input"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        @change="onImageSelect"
+      />
+      <div>点击上传产品图片</div>
+      <small>支持 JPG、PNG、WEBP，最大 5MB</small>
+    </label>
+
+    <div class="img-preview" v-if="imageSearchPreview">
+      <img :src="imageSearchPreview" alt="preview" />
+      <p>{{ imageSearchFileName }}</p>
+    </div>
+
+    <template #footer>
+      <div class="modal-actions">
+        <el-button class="image-btn image-btn--ghost" @click="onClose"
+          >取消</el-button
+        >
+        <el-button
+          class="image-btn image-btn--primary"
+          :loading="imageSearching"
+          @click="runImageSearch"
+        >
+          {{ imageSearching ? '识别中...' : '开始搜索' }}
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+</template>
+
 <script setup lang="ts">
-import * as Vue from 'vue';
+import { computed, ref, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { ProductLite } from '@/types';
 
@@ -13,17 +56,17 @@ const emit = defineEmits<{
   searched: [keyword: string];
 }>();
 
-const visible = Vue.computed({
+const visible = computed({
   get: () => props.modelValue,
   set: (value: boolean) => emit('update:modelValue', value),
 });
 
-const imageSearchPreview = Vue.ref('');
-const imageSearchFileName = Vue.ref('');
-const imageSearching = Vue.ref(false);
-let previewObjectUrl = '';
+const imageSearchPreview = ref<string>('');
+const imageSearchFileName = ref<string>('');
+const imageSearching = ref<boolean>(false);
+let previewObjectUrl: string | null = null;
 
-const resetState = () => {
+const resetState = (): void => {
   imageSearchFileName.value = '';
   imageSearchPreview.value = '';
   imageSearching.value = false;
@@ -33,7 +76,7 @@ const resetState = () => {
   }
 };
 
-const onImageSelect = (e: Event) => {
+const onImageSelect = (e: Event): void => {
   const input = e.target as HTMLInputElement;
   const file = input.files?.[0];
   if (!file) return;
@@ -55,7 +98,7 @@ const onImageSelect = (e: Event) => {
   imageSearchPreview.value = previewObjectUrl;
 };
 
-const runImageSearch = async () => {
+const runImageSearch = async (): Promise<void> => {
   if (!imageSearchFileName.value) {
     ElMessage.warning('请先上传图片');
     return;
@@ -66,60 +109,34 @@ const runImageSearch = async () => {
 
   const key = imageSearchFileName.value.toLowerCase().replace(/\s+/g, '');
   const hit = props.products.find((p) =>
-    [p.name, p.brand, p.model].some((x) => key.includes(x.toLowerCase().replace(/\s+/g, ''))),
+    [p.name, p.brand, p.model].some((x) =>
+      key.includes(x.toLowerCase().replace(/\s+/g, '')),
+    ),
   );
   emit('searched', hit ? `${hit.brand} ${hit.model}` : 'OmniSteer');
   visible.value = false;
   resetState();
 };
 
-const onClose = () => {
+const onClose = (): void => {
   visible.value = false;
   resetState();
 };
 
-Vue.onUnmounted(() => {
+onUnmounted(() => {
   if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
 });
 </script>
-
-<template>
-  <el-dialog
-    v-model="visible"
-    class="image-search-dialog"
-    title="以图搜图"
-    width="560px"
-    :close-on-click-modal="false"
-    @closed="resetState"
-  >
-    <p class="image-search__hint">上传一张方向盘图片，系统将搜索相似产品</p>
-    <label class="upload-area">
-      <input class="upload-input" type="file" accept="image/jpeg,image/png,image/webp" @change="onImageSelect">
-      <div>点击上传产品图片</div>
-      <small>支持 JPG、PNG、WEBP，最大 5MB</small>
-    </label>
-
-    <div class="img-preview" v-if="imageSearchPreview">
-      <img :src="imageSearchPreview" alt="preview">
-      <p>{{ imageSearchFileName }}</p>
-    </div>
-
-    <template #footer>
-      <div class="modal-actions">
-        <el-button class="image-btn image-btn--ghost" @click="onClose">取消</el-button>
-        <el-button class="image-btn image-btn--primary" :loading="imageSearching" @click="runImageSearch">
-          {{ imageSearching ? '识别中...' : '开始搜索' }}
-        </el-button>
-      </div>
-    </template>
-  </el-dialog>
-</template>
 
 <style scoped lang="scss">
 :deep(.image-search-dialog .el-dialog) {
   border: 1px solid rgba(v.$primary-amber, 0.32);
   border-radius: 14px;
-  background: linear-gradient(145deg, v.$panel-bg 0%, rgba(v.$cockpit-bg-mid, 0.97) 100%);
+  background: linear-gradient(
+    145deg,
+    v.$panel-bg 0%,
+    rgba(v.$cockpit-bg-mid, 0.97) 100%
+  );
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
 }
 
@@ -173,7 +190,9 @@ Vue.onUnmounted(() => {
   cursor: pointer;
   background: rgba(v.$input-bg, 0.55);
   color: rgba(245, 232, 223, 0.92);
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .upload-area:hover {

@@ -1,5 +1,5 @@
 import axios, {
-  AxiosError,
+  type AxiosError,
   type AxiosInstance,
   type InternalAxiosRequestConfig,
 } from 'axios';
@@ -9,6 +9,14 @@ const baseURL =
   import.meta.env.DEV || !import.meta.env.VITE_API_BASE_URL
     ? ''
     : import.meta.env.VITE_API_BASE_URL;
+
+/** 与 `stores/auth.ts` 中 TOKEN_KEY 保持一致 */
+const TOKEN_KEY = 'omnisteer_token';
+
+const readTokenFromStorage = (): string => {
+  if (typeof localStorage === 'undefined') return '';
+  return localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY) ?? '';
+};
 
 const instance: AxiosInstance = axios.create({
   baseURL,
@@ -38,7 +46,7 @@ const buildCancelKey = (config: RequestConfig): string | undefined => {
   return `${method}:${config.url}`;
 };
 
-const clearCancelKey = (config?: RequestConfig) => {
+const clearCancelKey = (config?: RequestConfig): void => {
   const key = config?.cancelKey || buildCancelKey(config || {});
   if (!key) return;
   pendingControllers.delete(key);
@@ -80,6 +88,10 @@ const normalizeError = (error: unknown): RequestError => {
 };
 
 instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const token = readTokenFromStorage();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   const requestConfig = config as InternalAxiosRequestConfig & RequestMeta;
   const key = requestConfig.cancelKey || buildCancelKey(requestConfig);
   if (!key) return requestConfig;
@@ -109,19 +121,19 @@ instance.interceptors.response.use(
   },
 );
 
-export const cancelRequest = (cancelKey: string) => {
+export const cancelRequest = (cancelKey: string): void => {
   const controller = pendingControllers.get(cancelKey);
   if (!controller) return;
   controller.abort();
   pendingControllers.delete(cancelKey);
 };
 
-export const cancelAllRequests = () => {
+export const cancelAllRequests = (): void => {
   pendingControllers.forEach((controller) => controller.abort());
   pendingControllers.clear();
 };
 
-export const isRequestCanceled = (error: unknown) =>
+export const isRequestCanceled = (error: unknown): boolean =>
   error instanceof RequestError && error.isCanceled;
 
 const request = {

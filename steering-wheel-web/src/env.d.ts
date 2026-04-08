@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  // 按需扩展构建时环境变量
+  VITE_PASSWORD_SECRET?: string;
 }
 /// <reference types="element-plus/global" />
 /// <reference types="vue/jsx-runtime" />
