@@ -1,0 +1,56 @@
+[data-theme='mist'] {
+  --color-primary-amber: rgb(148 163 184);
+  --color-accent-warm: rgb(203 213 225);
+  --color-panel-bg: rgba(30, 41, 59, 0.9);
+  --color-input-bg: rgba(51, 65, 85, 0.72);
+  --color-cockpit-bg-top: #0f172a;
+  --color-cockpit-bg-mid: #111827;
+  --color-cockpit-bg-bottom: #0b1220;
+  --color-cockpit-bg-mid-96: rgba(17, 24, 39, 0.96);
+  --color-cockpit-bg-mid-97: rgba(17, 24, 39, 0.97);
+  --color-zinc-label: rgb(203 213 225);
+  --color-zinc-text: rgb(241 245 249);
+  --color-zinc-muted: rgb(148 163 184);
+  --color-zinc-faint: rgb(100 116 139);
+
+  --color-primary-amber-04: rgba(148, 163, 184, 0.04);
+  --color-primary-amber-06: rgba(148, 163, 184, 0.06);
+  --color-primary-amber-07: rgba(148, 163, 184, 0.07);
+  --color-primary-amber-08: rgba(148, 163, 184, 0.08);
+  --color-primary-amber-09: rgba(148, 163, 184, 0.09);
+  --color-primary-amber-10: rgba(148, 163, 184, 0.1);
+  --color-primary-amber-12: rgba(148, 163, 184, 0.12);
+  --color-primary-amber-14: rgba(148, 163, 184, 0.14);
+  --color-primary-amber-15: rgba(148, 163, 184, 0.15);
+  --color-primary-amber-16: rgba(148, 163, 184, 0.16);
+  --color-primary-amber-18: rgba(148, 163, 184, 0.18);
+  --color-primary-amber-20: rgba(148, 163, 184, 0.2);
+  --color-primary-amber-22: rgba(148, 163, 184, 0.22);
+  --color-primary-amber-24: rgba(148, 163, 184, 0.24);
+  --color-primary-amber-25: rgba(148, 163, 184, 0.25);
+  --color-primary-amber-26: rgba(148, 163, 184, 0.26);
+  --color-primary-amber-28: rgba(148, 163, 184, 0.28);
+  --color-primary-amber-30: rgba(148, 163, 184, 0.3);
+  --color-primary-amber-32: rgba(148, 163, 184, 0.32);
+  --color-primary-amber-35: rgba(148, 163, 184, 0.35);
+  --color-primary-amber-36: rgba(148, 163, 184, 0.36);
+  --color-primary-amber-38: rgba(148, 163, 184, 0.38);
+  --color-primary-amber-42: rgba(148, 163, 184, 0.42);
+  --color-primary-amber-45: rgba(148, 163, 184, 0.45);
+  --color-primary-amber-48: rgba(148, 163, 184, 0.48);
+  --color-primary-amber-55: rgba(148, 163, 184, 0.55);
+  --color-primary-amber-70: rgba(148, 163, 184, 0.7);
+  --color-primary-amber-85: rgba(148, 163, 184, 0.85);
+  --color-primary-amber-90: rgba(148, 163, 184, 0.9);
+
+  --color-accent-warm-07: rgba(203, 213, 225, 0.07);
+  --color-accent-warm-11: rgba(203, 213, 225, 0.11);
+  --color-accent-warm-20: rgba(203, 213, 225, 0.2);
+  --color-accent-warm-32: rgba(203, 213, 225, 0.32);
+  --color-input-bg-55: rgba(51, 65, 85, 0.55);
+  --color-input-bg-72: rgba(51, 65, 85, 0.72);
+  --product-card-sheen:
+    radial-gradient(circle at 18% 14%, rgba(203, 213, 225, 0.18) 0%, rgba(148, 163, 184, 0.1) 30%, transparent 62%),
+    linear-gradient(150deg, rgba(203, 213, 225, 0.08) 0%, transparent 48%);
+  --product-card-hover-glow: rgba(148, 163, 184, 0.2);
+}

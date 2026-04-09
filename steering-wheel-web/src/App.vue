@@ -2,23 +2,22 @@
   <div class="app-shell">
     <router-view />
     <div class="theme-switcher">
-      <ThemeSelect :model-value="appStore.theme" @update:model-value="switchTheme" />
+      <ThemeModeToggle v-model="themeMode" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import { useAppStore } from '@/stores/app';
-import ThemeSelect from '@/components/ThemeSelect.vue';
-import type { ThemeName } from '@/types';
+import ThemeModeToggle from '@/components/ThemeModeToggle.vue';
+import type { ThemeMode } from '@/components/ThemeModeToggle.vue';
 
 const auth = useAuthStore();
-const appStore = useAppStore();
 const route = useRoute();
 const router = useRouter();
+const themeMode = ref<ThemeMode>('system');
 let sessionTimer: ReturnType<typeof setInterval> | null = null;
 
 const checkSession = (): void => {
@@ -43,9 +42,6 @@ onUnmounted((): void => {
   sessionTimer = null;
 });
 
-const switchTheme = (theme: ThemeName): void => {
-  appStore.setTheme(theme);
-};
 </script>
 
 <style scoped lang="scss">

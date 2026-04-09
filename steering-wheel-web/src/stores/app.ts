@@ -23,7 +23,7 @@ export const useAppStore = defineStore('app', () => {
 
   const initTheme = (): void => {
     const savedTheme = localStorage.getItem('omnisteer-theme');
-    if (savedTheme === 'amber' || savedTheme === 'cockpit' || savedTheme === 'indigo') {
+    if (savedTheme === 'amber' || savedTheme === 'cockpit' || savedTheme === 'indigo' || savedTheme === 'magenta' || savedTheme === 'teal' || savedTheme === 'emerald' || savedTheme === 'lime' || savedTheme === 'yellow' || savedTheme === 'stone' || savedTheme === 'mist' || savedTheme === 'olive') {
       theme.value = savedTheme;
     }
     applyTheme(theme.value);
