@@ -374,7 +374,7 @@ onUnmounted((): void => {
   }
 
   &__warm-base {
-    background: radial-gradient(ellipse 95% 60% at 50% 110%, rgba(v.$primary-amber, 0.2) 0%, transparent 55%);
+    background: radial-gradient(ellipse 95% 60% at 50% 110%, var(--color-primary-amber-20) 0%, transparent 55%);
   }
 
   &__vignette {
@@ -394,7 +394,7 @@ onUnmounted((): void => {
 
   &__badge {
     margin: 0;
-    color: rgba(v.$primary-amber, 0.85);
+    color: var(--color-primary-amber-85);
     letter-spacing: 0.24em;
     font-size: 11px;
   }
@@ -411,9 +411,9 @@ onUnmounted((): void => {
 
   &__panel {
     border-radius: 12px;
-    border: 1px solid rgba(v.$primary-amber, 0.24);
+    border: 1px solid var(--color-primary-amber-24);
     padding: 1rem;
-    background: linear-gradient(145deg, v.$panel-bg 0%, rgba(v.$cockpit-bg-mid, 0.96) 100%);
+    background: linear-gradient(145deg, v.$panel-bg 0%, var(--color-cockpit-bg-mid-96) 100%);
   }
 
   &__actions {
@@ -428,7 +428,7 @@ onUnmounted((): void => {
     object-fit: contain;
     display: block;
     border-radius: 10px;
-    border: 1px solid rgba(v.$primary-amber, 0.2);
+    border: 1px solid var(--color-primary-amber-20);
     background: rgba(0, 0, 0, 0.2);
   }
 }
@@ -442,7 +442,7 @@ onUnmounted((): void => {
 :deep(.el-input-number .el-input__wrapper) {
   background: v.$input-bg !important;
   color: v.$zinc-text !important;
-  box-shadow: 0 0 0 1px rgba(v.$primary-amber, 0.2) inset !important;
+  box-shadow: 0 0 0 1px var(--color-primary-amber-20) inset !important;
 }
 
 :deep(.el-input__inner),

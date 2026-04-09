@@ -7,21 +7,33 @@
     :close-on-click-modal="false"
     @closed="resetState"
   >
-    <p class="image-search__hint">上传一张方向盘图片，系统将搜索相似产品</p>
-    <label class="upload-area">
-      <input
-        class="upload-input"
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        @change="onImageSelect"
-      />
-      <div>点击上传产品图片</div>
-      <small>支持 JPG、PNG、WEBP，最大 5MB</small>
-    </label>
+    <div class="image-search__panel">
+      <p class="image-search__hint">上传一张方向盘图片，系统将搜索相似产品</p>
+      <label
+        class="upload-area"
+        :class="{ 'upload-area--dragover': dragOver }"
+        @dragover.prevent="onDragOver"
+        @dragleave.prevent="onDragLeave"
+        @drop.prevent="onDropFile"
+      >
+        <div class="upload-area__icon">⌁</div>
+        <div class="upload-area__title">
+          {{ dragOver ? '松开即可上传图片' : '点击或拖拽上传产品图片' }}
+        </div>
+        <small>支持 JPG、PNG、WEBP，最大 5MB</small>
+        <span v-if="imageSearchFileName" class="upload-area__file">{{ imageSearchFileName }}</span>
+        <input
+          class="upload-input"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          @change="onImageSelect"
+        />
+      </label>
+    </div>
 
     <div class="img-preview" v-if="imageSearchPreview">
       <img :src="imageSearchPreview" alt="preview" />
-      <p>{{ imageSearchFileName }}</p>
+      <p>已选择图片：{{ imageSearchFileName }}</p>
     </div>
 
     <template #footer>
@@ -67,6 +79,7 @@ const imageSearchPreview = ref<string>('');
 const imageSearchFileName = ref<string>('');
 const imageSearchDataUrl = ref<string>('');
 const imageSearching = ref<boolean>(false);
+const dragOver = ref<boolean>(false);
 let previewObjectUrl: string | null = null;
 
 const readFileAsDataUrl = (file: File): Promise<string> =>
@@ -82,39 +95,58 @@ const resetState = (): void => {
   imageSearchPreview.value = '';
   imageSearchDataUrl.value = '';
   imageSearching.value = false;
+  dragOver.value = false;
   if (previewObjectUrl) {
     URL.revokeObjectURL(previewObjectUrl);
     previewObjectUrl = '';
   }
 };
 
-const onImageSelect = async (e: Event): Promise<void> => {
-  const input = e.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (!file) return;
+const applySelectedFile = async (file: File): Promise<boolean> => {
   const okType = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
   if (!okType) {
     ElMessage.error('仅支持 JPG / PNG / WEBP 图片');
-    input.value = '';
-    return;
+    return false;
   }
   const okSize = file.size / 1024 / 1024 <= 5;
   if (!okSize) {
     ElMessage.error('图片不能超过 5MB');
-    input.value = '';
-    return;
+    return false;
   }
   try {
     imageSearchDataUrl.value = await readFileAsDataUrl(file);
   } catch {
     ElMessage.error('读取图片失败，请重试');
-    input.value = '';
-    return;
+    return false;
   }
   if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
   previewObjectUrl = URL.createObjectURL(file);
   imageSearchFileName.value = file.name;
   imageSearchPreview.value = previewObjectUrl;
+  return true;
+};
+
+const onImageSelect = async (e: Event): Promise<void> => {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  const ok = await applySelectedFile(file);
+  if (!ok) input.value = '';
+};
+
+const onDragOver = (): void => {
+  dragOver.value = true;
+};
+
+const onDragLeave = (): void => {
+  dragOver.value = false;
+};
+
+const onDropFile = async (e: DragEvent): Promise<void> => {
+  dragOver.value = false;
+  const file = e.dataTransfer?.files?.[0];
+  if (!file) return;
+  await applySelectedFile(file);
 };
 
 const runImageSearch = async (): Promise<void> => {
@@ -152,20 +184,20 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 :deep(.image-search-dialog .el-dialog) {
-  border: 1px solid rgba(v.$primary-amber, 0.32);
+  border: 1px solid var(--color-primary-amber-32);
   border-radius: 14px;
   background: linear-gradient(
     145deg,
     v.$panel-bg 0%,
-    rgba(v.$cockpit-bg-mid, 0.97) 100%
+    var(--color-cockpit-bg-mid-97) 100%
   );
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--color-cockpit-bg-mid-97) 68%, #000);
 }
 
 :deep(.image-search-dialog .el-dialog__header) {
   margin-right: 0;
   padding: 16px 18px 8px;
-  border-bottom: 1px solid rgba(v.$primary-amber, 0.16);
+  border-bottom: 1px solid var(--color-primary-amber-16);
 }
 
 :deep(.image-search-dialog .el-dialog__title) {
@@ -175,10 +207,22 @@ onUnmounted(() => {
 
 :deep(.image-search-dialog .el-dialog__headerbtn .el-dialog__close) {
   color: v.$zinc-label;
+  transition: color 0.2s ease, filter 0.2s ease;
+}
+
+:deep(.image-search-dialog .el-dialog__headerbtn) {
+  border-radius: 8px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 :deep(.image-search-dialog .el-dialog__headerbtn:hover .el-dialog__close) {
   color: v.$primary-amber;
+  filter: drop-shadow(0 0 8px var(--color-primary-amber-45));
+}
+
+:deep(.image-search-dialog .el-dialog__headerbtn:hover) {
+  background: var(--color-primary-amber-10);
+  box-shadow: inset 0 0 0 1px var(--color-primary-amber-20);
 }
 
 :deep(.image-search-dialog .el-dialog__body) {
@@ -190,42 +234,95 @@ onUnmounted(() => {
 }
 
 .image-search__hint {
-  margin: 0 0 0.85rem;
-  color: #fff;
-  font-size: 13px;
+  margin: 0;
+  color: v.$zinc-text;
+  font-size: 12px;
   line-height: 1.6;
-  letter-spacing: 0.02em;
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 8px 10px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 74%, transparent);
+  border: 1px solid var(--color-primary-amber-20);
+  border-radius: 10px;
+  padding: 9px 12px;
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--color-cockpit-bg-mid-97) 64%, #000);
+}
+
+.image-search__panel {
+  display: grid;
+  gap: 10px;
 }
 
 .upload-area {
-  display: block;
-  border: 1px dashed rgba(v.$primary-amber, 0.35);
-  border-radius: 10px;
-  padding: 1rem;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--color-primary-amber-35);
+  border-radius: 12px;
+  padding: 1.1rem 1rem 1rem;
   text-align: center;
   cursor: pointer;
-  background: rgba(v.$input-bg, 0.55);
-  color: rgba(245, 232, 223, 0.92);
+  background:
+    radial-gradient(circle at 18% 10%, var(--color-primary-amber-10) 0%, transparent 48%),
+    var(--color-input-bg-55);
+  color: color-mix(in srgb, var(--color-zinc-text) 92%, #fff);
   transition:
     border-color 0.2s ease,
-    background-color 0.2s ease;
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .upload-area:hover {
-  border-color: rgba(v.$primary-amber, 0.55);
-  background: rgba(v.$input-bg, 0.72);
+  border-color: var(--color-primary-amber-55);
+  background: var(--color-input-bg-72);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px var(--color-primary-amber-12);
+}
+
+.upload-area--dragover {
+  border-color: var(--color-primary-amber-70);
+  background: var(--color-input-bg-72);
+  box-shadow:
+    0 10px 26px var(--color-primary-amber-16),
+    inset 0 0 0 1px var(--color-primary-amber-24);
+}
+
+.upload-area__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 8px;
+  color: var(--color-primary-amber);
+  font-size: 19px;
+  background: var(--color-primary-amber-12);
+  border: 1px solid var(--color-primary-amber-28);
+}
+
+.upload-area__title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.upload-area__file {
+  margin-top: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-primary-amber-30);
+  background: var(--color-primary-amber-08);
+  color: v.$zinc-text;
+  font-size: 12px;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .upload-area small {
   display: block;
-  margin-top: 0.35rem;
-  color: rgba(201, 175, 160, 0.92);
+  margin-top: 0.45rem;
+  color: color-mix(in srgb, var(--color-zinc-label) 92%, #fff);
+  font-size: 12px;
 }
 
 .upload-input {
@@ -233,17 +330,19 @@ onUnmounted(() => {
 }
 
 .img-preview {
-  margin-top: 0.75rem;
-  border: 1px solid rgba(v.$primary-amber, 0.25);
-  border-radius: 10px;
-  padding: 0.75rem;
+  margin-top: 0.85rem;
+  border: 1px solid var(--color-primary-amber-25);
+  border-radius: 12px;
+  padding: 0.8rem;
   text-align: center;
+  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 74%, transparent);
 
   img {
     max-width: 100%;
-    max-height: 180px;
+    max-height: 210px;
     border-radius: 8px;
     object-fit: contain;
+    border: 1px solid var(--color-primary-amber-20);
   }
 
   p {
@@ -267,19 +366,19 @@ onUnmounted(() => {
 }
 
 .image-btn--ghost {
-  --el-button-bg-color: rgba(20, 12, 8, 0.65);
-  --el-button-border-color: rgba(249, 115, 22, 0.46);
-  --el-button-text-color: #fff7f0;
-  --el-button-hover-bg-color: rgba(28, 16, 10, 0.78);
-  --el-button-hover-border-color: rgba(249, 115, 22, 0.72);
-  --el-button-hover-text-color: #ffffff;
-  --el-button-active-bg-color: rgba(36, 20, 12, 0.9);
-  --el-button-active-border-color: rgba(234, 88, 12, 0.68);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --el-button-bg-color: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 64%, transparent);
+  --el-button-border-color: var(--color-primary-amber-45);
+  --el-button-text-color: var(--color-zinc-text);
+  --el-button-hover-bg-color: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 78%, transparent);
+  --el-button-hover-border-color: var(--color-primary-amber-70);
+  --el-button-hover-text-color: #fff;
+  --el-button-active-bg-color: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 86%, transparent);
+  --el-button-active-border-color: var(--color-primary-amber-55);
+  box-shadow: inset 0 0 0 1px var(--color-primary-amber-12);
 }
 
 :deep(.image-btn--ghost > span) {
-  color: #fff7f0;
+  color: var(--color-zinc-text);
   font-weight: 600;
 }
 
@@ -288,14 +387,14 @@ onUnmounted(() => {
 }
 
 .image-btn--primary {
-  --el-button-bg-color: rgb(194 65 12);
-  --el-button-border-color: rgb(234 88 12);
+  --el-button-bg-color: var(--color-primary-amber-85);
+  --el-button-border-color: var(--color-primary-amber);
   --el-button-text-color: #fff;
-  --el-button-hover-bg-color: rgb(234 88 12);
-  --el-button-hover-border-color: rgb(249 115 22);
+  --el-button-hover-bg-color: var(--color-primary-amber);
+  --el-button-hover-border-color: var(--color-accent-warm);
   --el-button-hover-text-color: #fff;
   --el-button-active-text-color: #fff;
-  box-shadow: 0 0 20px rgba(v.$primary-amber, 0.22);
+  box-shadow: 0 0 20px var(--color-primary-amber-24);
 }
 
 :deep(.image-btn--primary > span),

@@ -212,7 +212,7 @@ void fetchProducts();
   }
 
   &__warm-base {
-    background: radial-gradient(ellipse 95% 60% at 50% 110%, rgba(v.$primary-amber, 0.2) 0%, transparent 55%);
+    background: radial-gradient(ellipse 95% 60% at 50% 110%, var(--color-primary-amber-20) 0%, transparent 55%);
   }
 
   &__vignette {
@@ -232,7 +232,7 @@ void fetchProducts();
 
   &__badge {
     margin: 0;
-    color: rgba(v.$primary-amber, 0.85);
+    color: var(--color-primary-amber-85);
     letter-spacing: 0.24em;
     font-size: 11px;
   }
@@ -256,7 +256,7 @@ void fetchProducts();
   &__search {
     height: 42px;
     border-radius: 10px;
-    border: 1px solid rgba(v.$primary-amber, 0.28);
+    border: 1px solid var(--color-primary-amber-28);
     padding: 0 12px;
     color: v.$zinc-text;
     background: v.$input-bg;
@@ -283,27 +283,45 @@ void fetchProducts();
 }
 
 .btn-primary {
-  background: rgb(194 65 12);
+  background: var(--color-primary-amber-85);
   color: #fff;
-  border-color: rgb(234 88 12);
+  border-color: var(--color-primary-amber);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-amber);
+  border-color: var(--color-accent-warm);
+  box-shadow: 0 0 16px var(--color-primary-amber-24);
 }
 
 .btn-outline {
   background: transparent;
   color: v.$zinc-label;
-  border-color: rgba(v.$primary-amber, 0.35);
+  border-color: var(--color-primary-amber-35);
+}
+
+.btn-outline:hover:not(:disabled) {
+  color: v.$zinc-text;
+  border-color: var(--color-primary-amber-55);
+  background: var(--color-primary-amber-10);
 }
 
 .btn-danger {
-  background: rgba(185, 28, 28, 0.2);
-  color: #fecaca;
-  border-color: rgba(248, 113, 113, 0.4);
+  background: color-mix(in srgb, var(--color-primary-amber-28) 65%, rgba(127, 29, 29, 0.28));
+  color: color-mix(in srgb, #fff 82%, var(--color-accent-warm) 18%);
+  border-color: color-mix(in srgb, var(--color-primary-amber-48) 70%, rgba(248, 113, 113, 0.42));
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-primary-amber-35) 60%, rgba(153, 27, 27, 0.32));
+  border-color: var(--color-primary-amber-55);
+  box-shadow: 0 0 12px var(--color-primary-amber-18);
 }
 
 .btn-danger--pending {
-  background: rgba(153, 27, 27, 0.3);
-  border-color: rgba(248, 113, 113, 0.55);
-  color: #fee2e2;
+  background: color-mix(in srgb, var(--color-primary-amber-35) 72%, rgba(153, 27, 27, 0.35));
+  border-color: var(--color-primary-amber-55);
+  color: #fff;
 }
 
 .btn:disabled {
@@ -321,12 +339,28 @@ void fetchProducts();
   display: block;
   text-decoration: none;
   color: inherit;
-  border: 1px solid rgba(v.$primary-amber, 0.24);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-primary-amber-24);
   border-radius: 12px;
   padding: 0.9rem;
-  background: linear-gradient(145deg, v.$panel-bg 0%, rgba(v.$cockpit-bg-mid, 0.96) 100%);
+  background: linear-gradient(145deg, v.$panel-bg 0%, var(--color-cockpit-bg-mid-96) 100%);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--color-cockpit-bg-mid-97) 75%, transparent);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--product-card-sheen);
+    opacity: 0.9;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
 
   &__img {
+    position: relative;
+    z-index: 1;
     height: 150px;
     border-radius: 8px;
     overflow: hidden;
@@ -334,9 +368,9 @@ void fetchProducts();
     align-items: center;
     justify-content: center;
     background:
-      radial-gradient(circle at 30% 20%, rgba(v.$primary-amber, 0.16) 0%, rgba(v.$primary-amber, 0.06) 42%, transparent 80%),
-      rgba(10, 10, 10, 0.28);
-    border: 1px solid rgba(v.$primary-amber, 0.2);
+      radial-gradient(circle at 30% 20%, var(--color-primary-amber-16) 0%, var(--color-primary-amber-06) 42%, transparent 80%),
+      color-mix(in srgb, var(--color-cockpit-bg-mid-97) 72%, transparent);
+    border: 1px solid var(--color-primary-amber-20);
     margin-bottom: 0.75rem;
 
     img {
@@ -357,22 +391,40 @@ void fetchProducts();
     transform: scale(1.03);
   }
 
+  &:hover {
+    border-color: var(--color-primary-amber-36);
+    box-shadow: 0 14px 28px var(--product-card-hover-glow);
+    transform: translateY(-1px);
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+
   h3 {
+    position: relative;
+    z-index: 1;
     margin: 0;
     font-size: 1rem;
   }
 
   &__price {
+    position: relative;
+    z-index: 1;
     color: v.$accent-warm;
     font-weight: 700;
   }
 
   &__meta {
+    position: relative;
+    z-index: 1;
     color: v.$zinc-muted;
     font-size: 12px;
   }
 
   &__actions {
+    position: relative;
+    z-index: 1;
     margin-top: 0.75rem;
     display: flex;
     justify-content: flex-end;
@@ -381,31 +433,37 @@ void fetchProducts();
 }
 
 .product-card--off {
-  border-color: rgba(148, 163, 184, 0.22);
-  background: linear-gradient(145deg, rgba(39, 39, 42, 0.9) 0%, rgba(24, 24, 27, 0.9) 100%);
+  border-color: color-mix(in srgb, var(--color-primary-amber-24) 70%, var(--color-zinc-faint));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 88%, var(--color-zinc-faint) 12%) 0%,
+    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 92%, black 8%) 100%
+  );
 
   h3,
   .product-card__price {
-    color: rgba(244, 244, 245, 0.86);
+    color: color-mix(in srgb, var(--color-zinc-text) 86%, #fff);
   }
 
   .product-card__meta {
-    color: rgba(161, 161, 170, 0.85);
+    color: color-mix(in srgb, var(--color-zinc-muted) 88%, #9ca3af);
   }
 
   .product-card__img {
-    border-color: rgba(148, 163, 184, 0.2);
+    border-color: color-mix(in srgb, var(--color-primary-amber-20) 78%, #94a3b8);
     filter: saturate(0.72) brightness(0.92);
   }
 
   .btn-danger {
-    background: rgba(82, 82, 91, 0.3);
-    border-color: rgba(161, 161, 170, 0.38);
-    color: #d4d4d8;
+    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 70%, var(--color-primary-amber-16));
+    border-color: var(--color-primary-amber-30);
+    color: color-mix(in srgb, var(--color-zinc-text) 72%, var(--color-primary-amber));
   }
 }
 
 .badge {
+  position: relative;
+  z-index: 1;
   display: inline-block;
   font-size: 12px;
   padding: 2px 8px;
@@ -414,9 +472,10 @@ void fetchProducts();
 
 .badge-on { background: rgba(34, 197, 94, 0.2); color: #86efac; }
 .badge-off {
-  background: rgba(239, 68, 68, 0.18);
-  color: #fecaca;
-  border: 1px solid rgba(248, 113, 113, 0.42);
+  background: color-mix(in srgb, var(--color-primary-amber-20) 72%, var(--color-cockpit-bg-mid-97));
+  color: color-mix(in srgb, var(--color-zinc-text) 80%, var(--color-accent-warm));
+  border: 1px solid var(--color-primary-amber-45);
+  box-shadow: inset 0 0 0 1px var(--color-primary-amber-12);
 }
 
 .pagination {
@@ -430,8 +489,8 @@ void fetchProducts();
   min-width: 34px;
   height: 34px;
   border-radius: 8px;
-  border: 1px solid rgba(v.$primary-amber, 0.3);
-  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--color-primary-amber-30);
+  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 78%, var(--color-primary-amber-12));
   color: v.$zinc-text;
 }
 
@@ -441,7 +500,9 @@ void fetchProducts();
 }
 
 .page-btn.active {
-  background: rgba(v.$primary-amber, 0.35);
+  background: var(--color-primary-amber-35);
+  border-color: var(--color-primary-amber-48);
+  color: #fff;
 }
 
 </style>

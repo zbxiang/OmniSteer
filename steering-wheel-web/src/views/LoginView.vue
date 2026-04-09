@@ -379,7 +379,7 @@ onUnmounted(() => {
     z-index: 1;
     background: radial-gradient(
       circle min(72vw, 640px) at var(--sx, 50%) var(--sy, 48%),
-      rgba(v.$primary-amber, 0.15) 0%,
+      var(--color-primary-amber-15) 0%,
       rgba(251, 146, 60, 0.09) 36%,
       rgba(253, 186, 116, 0.06) 50%,
       transparent 62%
@@ -397,8 +397,8 @@ onUnmounted(() => {
     background: radial-gradient(
       circle min(58vw, 500px) at calc(50% + var(--mx) * 16%)
         calc(44% + var(--my) * 12%),
-      rgba(v.$accent-warm, 0.11) 0%,
-      rgba(v.$primary-amber, 0.09) 45%,
+      var(--color-accent-warm-11) 0%,
+      var(--color-primary-amber-09) 45%,
       transparent 70%
     );
     mix-blend-mode: screen;
@@ -430,8 +430,8 @@ onUnmounted(() => {
       left: -12%;
       background: radial-gradient(
         circle,
-        rgba(v.$primary-amber, 0.45) 0%,
-        rgba(v.$primary-amber, 0.08) 45%,
+        var(--color-primary-amber-45) 0%,
+        var(--color-primary-amber-08) 45%,
         transparent 70%
       );
       animation: login-blob-a 22s ease-in-out infinite alternate;
@@ -444,8 +444,8 @@ onUnmounted(() => {
       right: -15%;
       background: radial-gradient(
         circle,
-        rgba(v.$accent-warm, 0.32) 0%,
-        rgba(v.$accent-warm, 0.07) 50%,
+        var(--color-accent-warm-32) 0%,
+        var(--color-accent-warm-07) 50%,
         transparent 72%
       );
       animation: login-blob-b 28s ease-in-out infinite alternate;
@@ -527,9 +527,9 @@ onUnmounted(() => {
     background: linear-gradient(
       to bottom,
       transparent 0%,
-      rgba(v.$primary-amber, 0.04) 48%,
-      rgba(v.$primary-amber, 0.07) 50%,
-      rgba(v.$primary-amber, 0.04) 52%,
+      var(--color-primary-amber-04) 48%,
+      var(--color-primary-amber-07) 50%,
+      var(--color-primary-amber-04) 52%,
       transparent 100%
     );
     background-size: 100% 220%;
@@ -562,7 +562,7 @@ onUnmounted(() => {
     transform-origin: var(--rx, 50%) var(--ry, 50%);
     background: radial-gradient(
       circle 26% at var(--rx, 50%) var(--ry, 50%),
-      rgba(v.$primary-amber, 0.42),
+      var(--color-primary-amber-42),
       transparent 62%
     );
     mix-blend-mode: screen;
@@ -598,7 +598,7 @@ onUnmounted(() => {
     position: relative;
     width: min(92vw, 520px);
     height: min(92vw, 520px);
-    color: rgba(v.$primary-amber, 0.9);
+    color: var(--color-primary-amber-90);
     animation: login-wheel-drift 14s ease-in-out infinite;
   }
 
@@ -606,15 +606,15 @@ onUnmounted(() => {
     display: block;
     width: 100%;
     height: 100%;
-    filter: drop-shadow(0 0 60px rgba(v.$primary-amber, 0.12));
+    filter: drop-shadow(0 0 60px var(--color-primary-amber-12));
   }
 
   &__wheel-ticks {
     position: absolute;
     inset: 12%;
     border-radius: 9999px;
-    border: 1px solid rgba(v.$primary-amber, 0.14);
-    box-shadow: inset 0 0 40px rgba(v.$primary-amber, 0.06);
+    border: 1px solid var(--color-primary-amber-14);
+    box-shadow: inset 0 0 40px var(--color-primary-amber-06);
   }
 
   &__main {
@@ -642,7 +642,7 @@ onUnmounted(() => {
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.35em;
-    color: rgba(v.$primary-amber, 0.7);
+    color: var(--color-primary-amber-70);
   }
 
   &__title {
@@ -668,12 +668,12 @@ onUnmounted(() => {
 
   &__panel {
     border-radius: 1rem;
-    border: 1px solid rgba(v.$primary-amber, 0.26);
+    border: 1px solid var(--color-primary-amber-26);
     padding: 2rem;
     background: linear-gradient(
       145deg,
       v.$panel-bg 0%,
-      rgba(v.$cockpit-bg-mid, 0.96) 100%
+      var(--color-cockpit-bg-mid-96) 100%
     );
     backdrop-filter: blur(20px);
     box-shadow:
@@ -688,16 +688,16 @@ onUnmounted(() => {
     z-index: 30;
 
     &:hover {
-      border-color: rgba(v.$primary-amber, 0.36);
+      border-color: var(--color-primary-amber-36);
     }
 
     &:focus-within {
-      border-color: rgba(v.$primary-amber, 0.48);
+      border-color: var(--color-primary-amber-48);
       box-shadow:
         0 0 0 1px rgba(0, 0, 0, 0.35),
         0 24px 80px rgba(0, 0, 0, 0.45),
-        0 0 52px rgba(v.$primary-amber, 0.1),
-        0 0 1px rgba(v.$accent-warm, 0.2);
+        0 0 52px var(--color-primary-amber-10),
+        0 0 1px var(--color-accent-warm-20);
     }
   }
 
@@ -826,21 +826,21 @@ onUnmounted(() => {
 :deep(.login-form .el-input__wrapper) {
   background-color: v.$input-bg !important;
   box-shadow:
-    0 0 0 1px rgba(v.$primary-amber, 0.22) inset,
+    0 0 0 1px var(--color-primary-amber-22) inset,
     0 1px 0 rgba(255, 255, 255, 0.04) inset !important;
   border-radius: 10px;
 }
 
 :deep(.login-form .el-input__wrapper:hover) {
   box-shadow:
-    0 0 0 1px rgba(v.$primary-amber, 0.38) inset,
-    0 0 20px rgba(v.$primary-amber, 0.06) !important;
+    0 0 0 1px var(--color-primary-amber-38) inset,
+    0 0 20px var(--color-primary-amber-06) !important;
 }
 
 :deep(.login-form .el-input__wrapper.is-focus) {
   box-shadow:
-    0 0 0 1px rgba(v.$primary-amber, 0.55) inset,
-    0 0 24px rgba(v.$primary-amber, 0.12) !important;
+    0 0 0 1px var(--color-primary-amber-55) inset,
+    0 0 24px var(--color-primary-amber-12) !important;
 }
 
 :deep(.login-form .el-input__inner) {
@@ -868,13 +868,13 @@ onUnmounted(() => {
   --el-button-hover-border-color: #{v.$primary-amber};
   --el-button-active-bg-color: rgb(154 52 18);
   border-radius: 10px;
-  box-shadow: 0 0 22px rgba(v.$primary-amber, 0.28);
+  box-shadow: 0 0 22px var(--color-primary-amber-28);
   transition:
     transform 0.2s ease,
     box-shadow 0.25s ease;
 
   &:hover:not(:disabled) {
-    box-shadow: 0 0 34px rgba(v.$primary-amber, 0.38);
+    box-shadow: 0 0 34px var(--color-primary-amber-38);
   }
 
   &:active:not(:disabled) {

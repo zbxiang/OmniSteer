@@ -143,7 +143,7 @@ onMounted((): void => {
   }
 
   &__warm-base {
-    background: radial-gradient(ellipse 95% 60% at 50% 110%, rgba(v.$primary-amber, 0.2) 0%, transparent 55%);
+    background: radial-gradient(ellipse 95% 60% at 50% 110%, var(--color-primary-amber-20) 0%, transparent 55%);
   }
 
   &__vignette {
@@ -176,8 +176,8 @@ onMounted((): void => {
 
   &__img {
     border-radius: 12px;
-    border: 1px solid rgba(v.$primary-amber, 0.24);
-    background: linear-gradient(145deg, v.$panel-bg 0%, rgba(v.$cockpit-bg-mid, 0.96) 100%);
+    border: 1px solid var(--color-primary-amber-24);
+    background: linear-gradient(145deg, v.$panel-bg 0%, var(--color-cockpit-bg-mid-96) 100%);
     min-height: 360px;
     display: grid;
     place-items: center;
@@ -198,14 +198,14 @@ onMounted((): void => {
 
   &__info {
     border-radius: 12px;
-    border: 1px solid rgba(v.$primary-amber, 0.24);
-    background: linear-gradient(145deg, v.$panel-bg 0%, rgba(v.$cockpit-bg-mid, 0.96) 100%);
+    border: 1px solid var(--color-primary-amber-24);
+    background: linear-gradient(145deg, v.$panel-bg 0%, var(--color-cockpit-bg-mid-96) 100%);
     padding: 1rem;
   }
 
   &__badge {
     margin: 0;
-    color: rgba(v.$primary-amber, 0.85);
+    color: var(--color-primary-amber-85);
     letter-spacing: 0.2em;
     font-size: 11px;
   }
@@ -226,14 +226,14 @@ onMounted((): void => {
     margin: 0;
     padding: 0;
     list-style: none;
-    border-top: 1px solid rgba(v.$primary-amber, 0.18);
+    border-top: 1px solid var(--color-primary-amber-18);
 
     li {
       display: flex;
       justify-content: space-between;
       gap: 1rem;
       padding: 0.65rem 0;
-      border-bottom: 1px solid rgba(v.$primary-amber, 0.12);
+      border-bottom: 1px solid var(--color-primary-amber-12);
       color: v.$zinc-label;
     }
   }
@@ -247,8 +247,8 @@ onMounted((): void => {
 
   &__empty {
     border-radius: 12px;
-    border: 1px solid rgba(v.$primary-amber, 0.24);
-    background: linear-gradient(145deg, v.$panel-bg 0%, rgba(v.$cockpit-bg-mid, 0.96) 100%);
+    border: 1px solid var(--color-primary-amber-24);
+    background: linear-gradient(145deg, v.$panel-bg 0%, var(--color-cockpit-bg-mid-96) 100%);
     padding: 1.5rem;
     text-align: center;
 
@@ -296,7 +296,7 @@ onMounted((): void => {
 .btn-outline {
   background: transparent;
   color: v.$zinc-label;
-  border-color: rgba(v.$primary-amber, 0.35);
+  border-color: var(--color-primary-amber-35);
 }
 
 .btn-danger {
