@@ -46,21 +46,23 @@
           <path d="M10 11v5M14 11v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
         </svg>
       </button>
-      <img :src="imageSearchPreview" alt="preview" />
+      <div class="img-preview__image-wrap">
+        <div v-if="uploading || uploadProgress > 0" class="img-preview__progress img-preview__progress--overlay">
+          <div class="img-preview__progress-meta">
+            <span>{{ uploading ? '上传中...' : '上传完成' }}</span>
+            <span>{{ uploadProgress }}%</span>
+          </div>
+          <el-progress
+            :percentage="uploadProgress"
+            :status="uploadProgress === 100 && !uploading ? 'success' : undefined"
+            :stroke-width="6"
+            :show-text="false"
+          />
+        </div>
+        <img :src="imageSearchPreview" alt="preview" />
+      </div>
       <p>已选择图片：{{ imageSearchFileName }}</p>
       <p v-if="uploadedImageUrl" class="img-preview__uploaded">上传成功，已获取图片地址</p>
-      <div v-if="uploading || uploadProgress > 0" class="img-preview__progress">
-        <div class="img-preview__progress-meta">
-          <span>{{ uploading ? '上传中...' : '上传完成' }}</span>
-          <span>{{ uploadProgress }}%</span>
-        </div>
-        <el-progress
-          :percentage="uploadProgress"
-          :status="uploadProgress === 100 && !uploading ? 'success' : undefined"
-          :stroke-width="6"
-          :show-text="false"
-        />
-      </div>
     </div>
 
     <template #footer>
@@ -419,6 +421,12 @@ onUnmounted(() => {
     0 8px 24px var(--color-primary-amber-10),
     0 1px 0 rgba(255, 255, 255, 0.75) inset;
 
+  &__image-wrap {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+  }
+
   img {
     max-width: 100%;
     max-height: 210px;
@@ -480,6 +488,17 @@ onUnmounted(() => {
   border-radius: 10px;
   background: color-mix(in srgb, #fff 90%, var(--color-primary-amber-06));
   border: 1px solid var(--color-primary-amber-14);
+}
+
+.img-preview__progress--overlay {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 10px;
+  margin-top: 0;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .img-preview__progress-meta {

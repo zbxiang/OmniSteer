@@ -6,14 +6,16 @@
       :user-initial="userInitial"
       :is-home="isHome"
       :is-product-create="isProductCreate"
+      @layout-height="onTopBarLayoutHeight"
     />
     <div class="product-list__warm-base" aria-hidden="true" />
     <div class="product-list__vignette" aria-hidden="true" />
 
     <div class="product-list__content">
       <section
-        class="product-list__toolbar wow animate__fadeInUp"
-        data-wow-duration="0.55s"
+        class="product-list__toolbar wow animate__animated animate__fadeInLift"
+        :style="toolbarStickyStyle"
+        data-wow-duration="0.42s"
         data-wow-delay="0s"
       >
         <input
@@ -48,6 +50,24 @@
           重置筛选
         </button>
       </section>
+      <div v-if="imageUrlFilter" class="product-list__image-filter wow animate__animated animate__fadeInLift">
+        <span class="product-list__image-filter-label">以图搜图链接：</span>
+        <a
+          class="product-list__image-filter-link"
+          :href="imageUrlFilter"
+          target="_blank"
+          rel="noopener noreferrer"
+          :title="imageUrlFilter"
+        >
+          {{ imageUrlFilter }}
+        </a>
+        <button class="product-list__image-filter-btn" @click="copyImageUrl">
+          复制链接
+        </button>
+        <button class="product-list__image-filter-btn product-list__image-filter-btn--danger" @click="clearImageFilterAndSearch">
+          清除搜图
+        </button>
+      </div>
 
       <div
         class="product-list__result"
@@ -60,9 +80,9 @@
           <div
             v-for="(p, idx) in filteredPaged"
             :key="p.id"
-            class="wow animate__fadeInUp product-card-wow"
-            data-wow-duration="0.55s"
-            :data-wow-delay="`${Math.min(idx % 12, 11) * 0.06}s`"
+            class="wow animate__animated animate__fadeInLift product-card-wow"
+            data-wow-duration="0.42s"
+            :data-wow-delay="`${Math.min(idx % 12, 11) * 0.04}s`"
           >
             <div
               :class="[
@@ -136,7 +156,7 @@
     <ImageSearchDialog
       v-model="showModal"
       :products="products"
-      @searched="onImageSearched"
+      @submit="onImageSearchSubmit"
     />
   </div>
 </template>
@@ -174,6 +194,7 @@ const route = useRoute();
 const keyword = ref<string>('');
 const statusFilter = ref<'all' | ProductStatus>('all');
 const showModal = ref<boolean>(false);
+const imageUrlFilter = ref<string>('');
 const currentPage = ref<number>(1);
 const pageSize = 8;
 const loading = ref<boolean>(false);
@@ -208,12 +229,25 @@ const userInitial = computed<string>(() =>
 const isHome = computed<boolean>(() => route.name === 'home');
 const isProductCreate = computed<boolean>(() => route.name === 'productCreate');
 
+/** 与 TopBar 实测 offsetHeight 同步，sticky 搜索条紧贴导航底边 */
+const topBarOffsetPx = ref(63);
+
+const onTopBarLayoutHeight = (px: number): void => {
+  topBarOffsetPx.value = px;
+};
+
+/** 比顶栏实测高度上移 3px，与导航底边叠一层，避免亚像素缝透出列表图 */
+const toolbarStickyStyle = computed((): { top: string } => ({
+  top: `${Math.max(0, topBarOffsetPx.value - 3)}px`,
+}));
+
 const fetchProducts = async (append = false): Promise<void> => {
   if (loading.value) return;
   loading.value = true;
   try {
     const res = await listProductsApi({
       keyword: keyword.value.trim() || undefined,
+      imageUrl: imageUrlFilter.value || undefined,
       page: currentPage.value,
       size: pageSize,
     });
@@ -242,31 +276,39 @@ const fetchProducts = async (append = false): Promise<void> => {
 };
 
 const search = (): void => {
+  imageUrlFilter.value = '';
   currentPage.value = 1;
   void fetchProducts(false);
 };
 
+const clearImageFilterAndSearch = (): void => {
+  imageUrlFilter.value = '';
+  currentPage.value = 1;
+  void fetchProducts(false);
+};
+
+const copyImageUrl = async (): Promise<void> => {
+  if (!imageUrlFilter.value) return;
+  try {
+    await navigator.clipboard.writeText(imageUrlFilter.value);
+    ElMessage.success('已复制图片链接');
+  } catch {
+    ElMessage.warning('复制失败，请手动复制');
+  }
+};
+
 const resetFilters = (): void => {
   keyword.value = '';
+  imageUrlFilter.value = '';
   statusFilter.value = 'all';
   currentPage.value = 1;
   void fetchProducts(false);
 };
 
-const onImageSearched = (items: ProductOut[]): void => {
+const onImageSearchSubmit = (payload: { imageUrl: string }): void => {
+  imageUrlFilter.value = payload.imageUrl;
   currentPage.value = 1;
-  total.value = items.length;
-  products.value = items.map(
-    (x: ProductOut): ProductCardItem => ({
-      id: x.id,
-      name: x.name,
-      brand: x.brand,
-      model: x.model,
-      price: x.price,
-      state: normalizeProductStateFromOut(x),
-      imageUrl: x.images?.[0] || undefined,
-    }),
-  );
+  void fetchProducts(false);
 };
 
 const loadMore = (): void => {
@@ -398,10 +440,47 @@ onUnmounted((): void => {
   }
 
   &__toolbar {
+    position: sticky;
+    /* top 由 toolbarStickyStyle 绑定；z-index 低于顶栏 50 */
+    z-index: 40;
+    isolation: isolate;
     display: grid;
     grid-template-columns: 1fr auto auto auto;
     gap: 0.75rem;
+    /* 与 __content 左右 padding 对消，条带铺满内容区宽度 */
+    margin-left: -24px;
+    margin-right: -24px;
     margin-bottom: 1.35rem;
+    padding: 12px 24px 14px;
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--color-primary-amber-28) 28%, transparent);
+    /* 实色座舱底，不用 backdrop-filter，避免列表图透过条带 */
+    background:
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.22) 0%,
+        rgba(0, 0, 0, 0.08) 100%
+      ),
+      var(--color-cockpit-bg-mid);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+
+    /* 向上补一条实色，盖住 sticky 与导航之间可能出现的透光缝 */
+    &::before {
+      content: '';
+      position: absolute;
+      z-index: 0;
+      left: 0;
+      right: 0;
+      top: -12px;
+      height: 12px;
+      background: var(--color-cockpit-bg-mid);
+      pointer-events: none;
+    }
+
+    & > * {
+      position: relative;
+      z-index: 1;
+    }
 
     @media (max-width: 900px) {
       grid-template-columns: 1fr 1fr;
@@ -417,6 +496,61 @@ onUnmounted((): void => {
     background: v.$input-bg;
     outline: none;
     font-size: 13px;
+  }
+
+  &__image-filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: -0.65rem 0 1rem;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--color-primary-amber-22);
+    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 90%, transparent);
+  }
+
+  &__image-filter-label {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: color-mix(in srgb, var(--color-primary-amber-80) 80%, #fff);
+  }
+
+  &__image-filter-link {
+    min-width: 0;
+    flex: 1;
+    color: v.$zinc-text;
+    font-size: 12px;
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__image-filter-link:hover {
+    color: var(--color-primary-amber);
+    text-decoration: underline;
+  }
+
+  &__image-filter-btn {
+    flex-shrink: 0;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--color-primary-amber-28);
+    background: color-mix(in srgb, var(--color-primary-amber-12) 70%, transparent);
+    color: v.$zinc-text;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  &__image-filter-btn:hover {
+    border-color: var(--color-primary-amber-48);
+    background: color-mix(in srgb, var(--color-primary-amber-18) 72%, transparent);
+  }
+
+  &__image-filter-btn--danger {
+    border-color: color-mix(in srgb, var(--color-primary-amber-35) 72%, #ef4444);
+    color: color-mix(in srgb, #fff 84%, #fda4af);
   }
 
   &__empty {
@@ -646,7 +780,24 @@ onUnmounted((): void => {
   cursor: not-allowed;
 }
 
-/* WOW.js + animate.css 负责入场；此处仅做无障碍降级 */
+/* 轻量入场：淡入 + 约 8px 上移（弱于 animate 默认 fadeInUp） */
+@keyframes product-fade-in-lift {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate__fadeInLift {
+  animation-name: product-fade-in-lift;
+  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* WOW.js + 自定义 animate；无障碍降级 */
 @media (prefers-reduced-motion: reduce) {
   .product-list__toolbar.wow,
   .product-card-wow.wow {
@@ -784,7 +935,7 @@ onUnmounted((): void => {
       color-mix(in srgb, var(--color-cockpit-bg-mid-97) 72%, transparent);
     border: 1px solid var(--color-primary-amber-20);
     margin: calc(-1 * var(--card-padding)) calc(-1 * var(--card-padding))
-      0.75rem;
+      0.65rem;
     border-radius: 12px 12px 8px 8px;
 
     img {
@@ -828,13 +979,14 @@ onUnmounted((): void => {
     justify-content: space-between;
     gap: 10px;
     min-height: 32px;
+    margin-bottom: 0.28rem;
   }
 
   &__title {
     position: relative;
     margin: 0;
     font-size: 0.95rem;
-    line-height: 1.2;
+    line-height: 1.28;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -843,16 +995,21 @@ onUnmounted((): void => {
   &__price {
     position: relative;
     z-index: 1;
+    margin: 0 0 0.42rem;
+    padding: 0;
     color: v.$accent-warm;
     font-weight: 700;
     font-size: 0.98rem;
+    line-height: 1.25;
   }
 
   &__meta {
     position: relative;
     z-index: 1;
+    margin: 0;
     color: v.$zinc-muted;
     font-size: 11px;
+    line-height: 1.45;
   }
 
   &__meta-row {
@@ -861,7 +1018,7 @@ onUnmounted((): void => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 10px;
   }
 
   &__actions {
@@ -1046,6 +1203,13 @@ onUnmounted((): void => {
       padding: 32px 36px 32px;
     }
 
+    &__toolbar {
+      margin-left: -36px;
+      margin-right: -36px;
+      padding-left: 36px;
+      padding-right: 36px;
+    }
+
     &__title {
       font-size: 1.92rem;
     }
@@ -1077,6 +1241,13 @@ onUnmounted((): void => {
   .product-list {
     &__content {
       padding: 20px 16px 18px;
+    }
+
+    &__toolbar {
+      margin-left: -16px;
+      margin-right: -16px;
+      padding-left: 16px;
+      padding-right: 16px;
     }
 
     &__header {

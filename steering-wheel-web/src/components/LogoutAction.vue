@@ -81,7 +81,10 @@ const onLogout = async (): Promise<void> => {
     border-color 0.2s ease,
     background-color 0.2s ease,
     box-shadow 0.2s ease,
-    transform 0.15s ease;
+    transform 0.15s ease,
+    width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .product-list__logout svg {
@@ -89,6 +92,9 @@ const onLogout = async (): Promise<void> => {
   height: 18px;
   display: block;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.35));
+  transition:
+    width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .product-list__logout:hover {
