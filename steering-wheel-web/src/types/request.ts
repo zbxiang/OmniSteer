@@ -1,6 +1,11 @@
-import type { AxiosRequestConfig } from 'axios';
+import type { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 export type RequestMeta = {
+  /** 自定义请求唯一标识（用于去重/取消） */
+  requestKey?: string;
+  /** 请求取消令牌（推荐） */
+  cancelTokenKey?: string;
+  /** 兼容旧字段 */
   cancelKey?: string;
 };
 
@@ -10,4 +15,17 @@ export type RequestErrorOptions = {
   status?: number;
   code?: string;
   isCanceled?: boolean;
+};
+
+export type ApiResponse<T = any> = {
+  code?: number;
+  message?: string;
+  data?: T;
+  success?: boolean;
+};
+
+export type DefineInternalRequestConfig = InternalAxiosRequestConfig & RequestMeta;
+
+export type DefineAxiosResponse<T = unknown, D = unknown> = AxiosResponse<T, D> & {
+  config: DefineInternalRequestConfig;
 };

@@ -14,5 +14,5 @@ declare module 'vite-plugin-eslint' {
     failOnError?: boolean
   }
 
-  export default function eslintPlugin(rawOptions?: Options): Plugin;
+  export default function eslintPlugin(_rawOptions?: Options): Plugin;
 }

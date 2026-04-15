@@ -1,16 +1,33 @@
-export type LoginBody = {
-  username: string;
+export type LoginParams = {
+  userNo: string;
   password: string;
 };
 
 export type LoginResult = {
-  token: string;
-  username: string;
+  sessionId: string;
+  username?: string;
+  admin?: boolean;
   token_type?: string;
+  expireTime?: string;
+};
+
+export type LoginApiResponse = {
+  code: string;
+  success: boolean;
+  data?: {
+    admin?: boolean;
+    sessionId?: string;
+  };
 };
 
 export type LoginForm = {
-  username: string;
+  userNo: string;
   password: string;
   remember: boolean;
+};
+
+export interface UserInfo {
+  id?: string;
+  userName?: string;
+  admin?: boolean;
 };

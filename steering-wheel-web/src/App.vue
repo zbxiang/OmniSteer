@@ -1,47 +1,73 @@
 <template>
   <div class="app-shell">
-    <router-view />
-    <div class="theme-switcher">
-      <ThemeModeToggle v-model="themeMode" />
+    <!-- 列表页主题入口在顶栏内；详情/表单无主导航时用右下角轻量入口 -->
+    <div v-if="showFloatingThemeButton" class="app-floating-theme">
+      <ThemePaletteButton appearance="floating" />
     </div>
+    <router-view />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import ThemeModeToggle from '@/components/ThemeModeToggle.vue';
-import type { ThemeMode } from '@/components/ThemeModeToggle.vue';
+import ThemePaletteButton from '@/components/ThemePaletteButton.vue';
 
-const auth = useAuthStore();
 const route = useRoute();
 const router = useRouter();
-const themeMode = ref<ThemeMode>('system');
+
+const isAuthShellRoute = computed(
+  (): boolean =>
+    route.name === 'login' ||
+    route.name === 'signup' ||
+    route.name === 'forbidden' ||
+    route.name === 'notFound',
+);
+
+const showFloatingThemeButton = computed((): boolean => {
+  if (isAuthShellRoute.value) return false;
+  const n = route.name;
+  return n === 'productDetail' || n === 'productEdit';
+});
+
 let sessionTimer: ReturnType<typeof setInterval> | null = null;
 
+const routeNeedsAuth = (): boolean =>
+  route.matched.some((record) => record.meta.requiresAuth === true);
+
 const checkSession = (): void => {
-  auth.ensureValidSession();
-  if (route.name === 'login') return;
-  if (!route.meta.requiresAuth) return;
-  if (auth.isLoggedIn) return;
+  if (
+    route.name === 'login' ||
+    route.name === 'signup' ||
+    route.name === 'forbidden' ||
+    route.name === 'notFound'
+  ) {
+    return;
+  }
+  if (!routeNeedsAuth()) return;
   void router.replace({
     name: 'login',
     query: { redirect: route.fullPath },
   });
 };
 
+const onVisibilityChange = (): void => {
+  if (document.visibilityState !== 'visible') return;
+  checkSession();
+};
+
 onMounted((): void => {
   checkSession();
   sessionTimer = setInterval(checkSession, 15_000);
+  document.addEventListener('visibilitychange', onVisibilityChange);
 });
 
 onUnmounted((): void => {
+  document.removeEventListener('visibilitychange', onVisibilityChange);
   if (!sessionTimer) return;
   clearInterval(sessionTimer);
   sessionTimer = null;
 });
-
 </script>
 
 <style scoped lang="scss">
@@ -49,18 +75,15 @@ onUnmounted((): void => {
   position: relative;
 }
 
-.theme-switcher {
+.app-floating-theme {
   position: fixed;
-  right: 18px;
-  top: 16px;
-  z-index: 2200;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 12px;
-  border: 1px solid var(--color-primary-amber-28);
-  background: var(--color-panel-bg);
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--color-cockpit-bg-mid-97) 72%, #000);
+  right: 20px;
+  bottom: 22px;
+  z-index: 2100;
+  pointer-events: none;
+
+  :deep(.theme-palette-btn) {
+    pointer-events: auto;
+  }
 }
 </style>

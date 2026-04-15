@@ -20,8 +20,8 @@
           <p class="product-detail__badge">{{ appStore.systemName }}</p>
           <h1>{{ product.name }}</h1>
           <p class="product-detail__price">¥{{ product.price.toLocaleString() }}</p>
-          <span :class="['status-badge', product.status === 'on' ? 'status-badge--on' : 'status-badge--off']">
-            {{ product.status === 'on' ? '在售' : '下架' }}
+          <span :class="['status-badge', productState === ProductStatusEnum.UP ? 'status-badge--on' : 'status-badge--off']">
+            {{ productState === ProductStatusEnum.UP ? '在售' : '下架' }}
           </span>
 
           <p class="product-detail__desc">{{ product.description || '暂无描述' }}</p>
@@ -38,7 +38,7 @@
 
           <div class="product-detail__actions">
             <router-link :to="`/products/${product.id}/edit`" class="btn btn-primary">编辑</router-link>
-            <button class="btn btn-danger" :disabled="statusUpdating || product.status === 'off'" @click="offShelf">
+            <button class="btn btn-danger" :disabled="statusUpdating || productState === ProductStatusEnum.DOWN" @click="offShelf">
               {{ statusUpdating ? '处理中...' : '下架' }}
             </button>
             <router-link to="/" class="btn btn-outline">返回列表</router-link>
@@ -63,9 +63,11 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import type { ProductOut } from '@/types';
+import type { ProductOut } from '@/types/product';
+import { ProductStatusEnum } from '@/enums/product';
+import { normalizeProductStateFromOut } from '@/utils/productState';
 import { getProductDetailApi, updateProductStatusApi } from '@/api/product';
-import { isRequestCanceled, RequestError } from '@/api/request';
+import { isRequestCanceled, RequestError } from '@/utils/request';
 import { useAppStore } from '@/stores/app';
 
 const appStore = useAppStore();
@@ -79,6 +81,10 @@ const createdDateText = computed<string>(() => {
   const date = new Date(product.value.created_at);
   return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString();
 });
+
+const productState = computed(() =>
+  product.value ? normalizeProductStateFromOut(product.value) : ProductStatusEnum.UP,
+);
 
 const fetchDetail = async (): Promise<void> => {
   const productId = Number(route.params.id);
@@ -104,13 +110,13 @@ const fetchDetail = async (): Promise<void> => {
 
 const offShelf = async (): Promise<void> => {
   if (!product.value) return;
-  if (product.value.status === 'off') {
+  if (productState.value === ProductStatusEnum.DOWN) {
     ElMessage.info('该产品已下架');
     return;
   }
   statusUpdating.value = true;
   try {
-    const next = await updateProductStatusApi(product.value.id, { status: 'off' });
+    const next = await updateProductStatusApi(product.value.id, { state: ProductStatusEnum.DOWN });
     product.value = next;
     ElMessage.success('产品已下架');
   } catch (e) {

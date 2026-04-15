@@ -1,8 +1,10 @@
+import type { ProductStatus } from '@/enums/product';
+
 export type ProductLite = {
   name: string;
   brand: string;
   model: string;
-  imageUrl?: string;
+  images?: string[];
 };
 
 export type ProductItem = {
@@ -11,8 +13,9 @@ export type ProductItem = {
   brand: string;
   model: string;
   price: number;
-  status: 'on' | 'off';
-  imageUrl?: string;
+  /** 上架状态：UP 上架 / DOWN 下架 */
+  state: ProductStatus;
+  images?: string[];
 };
 
 export type ProductFormData = {
@@ -20,7 +23,8 @@ export type ProductFormData = {
   brand: string;
   model: string;
   price: number;
-  status: 'on' | 'off';
+  /** 上架状态：UP 上架 / DOWN 下架 */
+  state: ProductStatus;
   material: string;
   diameter: number | undefined;
   weight: number | undefined;
@@ -43,7 +47,7 @@ export type ProductCreateBody = {
   brand: string;
   model: string;
   price: number;
-  status: 'on' | 'off';
+  state: ProductStatus;
   material?: string;
   diameter?: number;
   weight?: number;
@@ -55,7 +59,7 @@ export type ProductCreateBody = {
 export type ProductUpdateBody = ProductCreateBody;
 
 export type ProductStatusUpdateBody = {
-  status: 'on' | 'off';
+  state: ProductStatus;
 };
 
 export type ProductOut = {
@@ -64,7 +68,10 @@ export type ProductOut = {
   brand: string;
   model: string;
   price: number;
-  status: string;
+  /** 上架状态：UP / DOWN */
+  state?: string;
+  /** @deprecated 兼容旧接口，优先使用 state */
+  status?: string;
   material: string | null;
   diameter: number | null;
   weight: number | null;
@@ -76,19 +83,22 @@ export type ProductOut = {
 
 export type ProductListQuery = {
   keyword?: string;
+  imageUrl?: string;
   page?: number;
-  page_size?: number;
+  size?: number;
 };
 
 export type ProductListResult = {
-  items: ProductOut[];
-  total: number;
-  page: number;
-  page_size: number;
+  data: {
+    content: ProductOut[];
+    totalElements?: number;
+    page?: number;
+    size?: number;
+  };
 };
 
 export type ProductImageSearchBody = {
-  image: string;
+  imageUrl: string;
   limit?: number;
 };
 

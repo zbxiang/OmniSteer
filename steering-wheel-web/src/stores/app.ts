@@ -1,10 +1,36 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import type { ThemeName } from '@/types';
+import type { ThemeName } from '@/types/theme';
 
 export const useAppStore = defineStore('app', () => {
   const systemName = ref('方向盘产品管理系统');
-  const theme = ref<ThemeName>('cockpit');
+  const theme = ref<ThemeName>('blue');
+  const themeList: ThemeName[] = [
+    'red',
+    'orange',
+    'amber',
+    'yellow',
+    'lime',
+    'green',
+    'emerald',
+    'teal',
+    'cyan',
+    'sky',
+    'blue',
+    'indigo',
+    'violet',
+    'purple',
+    'magenta',
+    'pink',
+    'rose',
+    'stone',
+    'gray',
+    'zinc',
+    'neutral',
+    'taupe',
+    'mist',
+    'olive',
+  ];
 
   const setSystemName = (name: string): void => {
     systemName.value = name;
@@ -16,15 +42,25 @@ export const useAppStore = defineStore('app', () => {
   };
 
   const setTheme = (nextTheme: ThemeName): void => {
-    theme.value = nextTheme;
-    applyTheme(nextTheme);
-    localStorage.setItem('omnisteer-theme', nextTheme);
+    if (nextTheme === theme.value) return;
+
+    const commit = (): void => {
+      theme.value = nextTheme;
+      applyTheme(nextTheme);
+      localStorage.setItem('omnisteer-theme', nextTheme);
+    };
+
+    if (typeof document !== 'undefined' && typeof document.startViewTransition === 'function') {
+      document.startViewTransition(commit);
+    } else {
+      commit();
+    }
   };
 
   const initTheme = (): void => {
     const savedTheme = localStorage.getItem('omnisteer-theme');
-    if (savedTheme === 'amber' || savedTheme === 'cockpit' || savedTheme === 'indigo' || savedTheme === 'magenta' || savedTheme === 'teal' || savedTheme === 'emerald' || savedTheme === 'lime' || savedTheme === 'yellow' || savedTheme === 'stone' || savedTheme === 'mist' || savedTheme === 'olive') {
-      theme.value = savedTheme;
+    if (savedTheme && themeList.includes(savedTheme as ThemeName)) {
+      theme.value = savedTheme as ThemeName;
     }
     applyTheme(theme.value);
   };

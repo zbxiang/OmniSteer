@@ -53,7 +53,6 @@ export default defineConfig(({ mode }) => {
             [proxyPrefix]: {
               target: proxyTarget,
               changeOrigin: true,
-              rewrite: (requestPath) => requestPath.replace(new RegExp(`^${proxyPrefix}`), ''),
             },
           }
         : undefined,
