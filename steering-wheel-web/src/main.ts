@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import './styles/index.css';
 import './styles/themes/index.scss';
+import './styles/dialog-cockpit.scss';
 import App from './App.vue';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';

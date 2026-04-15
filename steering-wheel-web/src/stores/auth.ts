@@ -27,6 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
   const router = useRouter();
   const fetchPromise = ref<Promise<any> | null>(null); // 当前用户信息请求 Promise
   const appLoading = ref<boolean>(false); // 应用加载状态
+  const loggingOut = ref<boolean>(false);
 
   // 保存用户信息
   const setUserInfo = (data: any): void => {
@@ -49,6 +50,7 @@ export const useAuthStore = defineStore('auth', () => {
     removeStorage(TOKEN_KEY);
     removeStorage('userInfo');
     token.value = '';
+    userInfo.value = null;
   };
 
   const ensureValidSession = (): void => {
@@ -105,10 +107,22 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   // 退出登录
-  const toLoginOut = (): void => {
-    loginOut().then(() => {
-      handleClearAll();
-    });
+  const toLoginOut = async (): Promise<void> => {
+    if (loggingOut.value) return;
+    loggingOut.value = true;
+    try {
+      try {
+        await loginOut();
+      } finally {
+        handleClearAll();
+      }
+      await router.replace({ name: 'login' });
+    } catch (error) {
+      console.warn('logout redirect failed:', error);
+      await router.replace('/login');
+    } finally {
+      loggingOut.value = false;
+    }
   };
 
   // 统一跳转登录页，并携带当前页回跳地址

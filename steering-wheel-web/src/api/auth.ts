@@ -11,5 +11,5 @@ export const login = (params: LoginParams): Promise<ApiResponse> => {
 
 // 退出登录
 export const loginOut = (): Promise<void> => {
-  return request.post(`${apiPrefix}/auth/loginOut`);
+  return request.post(`${apiPrefix}/auth/logout`);
 };

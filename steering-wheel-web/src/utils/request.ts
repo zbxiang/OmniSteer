@@ -177,9 +177,17 @@ class Request {
       case 500:
         ElMessage.error('服务器内部错误');
         break;
-      default:
-        ElMessage.error(data?.message || '请求失败');
+      default: {
+        const message = data?.message;
+        const desc =
+          message && typeof message === 'object'
+            ? (message as { desc?: string }).desc
+            : '';
+        ElMessage.error(
+          (typeof message === 'string' ? message : desc) || '请求失败',
+        );
         break;
+      }
     }
   }
 

@@ -13,6 +13,7 @@
 
     <div class="product-list__content">
       <section
+        ref="toolbarRef"
         class="product-list__toolbar wow animate__animated animate__fadeInLift"
         :style="toolbarStickyStyle"
         data-wow-duration="0.42s"
@@ -50,7 +51,11 @@
           重置筛选
         </button>
       </section>
-      <div v-if="imageUrlFilter" class="product-list__image-filter wow animate__animated animate__fadeInLift">
+      <div
+        v-if="imageUrlFilter"
+        class="product-list__image-filter wow animate__animated animate__fadeInLift"
+        :style="imageFilterStickyStyle"
+      >
         <span class="product-list__image-filter-label">以图搜图链接：</span>
         <a
           class="product-list__image-filter-link"
@@ -91,7 +96,20 @@
               ]"
             >
             <div class="product-card__img">
-              <img v-if="p.imageUrl" :src="p.imageUrl" :alt="p.name" />
+              <div
+                v-if="p.imageUrl && !isImageLoaded(p.id)"
+                class="product-card__img-placeholder"
+                aria-hidden="true"
+              />
+              <img
+                v-if="p.imageUrl"
+                :src="p.imageUrl"
+                :alt="p.name"
+                loading="lazy"
+                decoding="async"
+                :class="{ 'product-card__img-el--loaded': isImageLoaded(p.id) }"
+                @load="onProductImageLoad(p.id)"
+              />
               <span v-else>⚙</span>
             </div>
             <div class="product-card__title-row">
@@ -155,7 +173,6 @@
 
     <ImageSearchDialog
       v-model="showModal"
-      :products="products"
       @submit="onImageSearchSubmit"
     />
   </div>
@@ -171,51 +188,40 @@ import {
   Search,
   View,
 } from '@element-plus/icons-vue';
-import type { ProductItem, ProductOut } from '@/types/product';
-import { ProductStatusEnum, type ProductStatus } from '@/enums/product';
+import type { ProductCardItem, ProductOut } from '@/types/product';
+import { ProductStatusEnum } from '@/enums/product';
 import { normalizeProductStateFromOut } from '@/utils/productState';
-import { listProductsApi } from '@/api/product';
+import { getProductPage } from '@/api/product';
 import { isRequestCanceled, RequestError } from '@/utils/request';
 import { ElMessage } from 'element-plus';
 import { useAppStore } from '@/stores/app';
 import { useAuthStore } from '@/stores/auth';
 import ImageSearchDialog from '@/components/ImageSearchDialog.vue';
 import TopBar from '@/components/topBar.vue';
-import WOW from 'wow.js';
-import 'animate.css';
-
-type ProductCardItem = ProductItem & {
-  imageUrl?: string;
-};
+import { createWowController } from '@/utils/wow';
+import { PRODUCT_VIEW_CONSTANTS } from '@/constants/productView';
 
 const appStore = useAppStore();
 const authStore = useAuthStore();
 const route = useRoute();
 const keyword = ref<string>('');
-const statusFilter = ref<'all' | ProductStatus>('all');
 const showModal = ref<boolean>(false);
 const imageUrlFilter = ref<string>('');
 const currentPage = ref<number>(1);
-const pageSize = 8;
 const loading = ref<boolean>(false);
 const total = ref<number>(0);
 const loadMoreRef = ref<HTMLElement | null>(null);
 let loadMoreObserver: IntersectionObserver | null = null;
-let wowInstance: InstanceType<typeof WOW> | null = null;
+const wowController = createWowController();
 
 const products = ref<ProductCardItem[]>([]);
+const loadedImageIds = ref<Set<number>>(new Set<number>());
 
 const totalPages = computed<number>(
-  () => Math.ceil(total.value / pageSize) || 1,
+  () => Math.ceil(total.value / PRODUCT_VIEW_CONSTANTS.PAGE_SIZE) || 1,
 );
 const hasMore = computed<boolean>(() => currentPage.value < totalPages.value);
-const paged = computed<ProductCardItem[]>(() => products.value);
-const filteredPaged = computed<ProductCardItem[]>(() => {
-  if (statusFilter.value === 'all') return paged.value;
-  return paged.value.filter(
-    (item): boolean => item.state === statusFilter.value,
-  );
-});
+const filteredPaged = computed<ProductCardItem[]>(() => products.value);
 
 const displayName = computed<string>(() => {
   const info = authStore.userInfo;
@@ -230,7 +236,9 @@ const isHome = computed<boolean>(() => route.name === 'home');
 const isProductCreate = computed<boolean>(() => route.name === 'productCreate');
 
 /** 与 TopBar 实测 offsetHeight 同步，sticky 搜索条紧贴导航底边 */
-const topBarOffsetPx = ref(63);
+const topBarOffsetPx = ref(PRODUCT_VIEW_CONSTANTS.INITIAL_TOPBAR_OFFSET_PX);
+const toolbarRef = ref<HTMLElement | null>(null);
+const toolbarHeightPx = ref(PRODUCT_VIEW_CONSTANTS.INITIAL_TOOLBAR_HEIGHT_PX);
 
 const onTopBarLayoutHeight = (px: number): void => {
   topBarOffsetPx.value = px;
@@ -238,18 +246,34 @@ const onTopBarLayoutHeight = (px: number): void => {
 
 /** 比顶栏实测高度上移 3px，与导航底边叠一层，避免亚像素缝透出列表图 */
 const toolbarStickyStyle = computed((): { top: string } => ({
-  top: `${Math.max(0, topBarOffsetPx.value - 3)}px`,
+  top: `${Math.max(0, topBarOffsetPx.value - PRODUCT_VIEW_CONSTANTS.TOPBAR_OVERLAP_PX)}px`,
 }));
+
+/** 链接条吸附在搜索栏正下方 */
+const imageFilterStickyStyle = computed((): { top: string } => ({
+  top: `${Math.max(
+    0,
+    topBarOffsetPx.value -
+      PRODUCT_VIEW_CONSTANTS.TOPBAR_OVERLAP_PX +
+      toolbarHeightPx.value -
+      PRODUCT_VIEW_CONSTANTS.FILTER_BAR_OFFSET_PX,
+  )}px`,
+}));
+
+const syncToolbarHeight = (): void => {
+  if (!toolbarRef.value) return;
+  toolbarHeightPx.value = toolbarRef.value.offsetHeight;
+};
 
 const fetchProducts = async (append = false): Promise<void> => {
   if (loading.value) return;
   loading.value = true;
   try {
-    const res = await listProductsApi({
+    const res = await getProductPage({
       keyword: keyword.value.trim() || undefined,
       imageUrl: imageUrlFilter.value || undefined,
       page: currentPage.value,
-      size: pageSize,
+      size: PRODUCT_VIEW_CONSTANTS.PAGE_SIZE,
     });
     const list = res.data?.content ?? [];
     const mapped = list.map(
@@ -260,9 +284,18 @@ const fetchProducts = async (append = false): Promise<void> => {
         model: x.model,
         price: x.price,
         state: normalizeProductStateFromOut(x),
+        images: x.images || [],
         imageUrl: x.images?.[0] || undefined,
+        material: x.material || '',
+        diameter: x.diameter ?? undefined,
+        weight: x.weight ?? undefined,
+        mount: x.mount || '',
+        description: x.description || '',
       }),
     );
+    if (!append) {
+      loadedImageIds.value = new Set<number>();
+    }
     products.value = append ? [...products.value, ...mapped] : mapped;
     total.value = res.data?.totalElements ?? list.length;
   } catch (e) {
@@ -275,16 +308,26 @@ const fetchProducts = async (append = false): Promise<void> => {
   }
 };
 
-const search = (): void => {
-  imageUrlFilter.value = '';
+const onProductImageLoad = (productId: number): void => {
+  loadedImageIds.value.add(productId);
+};
+
+const isImageLoaded = (productId: number): boolean =>
+  loadedImageIds.value.has(productId);
+
+const refreshFirstPage = (): void => {
   currentPage.value = 1;
   void fetchProducts(false);
 };
 
+const search = (): void => {
+  imageUrlFilter.value = '';
+  refreshFirstPage();
+};
+
 const clearImageFilterAndSearch = (): void => {
   imageUrlFilter.value = '';
-  currentPage.value = 1;
-  void fetchProducts(false);
+  refreshFirstPage();
 };
 
 const copyImageUrl = async (): Promise<void> => {
@@ -300,15 +343,12 @@ const copyImageUrl = async (): Promise<void> => {
 const resetFilters = (): void => {
   keyword.value = '';
   imageUrlFilter.value = '';
-  statusFilter.value = 'all';
-  currentPage.value = 1;
-  void fetchProducts(false);
+  refreshFirstPage();
 };
 
 const onImageSearchSubmit = (payload: { imageUrl: string }): void => {
   imageUrlFilter.value = payload.imageUrl;
-  currentPage.value = 1;
-  void fetchProducts(false);
+  refreshFirstPage();
 };
 
 const loadMore = (): void => {
@@ -321,7 +361,7 @@ watch(
   () => filteredPaged.value.map((p) => p.id).join(','),
   (): void => {
     void nextTick(() => {
-      wowInstance?.sync();
+      wowController.sync();
     });
   },
   { flush: 'post' },
@@ -339,8 +379,8 @@ const initLoadMoreObserver = (): void => {
     },
     {
       root: null,
-      rootMargin: '0px 0px 160px 0px',
-      threshold: 0.05,
+      rootMargin: PRODUCT_VIEW_CONSTANTS.LOAD_MORE_ROOT_MARGIN,
+      threshold: PRODUCT_VIEW_CONSTANTS.LOAD_MORE_THRESHOLD,
     },
   );
   loadMoreObserver.observe(loadMoreRef.value);
@@ -350,23 +390,43 @@ onMounted((): void => {
   void fetchProducts(false);
   initLoadMoreObserver();
   void nextTick(() => {
-    wowInstance = new WOW({
-      boxClass: 'wow',
-      animateClass: 'animate__animated',
-      offset: 48,
-      mobile: true,
-      live: true,
-    });
-    wowInstance.init();
+    syncToolbarHeight();
+  });
+  void nextTick(() => {
+    wowController.init();
   });
 });
 
 onUnmounted((): void => {
   loadMoreObserver?.disconnect();
   loadMoreObserver = null;
-  wowInstance?.stop();
-  wowInstance = null;
+  wowController.stop();
 });
+
+watch(
+  () => [imageUrlFilter.value, keyword.value],
+  (): void => {
+    void nextTick(() => {
+      syncToolbarHeight();
+    });
+  },
+  { flush: 'post' },
+);
+
+if (typeof ResizeObserver !== 'undefined') {
+  let toolbarResizeObserver: ResizeObserver | null = null;
+  onMounted((): void => {
+    if (!toolbarRef.value) return;
+    toolbarResizeObserver = new ResizeObserver((): void => {
+      syncToolbarHeight();
+    });
+    toolbarResizeObserver.observe(toolbarRef.value);
+  });
+  onUnmounted((): void => {
+    toolbarResizeObserver?.disconnect();
+    toolbarResizeObserver = null;
+  });
+}
 </script>
 
 <style scoped lang="scss">
@@ -499,6 +559,8 @@ onUnmounted((): void => {
   }
 
   &__image-filter {
+    position: sticky;
+    z-index: 39;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -507,6 +569,7 @@ onUnmounted((): void => {
     border-radius: 10px;
     border: 1px solid var(--color-primary-amber-22);
     background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 90%, transparent);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
   }
 
   &__image-filter-label {
@@ -943,7 +1006,35 @@ onUnmounted((): void => {
       height: 100%;
       object-fit: cover;
       display: block;
-      transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+      opacity: 0;
+      transition:
+        transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.28s ease;
+    }
+
+    .product-card__img-el--loaded {
+      opacity: 1;
+    }
+
+    .product-card__img-placeholder {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(
+          100deg,
+          color-mix(in srgb, var(--color-cockpit-bg-mid-97) 88%, transparent) 0%,
+          color-mix(in srgb, var(--color-primary-amber-12) 56%, transparent) 46%,
+          color-mix(in srgb, var(--color-cockpit-bg-mid-97) 88%, transparent) 100%
+        ),
+        radial-gradient(
+          circle at 30% 20%,
+          var(--color-primary-amber-10) 0%,
+          transparent 60%
+        );
+      background-size: 240% 100%, 100% 100%;
+      animation: product-image-placeholder-shimmer 1.25s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
     }
 
     span {
@@ -1195,6 +1286,19 @@ onUnmounted((): void => {
   background: var(--color-primary-amber-35);
   border-color: var(--color-primary-amber-48);
   color: #fff;
+}
+
+@keyframes product-image-placeholder-shimmer {
+  0% {
+    background-position:
+      100% 0,
+      0 0;
+  }
+  100% {
+    background-position:
+      -100% 0,
+      0 0;
+  }
 }
 
 @media (min-width: 1440px) {

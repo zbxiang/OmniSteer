@@ -23,12 +23,8 @@
 
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { useRouter } from 'vue-router';
-import { loginOut } from '@/api/auth';
-import { RequestError } from '@/utils/request';
 import { useAuthStore } from '@/stores/auth';
 
-const router = useRouter();
 const auth = useAuthStore();
 
 const onLogout = async (): Promise<void> => {
@@ -45,16 +41,8 @@ const onLogout = async (): Promise<void> => {
     return;
   }
 
-  try {
-    await loginOut();
-  } catch (e) {
-    const msg = e instanceof RequestError ? e.message : '退出失败，请稍后重试';
-    ElMessage.error(msg);
-  }
-
-  auth.logout();
+  await auth.toLoginOut();
   ElMessage.success('已退出登录');
-  await router.replace({ name: 'login' });
 };
 </script>
 
@@ -127,15 +115,27 @@ const onLogout = async (): Promise<void> => {
 .logout-confirm-dialog .el-message-box__headerbtn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-primary-amber-20);
-  border-radius: 6px;
+  border-radius: 0;
 }
 
 .logout-confirm-dialog.el-message-box {
-  border: 1px solid var(--color-primary-amber-16);
-  border-radius: 14px;
+  border: 1px solid var(--color-primary-amber-26);
+  border-radius: 12px;
+  background:
+    radial-gradient(
+      circle at 12% -18%,
+      var(--color-primary-amber-16) 0%,
+      transparent 48%
+    ),
+    radial-gradient(
+      circle at 100% 120%,
+      var(--color-primary-amber-10) 0%,
+      transparent 56%
+    ),
+    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 94%, var(--color-primary-amber-06));
   box-shadow:
-    0 14px 34px rgba(0, 0, 0, 0.14),
-    0 2px 10px rgba(0, 0, 0, 0.08);
+    0 16px 34px color-mix(in srgb, var(--color-cockpit-bg-mid-97) 78%, transparent),
+    0 1px 0 rgba(255, 255, 255, 0.08) inset;
   overflow: hidden;
 }
 
@@ -146,54 +146,101 @@ const onLogout = async (): Promise<void> => {
 .logout-confirm-dialog .el-message-box__title {
   font-weight: 700;
   letter-spacing: 0.01em;
-  color: rgba(0, 0, 0, 0.88);
+  color: color-mix(in srgb, var(--color-zinc-text) 96%, #fff);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.32);
 }
 
 .logout-confirm-dialog .el-message-box__content {
   padding: 6px 20px 18px;
-  color: rgba(0, 0, 0, 0.64);
+  color: color-mix(in srgb, var(--color-zinc-muted) 90%, #fff);
+}
+
+.logout-confirm-dialog .el-message-box__message p {
+  margin: 0;
+  color: inherit;
 }
 
 .logout-confirm-dialog .el-message-box__btns {
   padding: 12px 20px 18px;
 }
 
-.logout-confirm-dialog .el-message-box__headerbtn {
-  color: var(--color-primary-amber-70);
-  border-radius: 6px;
+.logout-confirm-dialog .el-message-box__headerbtn,
+.logout-confirm-dialog__confirm-btn.el-button--primary,
+.logout-confirm-dialog__cancel-btn.el-button {
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 12px;
+  color: color-mix(in srgb, var(--color-zinc-text) 90%, #fff);
+  border-radius: 0 !important;
+  border: 1px solid var(--color-primary-amber-32) !important;
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 92%,
+    var(--color-primary-amber-06)
+  ) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 1px color-mix(in srgb, var(--color-cockpit-bg-low) 68%, transparent);
+  font-weight: 650 !important;
+  letter-spacing: 0.01em;
+  line-height: 32px;
   transition:
     color 0.2s ease,
     background-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.logout-confirm-dialog .el-message-box__headerbtn {
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+  color: var(--color-primary-amber-70);
+  border-radius: 8px !important;
 }
 
 .logout-confirm-dialog .el-message-box__headerbtn:hover {
   color: var(--color-primary-amber);
-  background-color: var(--color-primary-amber-08);
+  border-color: var(--color-primary-amber-55) !important;
+  background-color: color-mix(in srgb, var(--color-primary-amber-16) 78%, transparent) !important;
+}
+
+.logout-confirm-dialog .el-message-box__headerbtn:hover .el-icon,
+.logout-confirm-dialog .el-message-box__headerbtn:hover .el-message-box__close {
+  color: var(--color-primary-amber) !important;
+}
+
+.logout-confirm-dialog__confirm-btn.el-button--primary,
+.logout-confirm-dialog__cancel-btn.el-button {
+  min-width: 82px;
+  border-radius: 8px !important;
 }
 
 .logout-confirm-dialog__confirm-btn.el-button--primary {
-  min-width: 76px;
-  border-radius: 10px;
-  border-color: var(--color-primary-amber-70);
   background: linear-gradient(
     145deg,
     var(--color-primary-amber-70) 0%,
     var(--color-primary-amber) 56%,
     var(--color-primary-amber-85) 100%
-  );
+  ) !important;
   box-shadow:
     0 2px 8px var(--color-primary-amber-24),
     inset 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
 .logout-confirm-dialog__confirm-btn.el-button--primary:hover {
-  border-color: var(--color-primary-amber);
+  color: #fff !important;
+  border-color: var(--color-primary-amber) !important;
   background: linear-gradient(
     145deg,
     var(--color-primary-amber) 0%,
     var(--color-primary-amber-90) 100%
-  );
+  ) !important;
+  box-shadow:
+    0 6px 14px var(--color-primary-amber-26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
 }
 
 .logout-confirm-dialog__confirm-btn.el-button--primary:focus-visible,
@@ -203,17 +250,20 @@ const onLogout = async (): Promise<void> => {
 }
 
 .logout-confirm-dialog__cancel-btn.el-button {
-  min-width: 76px;
-  border-radius: 10px;
-  color: var(--color-primary-amber-70);
-  border-color: var(--color-primary-amber-24);
-  background: color-mix(in srgb, #fff 92%, var(--color-primary-amber-06));
+  color: color-mix(in srgb, var(--color-zinc-text) 90%, #fff) !important;
 }
 
 .logout-confirm-dialog__cancel-btn.el-button:hover {
-  color: var(--color-primary-amber);
-  border-color: var(--color-primary-amber-35);
-  background: color-mix(in srgb, #fff 86%, var(--color-primary-amber-08));
+  color: #fff !important;
+  border-color: var(--color-primary-amber-46) !important;
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 82%,
+    var(--color-primary-amber-16)
+  ) !important;
+  box-shadow:
+    0 6px 14px var(--color-primary-amber-18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
 }
 </style>
 

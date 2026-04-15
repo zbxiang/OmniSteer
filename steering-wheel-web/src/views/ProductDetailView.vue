@@ -1,59 +1,71 @@
 <template>
-  <div class="product-detail">
+  <div class="product-list product-detail">
+    <TopBar
+      :system-name="appStore.systemName"
+      :display-name="displayName"
+      :user-initial="userInitial"
+      :is-home="route.name === 'home'"
+      :is-product-create="route.name === 'productCreate'"
+    />
     <div class="product-detail__warm-base" aria-hidden="true" />
     <div class="product-detail__vignette" aria-hidden="true" />
 
-    <div class="product-detail__content">
-      <div class="product-detail__breadcrumb">
-        <router-link to="/">产品列表</router-link>
-        <span>/</span>
-        <span>产品详情</span>
-      </div>
-
-      <div class="product-detail__layout" v-if="product">
-        <div class="product-detail__img">
-          <img v-if="product.images?.[0]" :src="product.images[0]" :alt="product.name">
-          <div v-else class="product-detail__img-placeholder">⚙</div>
+    <div class="product-list__main">
+      <div class="product-detail__content">
+        <div class="product-detail__breadcrumb">
+          <router-link to="/">产品列表</router-link>
+          <span>/</span>
+          <span>产品详情</span>
         </div>
 
-        <div class="product-detail__info">
-          <p class="product-detail__badge">{{ appStore.systemName }}</p>
-          <h1>{{ product.name }}</h1>
-          <p class="product-detail__price">¥{{ product.price.toLocaleString() }}</p>
-          <span :class="['status-badge', productState === ProductStatusEnum.UP ? 'status-badge--on' : 'status-badge--off']">
-            {{ productState === ProductStatusEnum.UP ? '在售' : '下架' }}
-          </span>
+        <div class="product-detail__panel">
+          <div class="product-detail__layout" v-if="product">
+            <div class="product-detail__img">
+              <img
+                v-if="product.images?.[0]"
+                :src="product.images[0]"
+                :alt="product.name"
+              >
+              <div v-else class="product-detail__img-placeholder">⚙</div>
+            </div>
 
-          <p class="product-detail__desc">{{ product.description || '暂无描述' }}</p>
+            <div class="product-detail__info">
+              <p class="product-detail__badge">{{ appStore.systemName }}</p>
+              <h1>{{ product.name }}</h1>
+              <p class="product-detail__price">¥{{ product.price.toLocaleString() }}</p>
+              <span :class="['status-badge', productState === ProductStatusEnum.UP ? 'status-badge--on' : 'status-badge--off']">
+                {{ productState === ProductStatusEnum.UP ? '在售' : '下架' }}
+              </span>
 
-          <ul class="product-detail__attrs">
-            <li><span>品牌</span><span>{{ product.brand }}</span></li>
-            <li><span>型号</span><span>{{ product.model }}</span></li>
-            <li><span>材质</span><span>{{ product.material }}</span></li>
-            <li><span>直径</span><span>{{ product.diameter }}mm</span></li>
-            <li><span>重量</span><span>{{ product.weight }}g</span></li>
-            <li><span>安装方式</span><span>{{ product.mount }}</span></li>
-            <li><span>上架时间</span><span>{{ createdDateText }}</span></li>
-          </ul>
+              <p class="product-detail__desc">{{ product.description || '暂无描述' }}</p>
 
-          <div class="product-detail__actions">
-            <router-link :to="`/products/${product.id}/edit`" class="btn btn-primary">编辑</router-link>
-            <button class="btn btn-danger" :disabled="statusUpdating || productState === ProductStatusEnum.DOWN" @click="offShelf">
-              {{ statusUpdating ? '处理中...' : '下架' }}
-            </button>
+              <ul class="product-detail__attrs">
+                <li><span>品牌</span><span>{{ product.brand }}</span></li>
+                <li><span>型号</span><span>{{ product.model }}</span></li>
+                <li><span>材质</span><span>{{ product.material }}</span></li>
+                <li><span>直径</span><span>{{ product.diameter }}mm</span></li>
+                <li><span>重量</span><span>{{ product.weight }}g</span></li>
+                <li><span>安装方式</span><span>{{ product.mount }}</span></li>
+                <li><span>上架时间</span><span>{{ createdDateText }}</span></li>
+              </ul>
+
+              <div class="product-detail__actions">
+                <router-link :to="`/products/${product.id}/edit`" class="btn btn-primary">编辑</router-link>
+                <router-link to="/" class="btn btn-outline">返回列表</router-link>
+              </div>
+            </div>
+          </div>
+
+          <div class="product-detail__empty" v-else-if="!loading">
+            <h2>暂无详情</h2>
+            <p>未找到该产品信息，可能已下架或数据尚未同步。</p>
             <router-link to="/" class="btn btn-outline">返回列表</router-link>
           </div>
+          <div class="product-detail__empty" v-else>
+            <h2>加载中...</h2>
+            <p>正在获取产品详情，请稍候。</p>
+          </div>
         </div>
-      </div>
-
-      <div class="product-detail__empty" v-else-if="!loading">
-        <h2>暂无详情</h2>
-        <p>未找到该产品信息，可能已下架或数据尚未同步。</p>
-        <router-link to="/" class="btn btn-outline">返回列表</router-link>
-      </div>
-      <div class="product-detail__empty" v-else>
-        <h2>加载中...</h2>
-        <p>正在获取产品详情，请稍候。</p>
       </div>
     </div>
   </div>
@@ -66,15 +78,22 @@ import { ElMessage } from 'element-plus';
 import type { ProductOut } from '@/types/product';
 import { ProductStatusEnum } from '@/enums/product';
 import { normalizeProductStateFromOut } from '@/utils/productState';
-import { getProductDetailApi, updateProductStatusApi } from '@/api/product';
+import { getProductDetail } from '@/api/product';
 import { isRequestCanceled, RequestError } from '@/utils/request';
 import { useAppStore } from '@/stores/app';
+import { useAuthStore } from '@/stores/auth';
+import TopBar from '@/components/topBar.vue';
 
 const appStore = useAppStore();
+const authStore = useAuthStore();
 const route = useRoute();
 const product = ref<ProductOut | null>(null);
 const loading = ref<boolean>(false);
-const statusUpdating = ref<boolean>(false);
+const displayName = computed((): string => authStore.username || 'Admin');
+const userInitial = computed((): string => {
+  const n = displayName.value.trim();
+  return n ? n.slice(0, 1).toUpperCase() : 'A';
+});
 
 const createdDateText = computed<string>(() => {
   if (!product.value?.created_at) return '-';
@@ -94,7 +113,7 @@ const fetchDetail = async (): Promise<void> => {
   }
   loading.value = true;
   try {
-    product.value = await getProductDetailApi(productId);
+    product.value = await getProductDetail(productId);
   } catch (e) {
     if (isRequestCanceled(e)) return;
     if (e instanceof RequestError && e.status === 404) {
@@ -108,26 +127,6 @@ const fetchDetail = async (): Promise<void> => {
   }
 };
 
-const offShelf = async (): Promise<void> => {
-  if (!product.value) return;
-  if (productState.value === ProductStatusEnum.DOWN) {
-    ElMessage.info('该产品已下架');
-    return;
-  }
-  statusUpdating.value = true;
-  try {
-    const next = await updateProductStatusApi(product.value.id, { state: ProductStatusEnum.DOWN });
-    product.value = next;
-    ElMessage.success('产品已下架');
-  } catch (e) {
-    if (isRequestCanceled(e)) return;
-    const msg = e instanceof RequestError ? e.message : '下架失败，请稍后重试';
-    ElMessage.error(msg);
-  } finally {
-    statusUpdating.value = false;
-  }
-};
-
 onMounted((): void => {
   void fetchDetail();
 });
@@ -137,9 +136,15 @@ onMounted((): void => {
 .product-detail {
   position: relative;
   min-height: 100vh;
-  padding: 2rem 1rem 3rem;
   color: v.$zinc-text;
-  background: linear-gradient(168deg, v.$cockpit-bg-top 0%, v.$cockpit-bg-mid 48%, v.$cockpit-bg-bottom 100%);
+  background:
+    radial-gradient(
+      1200px 420px at 50% -140px,
+      var(--color-primary-amber-20) 0%,
+      var(--color-primary-amber-08) 45%,
+      transparent 78%
+    ),
+    linear-gradient(168deg, v.$cockpit-bg-top 0%, v.$cockpit-bg-mid 48%, v.$cockpit-bg-bottom 100%);
 
   &__warm-base,
   &__vignette {
@@ -159,15 +164,25 @@ onMounted((): void => {
   &__content {
     position: relative;
     z-index: 2;
-    max-width: 1100px;
+    max-width: 980px;
     margin: 0 auto;
   }
 
   &__breadcrumb {
     display: inline-flex;
     gap: 0.4rem;
-    margin-bottom: 1rem;
+    margin: 8px 0 18px;
     color: v.$zinc-muted;
+  }
+
+  &__panel {
+    border-radius: 12px;
+    border: 1px solid var(--color-primary-amber-24);
+    padding: 1rem;
+    background: linear-gradient(145deg, v.$panel-bg 0%, var(--color-cockpit-bg-mid-96) 100%);
+    box-shadow:
+      0 14px 30px color-mix(in srgb, var(--color-cockpit-bg-mid-97) 72%, transparent),
+      0 1px 0 rgba(255, 255, 255, 0.08) inset;
   }
 
   &__layout {
@@ -294,25 +309,35 @@ onMounted((): void => {
 }
 
 .btn-primary {
-  background: rgb(194 65 12);
+  background: var(--color-primary-amber-70);
   color: #fff;
-  border-color: rgb(234 88 12);
+  border-color: var(--color-primary-amber-70);
+  box-shadow:
+    0 8px 18px var(--color-primary-amber-20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
 .btn-outline {
-  background: transparent;
-  color: v.$zinc-label;
-  border-color: var(--color-primary-amber-35);
-}
-
-.btn-danger {
-  background: rgba(185, 28, 28, 0.2);
-  color: #fecaca;
-  border-color: rgba(248, 113, 113, 0.4);
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 92%,
+    var(--color-primary-amber-06)
+  );
+  color: var(--color-zinc-text);
+  border-color: var(--color-primary-amber-30);
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.product-list__main {
+  flex: 1;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px 24px 40px;
 }
 </style>

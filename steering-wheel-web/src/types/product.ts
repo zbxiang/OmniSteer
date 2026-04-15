@@ -18,6 +18,16 @@ export type ProductItem = {
   images?: string[];
 };
 
+export type ProductCardItem = ProductItem & {
+  imageUrl?: string;
+  images?: string[];
+  material?: string;
+  diameter?: number;
+  weight?: number;
+  mount?: string;
+  description?: string;
+};
+
 export type ProductFormData = {
   name: string;
   brand: string;
@@ -37,10 +47,6 @@ export type ProductEditSeed = Omit<ProductFormData, 'images'> & {
   id: number;
 };
 
-export type ProductDetailItem = ProductEditSeed & {
-  date: string;
-  desc: string;
-};
 
 export type ProductCreateBody = {
   name: string;
@@ -56,7 +62,9 @@ export type ProductCreateBody = {
   images: string[];
 };
 
-export type ProductUpdateBody = ProductCreateBody;
+export type ProductSaveOrUpdateParams = ProductCreateBody & {
+  id?: number;
+};
 
 export type ProductStatusUpdateBody = {
   state: ProductStatus;
@@ -105,4 +113,16 @@ export type ProductImageSearchBody = {
 export type ProductImageSearchResult = {
   items: ProductOut[];
   total: number;
+};
+
+export type FileUploadApiResponse = {
+  code?: string;
+  success?: boolean;
+  data?:
+    | string
+    | {
+        url?: string;
+        imageUrl?: string;
+        fileUrl?: string;
+      };
 };
