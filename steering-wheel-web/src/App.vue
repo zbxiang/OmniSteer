@@ -26,8 +26,8 @@ const isAuthShellRoute = computed(
 
 const showFloatingThemeButton = computed((): boolean => {
   if (isAuthShellRoute.value) return false;
-  const n = route.name;
-  return n === 'productEdit';
+  // 顶栏已内嵌主题入口（包含编辑页）；不再在右下角显示悬浮按钮
+  return false;
 });
 
 let sessionTimer: ReturnType<typeof setInterval> | null = null;

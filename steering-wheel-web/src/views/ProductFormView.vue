@@ -240,8 +240,10 @@
     </div>
     <el-dialog
       v-model="previewVisible"
+      class="product-create__preview-dialog"
+      modal-class="product-create__preview-modal"
       title="图片预览"
-      width="720px"
+      width="min(720px, 92vw)"
       :close-on-click-modal="true"
       append-to-body
     >
@@ -436,7 +438,10 @@ const syncFormImages = (): void => {
     .map((f) => f.url)
     .filter(
       (url): url is string =>
-        Boolean(url) && !url.startsWith('blob:') && !url.startsWith('data:'),
+        typeof url === 'string' &&
+        Boolean(url) &&
+        !url.startsWith('blob:') &&
+        !url.startsWith('data:'),
     );
 };
 
@@ -1274,14 +1279,61 @@ onUnmounted((): void => {
   );
 }
 
+@media (max-width: 900px) {
+  .product-list__main {
+    padding: 16px 16px 28px;
+  }
+
+  .product-create__panel {
+    padding: 14px;
+  }
+
+  .product-create__upload-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
 @media (max-width: 760px) {
+  .product-list__main {
+    padding: 12px 12px 22px;
+  }
+
+  .product-create {
+    --product-create-field-height: 38px;
+  }
+
+  .product-create__breadcrumb {
+    margin: 6px 0 12px;
+  }
+
+  .product-create__panel {
+    border-radius: 10px;
+    padding: 12px;
+  }
+
   .product-create__upload-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .product-create__upload-item {
+    min-height: 120px;
+    border-radius: 10px;
+  }
+
+  .product-create__upload-item-mask {
+    inset: auto 6px 6px 6px;
+    opacity: 1;
+    transform: none;
   }
 
   .product-create__actions {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 10px;
   }
 
   .product-create__actions-sub {
@@ -1290,7 +1342,68 @@ onUnmounted((): void => {
 
   .product-create__actions-buttons {
     width: 100%;
-    justify-content: flex-end;
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .product-create__actions-buttons .action-btn {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .product-list__main {
+    padding: 10px 8px 18px;
+  }
+
+  .product-create {
+    --product-create-field-height: 36px;
+  }
+
+  .product-create__panel {
+    padding: 10px;
+    border-radius: 9px;
+  }
+
+  .product-create__upload-title {
+    font-size: 13px;
+  }
+
+  .product-create__upload-hint {
+    font-size: 11px;
+  }
+
+  .product-create__upload-icon {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 8px;
+    font-size: 18px;
+  }
+
+  .product-create__upload-item {
+    min-height: 110px;
+  }
+
+  .product-create__upload-action {
+    min-width: 0;
+    flex: 1;
+    height: 26px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .product-create__actions-title {
+    font-size: 13px;
+  }
+
+  .product-create__actions-sub {
+    font-size: 11px;
+  }
+
+  .product-create__actions-buttons .action-btn {
+    height: 34px;
+    font-size: 12px;
   }
 }
 </style>
@@ -1335,5 +1448,140 @@ onUnmounted((): void => {
     var(--color-primary-amber-34)
   );
   box-shadow: inset 0 0 0 1px var(--color-primary-amber-60);
+}
+
+.product-create__preview-dialog {
+  margin-top: 8vh;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-primary-amber-34);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 94%, var(--color-primary-amber-06)) 0%,
+    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 98%, transparent) 100%
+  );
+  box-shadow:
+    0 20px 44px color-mix(in srgb, #000 56%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-primary-amber-20) 52%, transparent) inset,
+    0 0 24px var(--color-primary-amber-12);
+}
+
+.product-create__preview-dialog .el-dialog__header {
+  margin-right: 0;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--color-primary-amber-22);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary-amber-14) 52%, transparent) 0%,
+    transparent 100%
+  );
+}
+
+.product-create__preview-dialog .el-dialog__title {
+  color: color-mix(in srgb, var(--color-primary-amber) 78%, #fff);
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-shadow: 0 0 12px color-mix(in srgb, var(--color-primary-amber-20) 72%, transparent);
+}
+
+.product-create__preview-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: var(--color-primary-amber-70) !important;
+  width: 15px !important;
+  height: 15px !important;
+  transition: color 0.14s ease !important;
+}
+
+.product-create__preview-dialog .el-dialog__headerbtn {
+  width: 28px !important;
+  height: 28px !important;
+  top: 14px !important;
+  right: 14px !important;
+  border: 1px solid var(--color-primary-amber-20) !important;
+  border-radius: 7px !important;
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 88%,
+    var(--color-primary-amber-08)
+  ) !important;
+  transition:
+    background-color 0.14s ease,
+    box-shadow 0.14s ease,
+    transform 0.14s ease,
+    border-color 0.14s ease !important;
+}
+
+.product-create__preview-dialog .el-dialog__headerbtn:hover {
+  border-color: var(--color-primary-amber) !important;
+  background: var(--color-primary-amber-85) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14) !important;
+  transform: translateY(-1px) !important;
+}
+
+.product-create__preview-dialog .el-dialog__headerbtn:hover .el-dialog__close,
+.product-create__preview-dialog .el-dialog__headerbtn:focus-visible .el-dialog__close {
+  color: #fff !important;
+}
+
+.product-create__preview-dialog .el-dialog__headerbtn:active {
+  transform: translateY(0) !important;
+  background: var(--color-primary-amber) !important;
+}
+
+.product-create__preview-dialog .el-dialog__headerbtn:focus-visible {
+  outline: none !important;
+  box-shadow:
+    0 0 0 2px var(--color-primary-amber-18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14) !important;
+}
+
+.product-create__preview-dialog .el-dialog__body {
+  padding: 12px;
+}
+
+.product-create__preview-modal {
+  background: color-mix(in srgb, #05070a 72%, var(--color-primary-amber-10));
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 900px) {
+  .product-create__preview-dialog {
+    margin-top: 7vh;
+  }
+}
+
+@media (max-width: 760px) {
+  .product-create__preview-dialog {
+    width: min(640px, calc(100vw - 20px)) !important;
+    margin-top: 6vh;
+    border-radius: 10px;
+  }
+
+  .product-create__preview-dialog .el-dialog__header {
+    padding: 10px 12px 8px;
+  }
+
+  .product-create__preview-dialog .el-dialog__body {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 520px) {
+  .product-create__preview-dialog {
+    width: calc(100vw - 12px) !important;
+    margin-top: 3vh;
+    border-radius: 9px;
+  }
+
+  .product-create__preview-dialog .el-dialog__header {
+    padding: 9px 10px 7px;
+  }
+
+  .product-create__preview-dialog .el-dialog__title {
+    font-size: 14px;
+  }
+
+  .product-create__preview-dialog .el-dialog__body {
+    padding: 8px;
+  }
 }
 </style>

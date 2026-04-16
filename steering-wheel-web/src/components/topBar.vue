@@ -622,6 +622,35 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (max-width: 640px) {
+  .product-list__topbar--compact .product-list__mobile-menu-btn {
+    width: 31px;
+    height: 31px;
+    border-radius: 8px;
+    border-color: color-mix(in srgb, var(--color-primary-amber-45) 64%, rgba(255, 255, 255, 0.1));
+    background: linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--color-cockpit-bg-mid-96) 90%, var(--color-primary-amber-12)) 0%,
+      color-mix(in srgb, var(--color-cockpit-bg-mid-97) 93%, #000) 100%
+    );
+    box-shadow:
+      0 6px 12px rgba(0, 0, 0, 0.24),
+      inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent);
+  }
+
+  .product-list__topbar--compact .product-list__mobile-menu-icon,
+  .product-list__topbar--compact .product-list__mobile-menu-icon::before,
+  .product-list__topbar--compact .product-list__mobile-menu-icon::after {
+    width: 13px;
+  }
+
+  .product-list__topbar--compact .product-list__mobile-menu-icon::before {
+    top: -4px;
+  }
+
+  .product-list__topbar--compact .product-list__mobile-menu-icon::after {
+    top: 4px;
+  }
+
   .product-list__topbar--menu-open {
     border-bottom-color: color-mix(in srgb, var(--color-primary-amber-45) 58%, transparent);
     box-shadow:

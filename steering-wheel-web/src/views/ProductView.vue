@@ -225,9 +225,9 @@ const isHome = computed<boolean>(() => route.name === 'home');
 const isProductCreate = computed<boolean>(() => route.name === 'productCreate');
 
 /** 与 TopBar 实测 offsetHeight 同步，sticky 搜索条紧贴导航底边 */
-const topBarOffsetPx = ref(PRODUCT_VIEW_CONSTANTS.INITIAL_TOPBAR_OFFSET_PX);
+const topBarOffsetPx = ref<number>(PRODUCT_VIEW_CONSTANTS.INITIAL_TOPBAR_OFFSET_PX);
 const toolbarRef = ref<HTMLElement | null>(null);
-const toolbarHeightPx = ref(PRODUCT_VIEW_CONSTANTS.INITIAL_TOOLBAR_HEIGHT_PX);
+const toolbarHeightPx = ref<number>(PRODUCT_VIEW_CONSTANTS.INITIAL_TOOLBAR_HEIGHT_PX);
 
 const onTopBarLayoutHeight = (px: number): void => {
   topBarOffsetPx.value = px;
@@ -915,9 +915,13 @@ if (typeof ResizeObserver !== 'undefined') {
 }
 
 .product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1rem;
+  column-count: 4;
+  column-gap: 1rem;
+}
+
+.product-card-wow {
+  break-inside: avoid;
+  margin-bottom: 1rem;
 }
 
 .product-list__result {
@@ -1026,8 +1030,6 @@ if (typeof ResizeObserver !== 'undefined') {
   &__img {
     position: relative;
     z-index: 1;
-    aspect-ratio: 1 / 1;
-    min-height: 216px;
     border-radius: 8px;
     overflow: hidden;
     display: flex;
@@ -1048,8 +1050,8 @@ if (typeof ResizeObserver !== 'undefined') {
 
     img {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
+      height: auto;
+      object-fit: contain;
       display: block;
       opacity: 0;
       transition:
@@ -1381,8 +1383,8 @@ if (typeof ResizeObserver !== 'undefined') {
   }
 
   .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.1rem;
+    column-count: 4;
+    column-gap: 1.1rem;
   }
 }
 
@@ -1451,8 +1453,8 @@ if (typeof ResizeObserver !== 'undefined') {
   }
 
   .product-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.85rem;
+    column-count: 4;
+    column-gap: 0.85rem;
   }
 
   .product-card {
@@ -1483,7 +1485,7 @@ if (typeof ResizeObserver !== 'undefined') {
 
 @media (max-width: 1180px) {
   .product-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-count: 3;
   }
 }
 
@@ -1545,7 +1547,8 @@ if (typeof ResizeObserver !== 'undefined') {
   }
 
   .product-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-count: 2;
+    column-gap: 0.85rem;
   }
 }
 
@@ -1649,8 +1652,8 @@ if (typeof ResizeObserver !== 'undefined') {
   }
 
   .product-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+    column-count: 2;
+    column-gap: 0.85rem;
   }
 
   .product-card {
@@ -1716,6 +1719,11 @@ if (typeof ResizeObserver !== 'undefined') {
       min-width: 82px;
       padding: 0 10px;
     }
+  }
+
+  .product-grid {
+    column-count: 2;
+    column-gap: 0.85rem;
   }
 
   .product-list__toolbar .btn {

@@ -111,25 +111,30 @@ body,
 }
 
 .action-btn--danger {
-  border-color: color-mix(in srgb, #ef4444 42%, var(--color-primary-amber-35));
+  border-color: color-mix(in srgb, var(--color-primary-amber-35) 75%, transparent);
   background: color-mix(
     in srgb,
-    rgba(127, 29, 29, 0.26) 62%,
-    var(--color-cockpit-bg-mid-97)
+    var(--color-cockpit-bg-mid-97) 78%,
+    var(--color-primary-amber-24)
   );
-  color: color-mix(in srgb, #fff 84%, #fca5a5);
+  color: color-mix(in srgb, #fff 76%, var(--color-primary-amber-20));
+  box-shadow:
+    0 6px 12px color-mix(in srgb, var(--color-primary-amber-18) 40%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .action-btn--danger:hover,
 .action-btn--danger:focus-visible {
-  border-color: color-mix(in srgb, #f87171 55%, var(--color-primary-amber-48));
+  border-color: color-mix(in srgb, var(--color-primary-amber-48) 80%, transparent);
   background: color-mix(
     in srgb,
-    rgba(153, 27, 27, 0.34) 66%,
-    var(--color-cockpit-bg-mid-97)
+    var(--color-cockpit-bg-mid-97) 70%,
+    var(--color-primary-amber-24)
   );
   color: #fff;
-  box-shadow: 0 8px 16px color-mix(in srgb, #ef4444 20%, transparent);
+  box-shadow:
+    0 8px 16px color-mix(in srgb, var(--color-primary-amber-18) 50%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .action-btn--back {

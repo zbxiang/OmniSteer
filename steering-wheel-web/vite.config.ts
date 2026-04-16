@@ -10,17 +10,23 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
   const proxyPrefix = env.VITE_API_PROXY_PREFIX || '/api'
   const proxyTarget = env.VITE_API_PROXY_TARGET || ''
+  const isProdBuild = mode === 'production'
+  const isBuild = mode === 'production' || mode === 'test'
 
   return {
     plugins: [
       vue(),
       tailwindcss(),
-      eslintPlugin({
-        include: ['src/**/*.ts', 'src/**/*.vue'],
-        exclude: ['node_modules', 'dist'],
-        cache: false,
-        fix: true,
-      }),
+      ...(!isBuild
+        ? [
+            eslintPlugin({
+              include: ['src/**/*.ts', 'src/**/*.vue'],
+              exclude: ['node_modules', 'dist'],
+              cache: false,
+              fix: true,
+            }),
+          ]
+        : []),
       viteImagemin({
         disable: false,
         verbose: true,
@@ -59,7 +65,10 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      sourcemap: true,
+      // 仅生产关闭 sourcemap，加快构建并减小产物体积
+      sourcemap: !isProdBuild,
+      // 面向现代浏览器，减少额外转译开销
+      target: 'es2020',
       assetsDir: 'assets',
       assetsInlineLimit: 0,
       minify: 'esbuild',
@@ -92,8 +101,7 @@ export default defineConfig(({ mode }) => {
             }
             return `static/js/[name]-[hash].js`;
           },
-          entryFileNames: 'static/js/[name]-[hash].js',
-          maxSize: '1000Kb'
+          entryFileNames: 'static/js/[name]-[hash].js'
         },
       },
       esbuild: {

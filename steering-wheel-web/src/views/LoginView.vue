@@ -206,10 +206,13 @@ onUnmounted(() => {
       transparent 78%
     ),
     var(--color-cockpit-bg-mid);
+  display: flex;
+  align-items: center;
 }
 
 .login-page__card {
-  max-width: 420px;
+  max-width: clamp(420px, 38vw, 580px);
+  width: 100%;
   margin: 0 auto;
   border-radius: 12px;
   border: 1px solid var(--color-primary-amber-24);
@@ -222,6 +225,30 @@ onUnmounted(() => {
     0 10px 24px rgba(0, 0, 0, 0.24),
     0 1px 0 rgba(255, 255, 255, 0.06) inset;
   padding: 30px 24px;
+}
+
+@media (min-width: 1440px) {
+  .login-page__card {
+    max-width: 520px;
+    width: 100%;
+    padding: 36px 30px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .login-page__card {
+    max-width: 580px;
+    width: 100%;
+    padding: 40px 34px;
+  }
+}
+
+@media (min-width: 1366px) {
+  .login-page__card {
+    max-width: 500px;
+    width: 100%;
+    padding: 34px 28px;
+  }
 }
 
 .login-page__header {
@@ -297,6 +324,10 @@ onUnmounted(() => {
 
 .login-page__form-item {
   margin-bottom: 16px;
+}
+
+.login-page__form-item:last-child {
+  margin-bottom: 0;
 }
 
 .login-page__submit {
@@ -404,8 +435,127 @@ onUnmounted(() => {
 }
 
 @media (max-width: 560px) {
+  .login-page {
+    padding: 18px 12px;
+    align-items: flex-start;
+  }
+
   .login-page__card {
+    max-width: none;
+    width: 100%;
     padding: 24px 18px;
+    border-radius: 10px;
+  }
+
+  .login-page__header {
+    margin-bottom: 18px;
+  }
+
+  .login-page__brand {
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .login-page__brand-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+
+  .login-page__brand-wheel {
+    width: 16px;
+    height: 16px;
+  }
+
+  .login-page__brand-title {
+    font-size: 16px;
+  }
+
+  .login-page__title {
+    font-size: 19px;
+  }
+
+  .login-page__subtitle {
+    margin-top: 6px;
+    font-size: 12px;
+  }
+
+  .login-page__form-item {
+    margin-bottom: 12px;
+  }
+
+  .login-page__submit {
+    height: 40px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  :deep(.login-page__form .el-form-item__label) {
+    padding-bottom: 4px;
+    line-height: 1.3;
+    font-size: 13px;
+  }
+
+  :deep(.login-page__form .el-input__wrapper) {
+    min-height: 40px;
+    border-radius: 8px;
+  }
+
+  :deep(.login-page__form .el-input__inner) {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 420px) {
+  .login-page {
+    padding: 12px 8px;
+  }
+
+  .login-page__card {
+    max-width: none;
+    width: 100%;
+    padding: 18px 12px;
+    border-radius: 9px;
+  }
+
+  .login-page__header {
+    margin-bottom: 14px;
+  }
+
+  .login-page__brand-mark {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+  }
+
+  .login-page__brand-wheel {
+    width: 14px;
+    height: 14px;
+  }
+
+  .login-page__brand-title {
+    font-size: 15px;
+  }
+
+  .login-page__title {
+    font-size: 17px;
+  }
+
+  .login-page__subtitle {
+    font-size: 11px;
+  }
+
+  .login-page__submit {
+    height: 38px;
+    font-size: 13px;
+  }
+
+  :deep(.login-page__form .el-checkbox__label) {
+    font-size: 12px;
+  }
+
+  :deep(.login-page__form .el-input__wrapper) {
+    min-height: 38px;
   }
 }
 </style>

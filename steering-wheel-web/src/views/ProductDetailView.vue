@@ -12,13 +12,51 @@
 
         <div class="product-detail__panel">
           <div class="product-detail__layout" v-if="product">
-            <div class="product-detail__img">
-              <img
-                v-if="product.images?.[0]"
-                :src="product.images[0]"
-                :alt="product.name"
+            <div class="product-detail__media">
+              <div class="product-detail__img">
+                <button
+                  v-if="productImages.length > 1"
+                  type="button"
+                  class="product-detail__img-nav product-detail__img-nav--prev"
+                  aria-label="上一张图片"
+                  @click="showPrevImage"
+                >
+                  ‹
+                </button>
+                <img
+                  v-if="currentImage"
+                  :src="currentImage"
+                  :alt="product.name"
+                >
+                <div v-else class="product-detail__img-placeholder">⚙</div>
+                <button
+                  v-if="productImages.length > 1"
+                  type="button"
+                  class="product-detail__img-nav product-detail__img-nav--next"
+                  aria-label="下一张图片"
+                  @click="showNextImage"
+                >
+                  ›
+                </button>
+              </div>
+              <div
+                v-if="productImages.length > 1"
+                class="product-detail__thumbs"
+                aria-label="产品图片缩略图"
               >
-              <div v-else class="product-detail__img-placeholder">⚙</div>
+                <button
+                  v-for="(imageUrl, idx) in productImages"
+                  :key="`${product.id}-${idx}`"
+                  type="button"
+                  :class="[
+                    'product-detail__thumb',
+                    { 'product-detail__thumb--active': idx === currentImageIndex },
+                  ]"
+                  @click="setCurrentImageIndex(idx)"
+                >
+                  <img :src="imageUrl" :alt="`${product.name} 缩略图 ${idx + 1}`">
+                </button>
+              </div>
             </div>
 
             <div class="product-detail__info">
@@ -109,9 +147,56 @@ const router = useRouter();
 const product = ref<ProductOut | null>(null);
 const loading = ref<boolean>(false);
 const togglingState = ref<boolean>(false);
+const currentImageIndex = ref<number>(0);
 
-const goToEdit = (id: string): void => {
-  void router.push(`/products/${id}/edit`);
+const parseImageSource = (source: unknown): string[] => {
+  if (Array.isArray(source)) {
+    return source
+      .filter((item): item is string => typeof item === 'string')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  if (typeof source === 'string') {
+    return source
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const productImages = computed<string[]>(() =>
+  parseImageSource((product.value as ProductOut & { imageUrl?: unknown } | null)?.images)
+    .concat(parseImageSource((product.value as ProductOut & { imageUrl?: unknown } | null)?.imageUrl))
+    .filter((url, index, list) => list.indexOf(url) === index),
+);
+
+const currentImage = computed<string>(() => {
+  const images = productImages.value;
+  if (!images.length) return '';
+  const safeIndex = Math.min(Math.max(currentImageIndex.value, 0), images.length - 1);
+  return images[safeIndex] || '';
+});
+
+const setCurrentImageIndex = (idx: number): void => {
+  if (idx < 0 || idx >= productImages.value.length) return;
+  currentImageIndex.value = idx;
+};
+
+const showPrevImage = (): void => {
+  const total = productImages.value.length;
+  if (total <= 1) return;
+  currentImageIndex.value = (currentImageIndex.value - 1 + total) % total;
+};
+
+const showNextImage = (): void => {
+  const total = productImages.value.length;
+  if (total <= 1) return;
+  currentImageIndex.value = (currentImageIndex.value + 1) % total;
+};
+
+const goToEdit = (id: string | number): void => {
+  void router.push(`/products/${String(id)}/edit`);
 };
 
 const goToList = (): void => {
@@ -131,6 +216,9 @@ const takeDownProduct = async (): Promise<void> => {
         type: 'warning',
         confirmButtonText: '确认下架',
         cancelButtonText: '取消',
+        customClass: 'logout-confirm-dialog',
+        confirmButtonClass: 'logout-confirm-dialog__confirm-btn',
+        cancelButtonClass: 'logout-confirm-dialog__cancel-btn',
       },
     );
   } catch {
@@ -196,6 +284,7 @@ const fetchDetail = async (): Promise<void> => {
   loading.value = true;
   try {
     product.value = await getProductDetail(productId);
+    currentImageIndex.value = 0;
   } catch (e) {
     if (isRequestCanceled(e)) return;
     if (e instanceof RequestError && e.status === 404) {
@@ -274,6 +363,7 @@ onMounted((): void => {
   }
 
   &__img {
+    position: relative;
     border-radius: 12px;
     border: 1px solid var(--color-primary-amber-24);
     background: linear-gradient(145deg, v.$panel-bg 0%, var(--color-cockpit-bg-mid-96) 100%);
@@ -288,6 +378,81 @@ onMounted((): void => {
       object-fit: cover;
       display: block;
     }
+  }
+
+  &__img-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid var(--color-primary-amber-30);
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 76%, var(--color-primary-amber-16));
+    box-shadow: 0 8px 16px color-mix(in srgb, #000 36%, transparent);
+    transition: all 0.2s ease;
+  }
+
+  &__img-nav:hover {
+    border-color: var(--color-primary-amber-56);
+    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 70%, var(--color-primary-amber-25));
+  }
+
+  &__img-nav--prev {
+    left: 10px;
+  }
+
+  &__img-nav--next {
+    right: 10px;
+  }
+
+  &__thumbs {
+    margin-top: 0.65rem;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  &__thumb {
+    appearance: none;
+    border: 1px solid var(--color-primary-amber-22);
+    border-radius: 8px;
+    padding: 0;
+    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 92%, transparent);
+    overflow: hidden;
+    cursor: pointer;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+
+    img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  &__thumb:hover {
+    border-color: var(--color-primary-amber-48);
+    box-shadow: 0 6px 14px color-mix(in srgb, var(--color-primary-amber-18) 50%, transparent);
+    transform: translateY(-1px);
+  }
+
+  &__thumb--active {
+    border-color: var(--color-primary-amber-70);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--color-primary-amber-28) 72%, transparent),
+      0 8px 16px color-mix(in srgb, var(--color-primary-amber-20) 52%, transparent);
   }
 
   &__img-placeholder {
@@ -397,5 +562,216 @@ onMounted((): void => {
   max-width: 1280px;
   margin: 0 auto;
   padding: 20px 24px 40px;
+}
+
+@media (max-width: 900px) {
+  .product-list__main {
+    padding: 16px 16px 28px;
+  }
+
+  .product-detail__panel {
+    padding: 14px;
+  }
+
+  .product-detail__img {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 760px) {
+  .product-list__main {
+    padding: 12px 12px 22px;
+  }
+
+  .product-detail__breadcrumb {
+    margin: 6px 0 12px;
+  }
+
+  .product-detail__panel {
+    border-radius: 10px;
+    padding: 12px;
+  }
+
+  .product-detail__layout {
+    gap: 0.8rem;
+  }
+
+  .product-detail__img {
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+    border-radius: 10px;
+  }
+
+  .product-detail__img-nav {
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+  }
+
+  .product-detail__thumbs {
+    grid-template-columns: repeat(5, minmax(56px, 1fr));
+    gap: 0.45rem;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .product-detail__thumb {
+    min-width: 56px;
+  }
+
+  .product-detail__info {
+    border-radius: 10px;
+    padding: 0.85rem;
+  }
+
+  .product-detail__info h1 {
+    margin: 0;
+    font-size: 1.2rem;
+    line-height: 1.3;
+  }
+
+  .product-detail__price {
+    margin: 0.35rem 0 0.5rem;
+    font-size: 1.2rem;
+  }
+
+  .product-detail__desc {
+    margin: 0.75rem 0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .product-detail__attrs li {
+    gap: 0.6rem;
+    padding: 0.55rem 0;
+    flex-wrap: wrap;
+  }
+
+  .product-detail__attrs li > span:first-child {
+    min-width: 72px;
+  }
+
+  .product-detail__attrs li > span:last-child {
+    flex: 1;
+    min-width: 0;
+    text-align: right;
+    word-break: break-word;
+  }
+
+  .product-detail__actions {
+    margin-top: 0.8rem;
+    gap: 0.55rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .product-detail__actions .action-btn {
+    width: 100%;
+    margin-left: 0;
+    justify-content: center;
+  }
+
+  .product-detail__actions .action-btn--back {
+    grid-column: 1 / -1;
+  }
+
+  .product-detail__empty {
+    border-radius: 10px;
+    padding: 1rem 0.85rem;
+  }
+
+  .product-detail__empty h2 {
+    font-size: 1.15rem;
+  }
+
+  .product-detail__empty p {
+    margin: 0.65rem 0 0.9rem;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .product-detail__empty .action-btn {
+    width: 100%;
+    margin-left: 0;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .product-list__main {
+    padding: 10px 8px 18px;
+  }
+
+  .product-detail__panel {
+    border-radius: 9px;
+    padding: 10px;
+  }
+
+  .product-detail__img {
+    aspect-ratio: 1 / 1;
+    border-radius: 9px;
+  }
+
+  .product-detail__img-nav {
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+  }
+
+  .product-detail__thumbs {
+    margin-top: 0.5rem;
+    grid-template-columns: repeat(5, minmax(52px, 1fr));
+    gap: 0.4rem;
+  }
+
+  .product-detail__thumb {
+    min-width: 52px;
+    border-radius: 7px;
+  }
+
+  .product-detail__info {
+    border-radius: 9px;
+    padding: 0.75rem;
+  }
+
+  .product-detail__info h1 {
+    font-size: 1.05rem;
+  }
+
+  .product-detail__price {
+    font-size: 1.08rem;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+
+  .product-detail__desc {
+    font-size: 12px;
+  }
+
+  .product-detail__attrs li {
+    padding: 0.48rem 0;
+    font-size: 12px;
+  }
+
+  .product-detail__attrs li > span:first-child {
+    min-width: 64px;
+  }
+
+  .product-detail__empty {
+    border-radius: 9px;
+    padding: 0.9rem 0.7rem;
+  }
+
+  .product-detail__empty h2 {
+    font-size: 1.02rem;
+  }
+
+  .product-detail__empty p {
+    margin: 0.55rem 0 0.8rem;
+    font-size: 12px;
+  }
 }
 </style>

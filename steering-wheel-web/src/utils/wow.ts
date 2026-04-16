@@ -15,9 +15,7 @@ const DEFAULT_WOW_OPTIONS: WowOptions = {
   live: true,
 };
 
-export const createWowController = (
-  options?: WowOptions,
-): WowController => {
+export const createWowController = (options?: WowOptions): WowController => {
   let wowInstance: InstanceType<typeof WOW> | null = null;
 
   const init = (): void => {

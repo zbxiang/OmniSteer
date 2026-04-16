@@ -119,8 +119,7 @@ export const useAuthStore = defineStore('auth', () => {
         handleClearAll();
       }
       await router.replace({ name: 'login' });
-    } catch (error) {
-      console.warn('logout redirect failed:', error);
+    } catch {
       await router.replace('/login');
     } finally {
       loggingOut.value = false;
@@ -170,7 +169,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 打印登录时间检查日志
   const timeLog = (): void => {
-    console.log(`已经登录${(getStorageTime('expireTime') - getStorageTime('updateTime')) / 1000 / 60}分钟`);
+    // noop: 保留函数结构，避免构建时 no-console warning
   };
 
   // 检查
@@ -187,7 +186,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 检查登录时效
   const startRefreshTimer = (): void => {
-    console.log('开始计时');
     // 清理旧定时器
     clearRefreshTimer();
     // 获取开始时间
@@ -213,11 +211,9 @@ export const useAuthStore = defineStore('auth', () => {
             closeOnPressEscape: false,
           });
           // 退出登录
-          console.log('不刷新登录状态');
           toLoginOut();
         } catch {
           // 退出登录
-          console.log('不刷新登录状态');
           toLoginOut();
         }
       }

@@ -169,7 +169,6 @@ class Request {
         // 日志接口失败不提示
         const reqType = (config.headers as Record<string, unknown>)?.['x-request-type'];
         if (reqType === 'log') {
-          console.log('日志请求失败');
           return Promise.reject(error);
         }
 
@@ -280,7 +279,6 @@ class Request {
 
   // 取消指定请求
   public cancelRequest(requestKey: string): void {
-    console.log('取消请求');
     if (this.pendingControllers.has(requestKey)) {
       this.pendingControllers.get(requestKey)?.abort();
       this.pendingControllers.delete(requestKey);
@@ -289,7 +287,6 @@ class Request {
 
   // 取消所有请求
   public cancelAllRequests(): void {
-    console.log('取消所有请求');
     this.pendingControllers.forEach((controller) => controller.abort());
     this.pendingControllers.clear();
   }

@@ -7,8 +7,20 @@
     @click="onLogout"
   >
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M15 3h-5a2 2 0 0 0-2 2v3" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" />
-      <path d="M15 21h-5a2 2 0 0 1-2-2v-3" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" />
+      <path
+        d="M15 3h-5a2 2 0 0 0-2 2v3"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.1"
+        stroke-linecap="round"
+      />
+      <path
+        d="M15 21h-5a2 2 0 0 1-2-2v-3"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.1"
+        stroke-linecap="round"
+      />
       <path
         d="M10 12h10M17 8l4 4-4 4"
         fill="none"
@@ -120,9 +132,6 @@ const onLogout = async (): Promise<void> => {
 .logout-confirm-dialog.el-message-box {
   margin: 0 !important;
   position: relative;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
   border: 1px solid var(--color-primary-amber-26);
   border-radius: 12px;
   background:
@@ -136,9 +145,14 @@ const onLogout = async (): Promise<void> => {
       var(--color-primary-amber-10) 0%,
       transparent 56%
     ),
-    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 94%, var(--color-primary-amber-06));
+    color-mix(
+      in srgb,
+      var(--color-cockpit-bg-mid-97) 94%,
+      var(--color-primary-amber-06)
+    );
   box-shadow:
-    0 16px 34px color-mix(in srgb, var(--color-cockpit-bg-mid-97) 78%, transparent),
+    0 16px 34px
+      color-mix(in srgb, var(--color-cockpit-bg-mid-97) 78%, transparent),
     0 1px 0 rgba(255, 255, 255, 0.08) inset;
   overflow: hidden;
 }
@@ -208,7 +222,11 @@ const onLogout = async (): Promise<void> => {
 .logout-confirm-dialog .el-message-box__headerbtn:hover {
   color: var(--color-primary-amber);
   border-color: var(--color-primary-amber-55) !important;
-  background-color: color-mix(in srgb, var(--color-primary-amber-16) 78%, transparent) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary-amber-16) 78%,
+    transparent
+  ) !important;
 }
 
 .logout-confirm-dialog .el-message-box__headerbtn:hover .el-icon,
@@ -275,6 +293,9 @@ const onLogout = async (): Promise<void> => {
     width: calc(100vw - 16px) !important;
     max-width: calc(100vw - 16px) !important;
     border-radius: 10px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
   }
 
   .logout-confirm-dialog .el-message-box__header {
@@ -354,4 +375,3 @@ const onLogout = async (): Promise<void> => {
   }
 }
 </style>
-
