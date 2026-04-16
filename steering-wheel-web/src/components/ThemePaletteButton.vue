@@ -111,8 +111,8 @@ const onCommand = (command: string): void => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border: 1px solid #e8e8e8;
   border-radius: 8px;
@@ -143,12 +143,14 @@ const onCommand = (command: string): void => {
 }
 
 .theme-palette-btn__icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   display: block;
 }
 
 .theme-palette-btn--embedded {
+  width: 28px;
+  height: 28px;
   border-color: transparent;
   background: transparent;
   box-shadow: none;

@@ -50,17 +50,26 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import LogoutAction from '@/components/LogoutAction.vue';
 import ThemePaletteButton from '@/components/ThemePaletteButton.vue';
+import { useAuthStore } from '@/stores/auth';
+import { useAppStore } from '@/stores/app';
 
 defineProps<{
-  systemName: string;
-  displayName: string;
-  userInitial: string;
   isHome: boolean;
   isProductCreate: boolean;
 }>();
+
+const authStore = useAuthStore();
+const appStore = useAppStore();
+const systemName = computed<string>(() => appStore.systemName);
+const displayName = computed<string>(() => {
+  const fallback = '管理员';
+  const name = authStore.userInfo?.userName;
+  return typeof name === 'string' && name.trim() ? name : fallback;
+});
+const userInitial = computed<string>(() => displayName.value.slice(0, 1).toUpperCase());
 
 const emit = defineEmits<{
   /** 整块 header 实际高度（含底边），供下方 sticky 条紧贴定位 */
@@ -115,32 +124,31 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   top: 0;
   z-index: 50;
   flex-shrink: 0;
-  /* 整体更暗：压一层中性遮罩 + 略提高座舱不透明度 */
+  /* 主题色导航：深色基底 + 主题色柔和泛光 */
   background:
     linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0.26) 0%,
-      rgba(0, 0, 0, 0.12) 100%
+      color-mix(in srgb, #000 70%, var(--color-primary-amber-20)) 0%,
+      color-mix(in srgb, #000 78%, var(--color-primary-amber-12)) 100%
     ),
     radial-gradient(
       118% 150% at 8% -35%,
-      color-mix(in srgb, var(--color-primary-amber) 10%, transparent) 0%,
-      transparent 52%
+      color-mix(in srgb, var(--color-primary-amber-35) 38%, transparent) 0%,
+      transparent 62%
     ),
     radial-gradient(
       125% 170% at 96% -45%,
-      color-mix(in srgb, var(--color-primary-amber) 7%, transparent) 0%,
-      transparent 58%
+      color-mix(in srgb, var(--color-primary-amber-28) 32%, transparent) 0%,
+      transparent 68%
     ),
     linear-gradient(
       175deg,
-      color-mix(in srgb, var(--color-cockpit-bg-mid-97) 94%, transparent) 0%,
-      color-mix(in srgb, var(--color-cockpit-bg-mid-96) 97%, transparent) 100%
+      color-mix(in srgb, var(--color-cockpit-bg-mid-97) 86%, var(--color-primary-amber-14)) 0%,
+      color-mix(in srgb, var(--color-cockpit-bg-mid-96) 90%, var(--color-primary-amber-10)) 100%
     );
   backdrop-filter: saturate(1.04) blur(14px);
   -webkit-backdrop-filter: saturate(1.04) blur(14px);
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--color-primary-amber-28) 36%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary-amber-35) 48%, transparent);
   box-shadow:
     0 14px 36px rgba(0, 0, 0, 0.38),
     inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent);
@@ -150,9 +158,9 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .product-list__topbar--compact {
-  border-bottom-color: color-mix(in srgb, var(--color-primary-amber-28) 30%, transparent);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
   box-shadow:
-    0 10px 32px rgba(0, 0, 0, 0.45),
+    0 10px 28px rgba(0, 0, 0, 0.42),
     inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent);
 }
 
@@ -224,7 +232,7 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .product-list__brand:hover {
-  background-color: color-mix(in srgb, #fff 6%, transparent);
+  background-color: color-mix(in srgb, #fff 4%, transparent);
 }
 
 .product-list__brand:focus-visible {
@@ -302,7 +310,7 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
   padding: 18px 20px;
   font-size: 15px;
-  color: color-mix(in srgb, var(--color-zinc-muted) 82%, transparent);
+  color: color-mix(in srgb, #fff 68%, var(--color-zinc-muted));
   text-decoration: none;
   transition:
     color 0.2s ease,
@@ -314,9 +322,9 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   padding: 10px 16px;
   font-size: 14px;
 }
-.product-list__tab:hover { color: var(--color-primary-amber); }
+.product-list__tab:hover { color: color-mix(in srgb, #fff 90%, var(--color-primary-amber)); }
 .product-list__tab--active {
-  color: var(--color-primary-amber);
+  color: color-mix(in srgb, #fff 88%, var(--color-primary-amber));
   font-weight: 600;
 }
 .product-list__tab--active::before {
@@ -329,10 +337,10 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   border-radius: 999px;
   background: color-mix(
     in srgb,
-    var(--color-primary-amber-18) 40%,
-    var(--color-cockpit-bg-mid-97)
+    var(--color-primary-amber-12) 26%,
+    var(--color-cockpit-bg-mid-97) 74%
   );
-  border: 1px solid color-mix(in srgb, var(--color-primary-amber-35) 55%, transparent);
+  border: 1px solid color-mix(in srgb, rgba(255, 255, 255, 0.24) 55%, transparent);
   z-index: -1;
   transition:
     left 0.32s $topbar-ease,
@@ -357,9 +365,9 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   border-radius: 2px 2px 0 0;
   background: linear-gradient(
     90deg,
-    var(--color-primary-amber-55) 0%,
-    var(--color-primary-amber) 50%,
-    var(--color-primary-amber-55) 100%
+    color-mix(in srgb, var(--color-primary-amber-55) 72%, transparent) 0%,
+    color-mix(in srgb, var(--color-primary-amber) 82%, transparent) 50%,
+    color-mix(in srgb, var(--color-primary-amber-55) 72%, transparent) 100%
   );
   transition: left 0.32s $topbar-ease, right 0.32s $topbar-ease;
 }
@@ -373,13 +381,13 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 .product-list__user {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   justify-self: end;
   transition: gap 0.32s $topbar-ease;
 }
 
 .product-list__topbar--compact .product-list__user {
-  gap: 6px;
+  gap: 9px;
 }
 
 .product-list__user-sep {
@@ -394,25 +402,44 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   height: 14px;
 }
 
-/* 退出按钮与收缩态顶栏对齐（尺寸与品牌/头像一致） */
-.product-list__topbar--compact :deep(.product-list__logout) {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+/* 退出按钮与头像尺寸对齐（常态 30 / 收缩态 26） */
+:deep(.product-list__logout) {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
 }
 
-.product-list__topbar--compact :deep(.product-list__logout svg) {
+:deep(.product-list__logout svg) {
   width: 15px;
   height: 15px;
 }
+
+.product-list__topbar--compact :deep(.product-list__logout) {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+.product-list__topbar--compact :deep(.product-list__logout svg) {
+  width: 14px;
+  height: 14px;
+}
+
+:deep(.product-list__logout) {
+  margin-left: 8px;
+}
+
+.product-list__topbar--compact :deep(.product-list__logout) {
+  margin-left: 6px;
+}
 .product-list__avatar {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: color-mix(in srgb, #fff 84%, var(--color-primary-amber-20));
   color: var(--color-primary-amber);
   border: 1px solid var(--color-primary-amber-24);
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -424,19 +451,19 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .product-list__topbar--compact .product-list__avatar {
-  width: 28px;
-  height: 28px;
-  font-size: 12px;
+  width: 22px;
+  height: 22px;
+  font-size: 9px;
 }
 
 .product-list__user-name {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--color-zinc-text);
   transition: font-size 0.32s $topbar-ease;
 }
 
 .product-list__topbar--compact .product-list__user-name {
-  font-size: 13px;
+  font-size: 11px;
 }
 
 </style>

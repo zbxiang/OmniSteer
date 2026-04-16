@@ -1,9 +1,6 @@
 <template>
   <div class="product-list">
     <TopBar
-      :system-name="appStore.systemName"
-      :display-name="displayName"
-      :user-initial="userInitial"
       :is-home="isHome"
       :is-product-create="isProductCreate"
       @layout-height="onTopBarLayoutHeight"
@@ -48,7 +45,7 @@
           <span class="btn__icon" aria-hidden="true"
             ><el-icon><RefreshRight /></el-icon
           ></span>
-          重置筛选
+          重置
         </button>
       </section>
       <div
@@ -97,7 +94,7 @@
             >
             <div class="product-card__img">
               <div
-                v-if="p.imageUrl && !isImageLoaded(p.id)"
+                v-if="p.imageUrl && !isImageLoaded(p)"
                 class="product-card__img-placeholder"
                 aria-hidden="true"
               />
@@ -107,8 +104,8 @@
                 :alt="p.name"
                 loading="lazy"
                 decoding="async"
-                :class="{ 'product-card__img-el--loaded': isImageLoaded(p.id) }"
-                @load="onProductImageLoad(p.id)"
+                :class="{ 'product-card__img-el--loaded': isImageLoaded(p) }"
+                @load="onProductImageLoad(p)"
               />
               <span v-else>⚙</span>
             </div>
@@ -194,15 +191,11 @@ import { normalizeProductStateFromOut } from '@/utils/productState';
 import { getProductPage } from '@/api/product';
 import { isRequestCanceled, RequestError } from '@/utils/request';
 import { ElMessage } from 'element-plus';
-import { useAppStore } from '@/stores/app';
-import { useAuthStore } from '@/stores/auth';
 import ImageSearchDialog from '@/components/ImageSearchDialog.vue';
 import TopBar from '@/components/topBar.vue';
 import { createWowController } from '@/utils/wow';
 import { PRODUCT_VIEW_CONSTANTS } from '@/constants/productView';
 
-const appStore = useAppStore();
-const authStore = useAuthStore();
 const route = useRoute();
 const keyword = ref<string>('');
 const showModal = ref<boolean>(false);
@@ -215,7 +208,10 @@ let loadMoreObserver: IntersectionObserver | null = null;
 const wowController = createWowController();
 
 const products = ref<ProductCardItem[]>([]);
-const loadedImageIds = ref<Set<number>>(new Set<number>());
+const loadedImageKeys = ref<Set<string>>(new Set<string>());
+
+const getImageLoadKey = (product: Pick<ProductCardItem, 'id' | 'imageUrl'>): string =>
+  `${product.id}-${product.imageUrl || ''}`;
 
 const totalPages = computed<number>(
   () => Math.ceil(total.value / PRODUCT_VIEW_CONSTANTS.PAGE_SIZE) || 1,
@@ -223,15 +219,6 @@ const totalPages = computed<number>(
 const hasMore = computed<boolean>(() => currentPage.value < totalPages.value);
 const filteredPaged = computed<ProductCardItem[]>(() => products.value);
 
-const displayName = computed<string>(() => {
-  const info = authStore.userInfo;
-  const fallback = '管理员';
-  if (!info) return fallback;
-  return info.userName?.trim() || fallback;
-});
-const userInitial = computed<string>(() =>
-  displayName.value.slice(0, 1).toUpperCase(),
-);
 const isHome = computed<boolean>(() => route.name === 'home');
 const isProductCreate = computed<boolean>(() => route.name === 'productCreate');
 
@@ -294,12 +281,17 @@ const fetchProducts = async (append = false): Promise<void> => {
       }),
     );
     if (!append) {
-      loadedImageIds.value = new Set<number>();
+      const currentKeys = new Set(mapped.map((item) => getImageLoadKey(item)));
+      // 保留当前列表仍在使用的已加载图片，避免搜索后节点复用导致 load 不再触发
+      loadedImageKeys.value = new Set(
+        [...loadedImageKeys.value].filter((key) => currentKeys.has(key)),
+      );
     }
     products.value = append ? [...products.value, ...mapped] : mapped;
     total.value = res.data?.totalElements ?? list.length;
   } catch (e) {
     if (isRequestCanceled(e as Error)) return;
+    if (e instanceof RequestError && e.isNotified) return;
     const msg =
       e instanceof RequestError ? e.message : '产品列表加载失败，请稍后重试';
     ElMessage.error(msg);
@@ -308,12 +300,12 @@ const fetchProducts = async (append = false): Promise<void> => {
   }
 };
 
-const onProductImageLoad = (productId: number): void => {
-  loadedImageIds.value.add(productId);
+const onProductImageLoad = (product: ProductCardItem): void => {
+  loadedImageKeys.value.add(getImageLoadKey(product));
 };
 
-const isImageLoaded = (productId: number): boolean =>
-  loadedImageIds.value.has(productId);
+const isImageLoaded = (product: ProductCardItem): boolean =>
+  loadedImageKeys.value.has(getImageLoadKey(product));
 
 const refreshFirstPage = (): void => {
   currentPage.value = 1;

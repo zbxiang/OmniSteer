@@ -23,6 +23,7 @@ export class RequestError extends Error {
   status?: number;
   code?: string;
   isCanceled: boolean;
+  isNotified: boolean;
 
   constructor(message: string, options?: RequestErrorOptions) {
     super(message);
@@ -30,8 +31,33 @@ export class RequestError extends Error {
     this.status = options?.status;
     this.code = options?.code;
     this.isCanceled = Boolean(options?.isCanceled);
+    this.isNotified = Boolean(options?.isNotified);
   }
 }
+
+const getApiErrorMessage = (
+  message: ApiResponse['message'],
+  fallback = '请求失败',
+): string => {
+  if (typeof message === 'string') return message;
+  if (message && typeof message === 'object') {
+    const desc = (message as { desc?: string }).desc;
+    if (typeof desc === 'string' && desc.trim()) return desc;
+  }
+  return fallback;
+};
+
+let lastErrorTip = '';
+let lastErrorTipAt = 0;
+const showErrorMessage = (message: string): void => {
+  const normalizedMessage = message.trim();
+  if (!normalizedMessage) return;
+  const now = Date.now();
+  if (normalizedMessage === lastErrorTip && now - lastErrorTipAt < 800) return;
+  lastErrorTip = normalizedMessage;
+  lastErrorTipAt = now;
+  ElMessage.error(normalizedMessage);
+};
 
 class Request {
   private readonly instance: AxiosInstance;
@@ -96,7 +122,7 @@ class Request {
         const successByFlag = data?.success === true;
         const isNotSuccess = !successByFlag && !successByCode;
         if (isNotSuccess) {
-          ElMessage.error(data?.message || '数据异常');
+          showErrorMessage(getApiErrorMessage(data?.message, '数据异常'));
           const auth = useAuthStore();
           const permissionCode = Number(codeValue);
           // 用户不存在
@@ -109,9 +135,11 @@ class Request {
             auth.toNotPermission();
           }
           setStorage('permissionCode', normalizedCode);
+          const errorMessage = getApiErrorMessage(data?.message, '数据异常');
           return Promise.reject(
-            new RequestError(data?.message || '数据异常', {
+            new RequestError(errorMessage, {
               code: normalizedCode,
+              isNotified: true,
             }),
           );
         }
@@ -146,49 +174,54 @@ class Request {
         }
 
         // 其他状态异常情况
-        this.handleRequestError(error);
-        return Promise.reject(error);
+        const requestError = this.handleRequestError(error);
+        return Promise.reject(requestError);
       },
     );
   }
 
-  private handleRequestError(error: AxiosError<ApiResponse>): void {
+  private handleRequestError(error: AxiosError<ApiResponse>): RequestError {
     if (!error.response) {
       if (error.request) {
-        ElMessage.error('网络错误');
-        return;
+        const message = '网络错误';
+        showErrorMessage(message);
+        return new RequestError(message, { isNotified: true });
       }
-      ElMessage.error('请求配置错误');
-      return;
+      const message = '请求配置错误';
+      showErrorMessage(message);
+      return new RequestError(message, { isNotified: true });
     }
     const { status, data } = error.response;
     const auth = useAuthStore();
+    let message = getApiErrorMessage(data?.message);
     switch (status) {
       case 401:
-        ElMessage.error('未登录或登录已过期，请重新登录');
+        message = '未登录或登录已过期，请重新登录';
+        showErrorMessage(message);
         auth.toJumpLogin();
         break;
       case 403:
-        ElMessage.error('没有权限访问该资源');
+        message = '没有权限访问该资源';
+        showErrorMessage(message);
         break;
       case 404:
-        ElMessage.error('请求地址不存在');
+        message = '请求地址不存在';
+        showErrorMessage(message);
         break;
       case 500:
-        ElMessage.error('服务器内部错误');
+        message = '服务器内部错误';
+        showErrorMessage(message);
         break;
       default: {
-        const message = data?.message;
-        const desc =
-          message && typeof message === 'object'
-            ? (message as { desc?: string }).desc
-            : '';
-        ElMessage.error(
-          (typeof message === 'string' ? message : desc) || '请求失败',
-        );
+        showErrorMessage(message);
         break;
       }
     }
+    return new RequestError(message, {
+      status,
+      code: isEmptyData(data?.code) ? undefined : String(data?.code),
+      isNotified: true,
+    });
   }
 
   // 获取

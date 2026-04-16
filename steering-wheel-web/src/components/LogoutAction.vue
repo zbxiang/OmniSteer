@@ -7,13 +7,13 @@
     @click="onLogout"
   >
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M15 3h-5a2 2 0 0 0-2 2v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-      <path d="M15 21h-5a2 2 0 0 1-2-2v-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      <path d="M15 3h-5a2 2 0 0 0-2 2v3" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" />
+      <path d="M15 21h-5a2 2 0 0 1-2-2v-3" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" />
       <path
         d="M10 12h10M17 8l4 4-4 4"
         fill="none"
         stroke="currentColor"
-        stroke-width="1.8"
+        stroke-width="2.1"
         stroke-linecap="round"
         stroke-linejoin="round"
       />
@@ -55,14 +55,15 @@ const onLogout = async (): Promise<void> => {
   width: 34px;
   height: 34px;
   padding: 0;
-  border: 1px solid var(--color-primary-amber-16);
+  border: 1px solid transparent;
   border-radius: 10px;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, #fff 94%, var(--color-primary-amber-08)) 0%,
-    color-mix(in srgb, #fff 88%, var(--color-primary-amber-12)) 100%
+    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 97%, transparent) 0%,
+    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 95%, transparent) 100%
   );
-  color: var(--color-primary-amber-70);
+  color: color-mix(in srgb, var(--color-zinc-muted) 48%, #fff);
+  opacity: 0.78;
   cursor: pointer;
   transition:
     color 0.2s ease,
@@ -86,17 +87,15 @@ const onLogout = async (): Promise<void> => {
 }
 
 .product-list__logout:hover {
-  color: var(--color-primary-amber);
-  border-color: var(--color-primary-amber-30);
+  color: color-mix(in srgb, var(--color-zinc-text) 60%, #fff);
+  border-color: transparent;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, #fff 90%, var(--color-primary-amber-12)) 0%,
-    color-mix(in srgb, #fff 82%, var(--color-primary-amber-18)) 100%
+    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 98%, transparent) 0%,
+    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 96%, transparent) 100%
   );
-  box-shadow:
-    0 6px 14px var(--color-primary-amber-24),
-    0 1px 0 rgba(255, 255, 255, 0.5) inset;
-  transform: translateY(-1px);
+  box-shadow: none;
+  transform: none;
 }
 
 .product-list__logout:active {

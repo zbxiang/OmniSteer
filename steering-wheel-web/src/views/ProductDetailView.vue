@@ -1,10 +1,7 @@
 <template>
   <div class="product-list product-detail">
     <TopBar
-      :system-name="appStore.systemName"
-      :display-name="displayName"
-      :user-initial="userInitial"
-      :is-home="route.name === 'home'"
+      :is-home="route.name === 'home' || route.name === 'productDetail' || route.name === 'productEdit'"
       :is-product-create="route.name === 'productCreate'"
     />
     <div class="product-detail__warm-base" aria-hidden="true" />
@@ -12,11 +9,7 @@
 
     <div class="product-list__main">
       <div class="product-detail__content">
-        <div class="product-detail__breadcrumb">
-          <router-link to="/">产品列表</router-link>
-          <span>/</span>
-          <span>产品详情</span>
-        </div>
+        <AppBreadcrumb class="product-detail__breadcrumb" current-label="产品详情" />
 
         <div class="product-detail__panel">
           <div class="product-detail__layout" v-if="product">
@@ -32,7 +25,7 @@
             <div class="product-detail__info">
               <p class="product-detail__badge">{{ appStore.systemName }}</p>
               <h1>{{ product.name }}</h1>
-              <p class="product-detail__price">¥{{ product.price.toLocaleString() }}</p>
+              <p class="product-detail__price">¥{{ productPriceText }}</p>
               <span :class="['status-badge', productState === ProductStatusEnum.UP ? 'status-badge--on' : 'status-badge--off']">
                 {{ productState === ProductStatusEnum.UP ? '在售' : '下架' }}
               </span>
@@ -50,8 +43,21 @@
               </ul>
 
               <div class="product-detail__actions">
-                <router-link :to="`/products/${product.id}/edit`" class="btn btn-primary">编辑</router-link>
-                <router-link to="/" class="btn btn-outline">返回列表</router-link>
+                <router-link
+                  :to="`/products/${product.id}/edit`"
+                  class="action-btn action-btn--primary"
+                >
+                  <span class="action-btn__icon" aria-hidden="true">
+                    <el-icon><EditPen /></el-icon>
+                  </span>
+                  编辑
+                </router-link>
+                <router-link to="/" class="action-btn action-btn--secondary">
+                  <span class="action-btn__icon" aria-hidden="true">
+                    <el-icon><ArrowLeft /></el-icon>
+                  </span>
+                  返回列表
+                </router-link>
               </div>
             </div>
           </div>
@@ -59,7 +65,12 @@
           <div class="product-detail__empty" v-else-if="!loading">
             <h2>暂无详情</h2>
             <p>未找到该产品信息，可能已下架或数据尚未同步。</p>
-            <router-link to="/" class="btn btn-outline">返回列表</router-link>
+            <router-link to="/" class="action-btn action-btn--secondary">
+              <span class="action-btn__icon" aria-hidden="true">
+                <el-icon><ArrowLeft /></el-icon>
+              </span>
+              返回列表
+            </router-link>
           </div>
           <div class="product-detail__empty" v-else>
             <h2>加载中...</h2>
@@ -75,25 +86,20 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { ArrowLeft, EditPen } from '@element-plus/icons-vue';
 import type { ProductOut } from '@/types/product';
 import { ProductStatusEnum } from '@/enums/product';
 import { normalizeProductStateFromOut } from '@/utils/productState';
 import { getProductDetail } from '@/api/product';
 import { isRequestCanceled, RequestError } from '@/utils/request';
 import { useAppStore } from '@/stores/app';
-import { useAuthStore } from '@/stores/auth';
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue';
 import TopBar from '@/components/topBar.vue';
 
 const appStore = useAppStore();
-const authStore = useAuthStore();
 const route = useRoute();
 const product = ref<ProductOut | null>(null);
 const loading = ref<boolean>(false);
-const displayName = computed((): string => authStore.username || 'Admin');
-const userInitial = computed((): string => {
-  const n = displayName.value.trim();
-  return n ? n.slice(0, 1).toUpperCase() : 'A';
-});
 
 const createdDateText = computed<string>(() => {
   if (!product.value?.created_at) return '-';
@@ -101,13 +107,22 @@ const createdDateText = computed<string>(() => {
   return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString();
 });
 
+const productPriceText = computed<string>(() => {
+  const price = product.value?.price;
+  return typeof price === 'number' && Number.isFinite(price)
+    ? price.toLocaleString()
+    : '-';
+});
+
 const productState = computed(() =>
   product.value ? normalizeProductStateFromOut(product.value) : ProductStatusEnum.UP,
 );
 
 const fetchDetail = async (): Promise<void> => {
-  const productId = Number(route.params.id);
-  if (!Number.isFinite(productId) || productId <= 0) {
+  const routeId = route.params.id;
+  const productId =
+    typeof routeId === 'string' ? routeId : Array.isArray(routeId) ? routeId[0] : '';
+  if (!productId?.trim()) {
     product.value = null;
     return;
   }
@@ -120,6 +135,7 @@ const fetchDetail = async (): Promise<void> => {
       product.value = null;
       return;
     }
+    if (e instanceof RequestError && e.isNotified) return;
     const msg = e instanceof RequestError ? e.message : '加载产品详情失败，请稍后重试';
     ElMessage.error(msg);
   } finally {
@@ -295,42 +311,6 @@ onMounted((): void => {
 
 .status-badge--on { background: rgba(34, 197, 94, 0.2); color: #86efac; }
 .status-badge--off { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-
-.btn {
-  height: 40px;
-  border-radius: 10px;
-  padding: 0 14px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-primary {
-  background: var(--color-primary-amber-70);
-  color: #fff;
-  border-color: var(--color-primary-amber-70);
-  box-shadow:
-    0 8px 18px var(--color-primary-amber-20),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
-}
-
-.btn-outline {
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 92%,
-    var(--color-primary-amber-06)
-  );
-  color: var(--color-zinc-text);
-  border-color: var(--color-primary-amber-30);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 
 .product-list__main {
   flex: 1;

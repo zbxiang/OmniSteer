@@ -15,6 +15,7 @@ export type RequestErrorOptions = {
   status?: number;
   code?: string;
   isCanceled?: boolean;
+  isNotified?: boolean;
 };
 
 export type ApiResponse<T = any> = {

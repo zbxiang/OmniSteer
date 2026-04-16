@@ -14,9 +14,19 @@ const apiPrefix = import.meta.env.VITE_API_PROXY_PREFIX || '/api';
 export const getProductPage = (
   params: ProductListQuery,
 ): Promise<ProductListResult> => {
-  return request.post<ProductListResult>(`${apiPrefix}/product/page`, params, {
-    cancelKey: `POST:${apiPrefix}/product/page`,
-  });
+  return request.post<ProductListResult>(
+    `${apiPrefix}/product/page`,
+    {
+      keyword: params.keyword ?? '',
+      imageUrl: params.imageUrl,
+      page: params.page,
+      size: params.size,
+    },
+    {
+      cancelKey: `POST:${apiPrefix}/product/page`,
+    },
+    false,
+  );
 };
 
 // 产品新增/编辑（统一保存）
@@ -29,9 +39,9 @@ export const saveOrUpdateProduct = (
 };
 
 // 产品详情
-export const getProductDetail = (productId: number): Promise<ProductOut> => {
-  return request.get<ProductOut>(`${apiPrefix}/products/${productId}`, {
-    cancelKey: `GET:${apiPrefix}/products/${productId}`,
+export const getProductDetail = (productId: string): Promise<ProductOut> => {
+  return request.post<ProductOut>(`${apiPrefix}/product/detail`, {id: productId}, {
+    cancelKey: `post:${apiPrefix}/product/detail/${productId}`,
   });
 };
 

@@ -1,21 +1,16 @@
 <template>
   <div class="product-list product-create">
     <TopBar
-      :system-name="appStore.systemName"
-      :display-name="displayName"
-      :user-initial="userInitial"
-      :is-home="route.name === 'home'"
+      :is-home="route.name === 'home' || route.name === 'productDetail' || route.name === 'productEdit'"
       :is-product-create="route.name === 'productCreate'"
     />
 
     <div class="product-list__main">
       <div class="product-create__content">
-        <el-breadcrumb class="product-create__breadcrumb" separator="/">
-          <el-breadcrumb-item :to="{ path: '/' }">产品列表</el-breadcrumb-item>
-          <el-breadcrumb-item>{{
-            isEdit ? '编辑产品' : '上架产品'
-          }}</el-breadcrumb-item>
-        </el-breadcrumb>
+        <AppBreadcrumb
+          class="product-create__breadcrumb"
+          :current-label="isEdit ? '编辑产品' : '上架产品'"
+        />
         <div class="product-create__panel">
           <el-form
             ref="formRef"
@@ -171,6 +166,7 @@
               <el-col :xs="24" :md="12">
                 <el-form-item label="直径（mm）">
                   <el-input-number
+                    class="product-create__diameter-input"
                     v-model="form.diameter"
                     :min="1"
                     :step="1"
@@ -221,13 +217,15 @@
               </div>
               <div class="product-create__actions-buttons">
                 <el-button
-                  class="product-create__btn product-create__btn--ghost"
+                  class="action-btn action-btn--secondary"
+                  :class="{ 'product-create__btn-cancel--edit': isEdit }"
                   @click="router.push('/')"
-                  >取消</el-button
                 >
+                  取消
+                </el-button>
                 <el-button
                   type="primary"
-                  class="product-create__btn product-create__btn--primary"
+                  class="action-btn action-btn--primary"
                   :loading="loading"
                   :disabled="isSubmitDisabled"
                   @click="submit"
@@ -277,19 +275,11 @@ import {
   uploadImageFile,
 } from '@/api/product';
 import { isRequestCanceled, RequestError } from '@/utils/request';
-import { useAppStore } from '@/stores/app';
-import { useAuthStore } from '@/stores/auth';
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue';
 import TopBar from '@/components/topBar.vue';
 
-const appStore = useAppStore();
-const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
-const displayName = computed((): string => authStore.username || 'Admin');
-const userInitial = computed((): string => {
-  const n = displayName.value.trim();
-  return n ? n.slice(0, 1).toUpperCase() : 'A';
-});
 
 const formRef = ref<FormInstance>();
 const loading = ref<boolean>(false);
@@ -522,8 +512,10 @@ const fillFormByDetail = (detail: ProductOut): void => {
 
 const loadEditDetail = async (): Promise<void> => {
   if (!isEdit.value) return;
-  const productId = Number(route.params.id);
-  if (!Number.isFinite(productId) || productId <= 0) {
+  const routeId = route.params.id;
+  const productId =
+    typeof routeId === 'string' ? routeId : Array.isArray(routeId) ? routeId[0] : '';
+  if (!productId?.trim()) {
     ElMessage.error('产品 ID 无效');
     await router.replace('/');
     return;
@@ -539,6 +531,7 @@ const loadEditDetail = async (): Promise<void> => {
       await router.replace('/');
       return;
     }
+    if (e instanceof RequestError && e.isNotified) return;
     const msg = e instanceof RequestError ? e.message : '加载产品详情失败，请稍后重试';
     ElMessage.error(msg);
   } finally {
@@ -598,6 +591,7 @@ const submit = async (): Promise<void> => {
       });
       return;
     }
+    if (e instanceof RequestError && e.isNotified) return;
     const msg = e instanceof RequestError ? e.message : '提交失败，请稍后重试';
     ElMessage.error(msg);
   } finally {
@@ -617,7 +611,7 @@ onUnmounted((): void => {
 
 <style scoped lang="scss">
 .product-create {
-  --product-create-field-height: 38px;
+  --product-create-field-height: 40px;
 
   position: relative;
   min-height: 100vh;
@@ -720,39 +714,16 @@ onUnmounted((): void => {
     flex-shrink: 0;
   }
 
-  &__btn {
-    min-width: 104px;
-    border-radius: 10px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-  }
-
-  &__btn--ghost {
-    --el-button-bg-color: color-mix(
+  &__btn-cancel--edit:hover,
+  &__btn-cancel--edit:focus-visible {
+    border-color: color-mix(in srgb, rgba(255, 255, 255, 0.24) 72%, transparent);
+    background: color-mix(
       in srgb,
-      var(--color-cockpit-bg-mid-97) 92%,
-      var(--color-primary-amber-06)
+      var(--color-cockpit-bg-mid-97) 94%,
+      transparent
     );
-    --el-button-border-color: var(--color-primary-amber-30);
-    --el-button-text-color: var(--color-zinc-text);
-    --el-button-hover-bg-color: color-mix(
-      in srgb,
-      var(--color-cockpit-bg-mid-97) 86%,
-      var(--color-primary-amber-10)
-    );
-    --el-button-hover-border-color: var(--color-primary-amber-50);
-    --el-button-hover-text-color: var(--color-zinc-text);
-    --el-button-active-text-color: var(--color-zinc-text);
-  }
-
-  &__btn--primary {
-    --el-button-bg-color: var(--color-primary-amber-70);
-    --el-button-border-color: var(--color-primary-amber-70);
-    --el-button-hover-bg-color: var(--color-primary-amber);
-    --el-button-hover-border-color: var(--color-primary-amber);
-    box-shadow:
-      0 8px 18px var(--color-primary-amber-20),
-      inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    color: color-mix(in srgb, #fff 90%, var(--color-zinc-text));
+    box-shadow: none;
   }
 
   &__preview-image {
@@ -764,20 +735,6 @@ onUnmounted((): void => {
     border: 1px solid var(--color-primary-amber-20);
     background: rgba(0, 0, 0, 0.2);
   }
-}
-
-:deep(.product-create__breadcrumb .el-breadcrumb__inner) {
-  color: color-mix(in srgb, var(--color-zinc-muted) 82%, #fff);
-  font-size: 13px;
-}
-
-:deep(
-  .product-create__breadcrumb
-    .el-breadcrumb__item:last-child
-    .el-breadcrumb__inner
-) {
-  color: var(--color-primary-amber);
-  font-weight: 600;
 }
 
 .product-list__main {
@@ -806,6 +763,16 @@ onUnmounted((): void => {
   box-shadow: 0 0 0 1px var(--color-primary-amber-26) inset !important;
 }
 
+:deep(.el-input .el-input__wrapper) {
+  min-height: var(--product-create-field-height) !important;
+  height: var(--product-create-field-height) !important;
+}
+
+:deep(.el-input .el-input__inner) {
+  height: 100% !important;
+  line-height: calc(var(--product-create-field-height) - 2px) !important;
+}
+
 :deep(.el-input__inner),
 :deep(.el-textarea__inner) {
   color: var(--color-zinc-text) !important;
@@ -819,6 +786,15 @@ onUnmounted((): void => {
 :deep(.el-input-number) {
   width: 100%;
   height: var(--product-create-field-height);
+}
+
+:deep(.el-input-number .el-input) {
+  height: var(--product-create-field-height) !important;
+}
+
+:deep(.product-create__diameter-input .el-input__wrapper) {
+  min-height: var(--product-create-field-height) !important;
+  height: var(--product-create-field-height) !important;
 }
 
 :deep(.el-input-number .el-input__wrapper) {
@@ -872,7 +848,7 @@ onUnmounted((): void => {
     var(--color-cockpit-bg-mid-97) 92%,
     var(--color-primary-amber-08)
   ) !important;
-  border-color: var(--color-primary-amber-46) !important;
+  border-color: color-mix(in srgb, var(--color-primary-amber-16) 22%, transparent) !important;
   width: 32px !important;
   font-size: 16px !important;
   font-weight: 800 !important;
@@ -908,10 +884,10 @@ onUnmounted((): void => {
     var(--color-primary-amber-70) 72%,
     var(--color-cockpit-bg-mid-97) 28%
   ) !important;
-  border-color: var(--color-primary-amber-70) !important;
+  border-color: color-mix(in srgb, var(--color-primary-amber-24) 32%, transparent) !important;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-    0 0 0 1px color-mix(in srgb, var(--color-primary-amber-45) 60%, transparent) !important;
+    inset 0 0 0 1px color-mix(in srgb, var(--color-primary-amber-45) 46%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-primary-amber-35) 38%, transparent) !important;
 }
 
 :deep(.el-input-number__decrease:active),
@@ -929,7 +905,15 @@ onUnmounted((): void => {
 
 :deep(.el-input-number.is-controls-right .el-input-number__decrease),
 :deep(.el-input-number.is-controls-right .el-input-number__increase) {
-  border-left: 1px solid var(--color-primary-amber-36) !important;
+  border-left: 1px solid
+    color-mix(in srgb, var(--color-primary-amber-12) 18%, transparent) !important;
+}
+
+:deep(.el-input-number.is-controls-right:hover .el-input-number__decrease),
+:deep(.el-input-number.is-controls-right:hover .el-input-number__increase),
+:deep(.el-input-number.is-controls-right .el-input__wrapper.is-focus + .el-input-number__increase),
+:deep(.el-input-number.is-controls-right .el-input__wrapper.is-focus ~ .el-input-number__decrease) {
+  border-left-color: color-mix(in srgb, var(--color-primary-amber-24) 32%, transparent) !important;
 }
 
 :deep(.el-input-number .is-disabled.el-input-number__decrease),
