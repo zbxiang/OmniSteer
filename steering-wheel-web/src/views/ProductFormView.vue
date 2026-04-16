@@ -219,7 +219,7 @@
                 <el-button
                   class="action-btn action-btn--secondary"
                   :class="{ 'product-create__btn-cancel--edit': isEdit }"
-                  @click="router.push('/')"
+                  @click="router.push('/products')"
                 >
                   取消
                 </el-button>
@@ -576,7 +576,7 @@ const submit = async (): Promise<void> => {
     await saveOrUpdateProduct(payload);
     if (isEdit.value) {
       ElMessage.success('产品修改成功');
-      await router.push('/');
+      await router.push('/products');
       return;
     }
     ElMessage.success('产品创建成功');

@@ -1,6 +1,6 @@
 <template>
   <div class="app-shell">
-    <!-- 列表页主题入口在顶栏内；详情/表单无主导航时用右下角轻量入口 -->
+    <!-- 顶栏已包含主题入口；仅在无顶栏场景保留右下角轻量入口 -->
     <div v-if="showFloatingThemeButton" class="app-floating-theme">
       <ThemePaletteButton appearance="floating" />
     </div>
@@ -27,7 +27,7 @@ const isAuthShellRoute = computed(
 const showFloatingThemeButton = computed((): boolean => {
   if (isAuthShellRoute.value) return false;
   const n = route.name;
-  return n === 'productDetail' || n === 'productEdit';
+  return n === 'productEdit';
 });
 
 let sessionTimer: ReturnType<typeof setInterval> | null = null;

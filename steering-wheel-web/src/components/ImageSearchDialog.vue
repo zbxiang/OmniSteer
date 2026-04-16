@@ -4,7 +4,7 @@
     class="cockpit-dialog image-search-dialog"
     modal-class="cockpit-dialog-overlay image-search-overlay"
     title="以图搜图"
-    width="560px"
+    :width="dialogWidth"
     :close-on-click-modal="false"
     @closed="resetState"
   >
@@ -80,12 +80,13 @@
 
     <template #footer>
       <div class="modal-actions">
-        <el-button class="image-btn image-btn--ghost" @click="onClose"
+        <el-button class="image-btn image-btn--ghost" :disabled="imageSearching" @click="onClose"
           >取消</el-button
         >
         <el-button
           class="image-btn image-btn--primary"
           :loading="imageSearching"
+          :disabled="!canStartSearch"
           @click="runImageSearch"
         >
           {{ imageSearching ? '识别中...' : '开始搜索' }}
@@ -96,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { UploadProps } from 'element-plus';
 import { UploadFilled } from '@element-plus/icons-vue';
@@ -116,6 +117,13 @@ const visible = computed({
   set: (value: boolean) => emit('update:modelValue', value),
 });
 
+const viewportWidth = ref<number>(typeof window === 'undefined' ? 1024 : window.innerWidth);
+const dialogWidth = computed<string>(() => {
+  if (viewportWidth.value <= 420) return '96vw';
+  if (viewportWidth.value <= 768) return '94vw';
+  return '520px';
+});
+
 const imageSearchPreview = ref<string>('');
 const imageSearchFileName = ref<string>('');
 const uploadedImageUrl = ref<string>('');
@@ -125,6 +133,15 @@ const uploadProgress = ref<number>(0);
 const uploadErrorMessage = ref<string>('');
 const selectedImageFile = ref<File | null>(null);
 let previewObjectUrl: string | null = null;
+
+const canStartSearch = computed<boolean>(
+  () =>
+    !imageSearching.value &&
+    !uploading.value &&
+    !!imageSearchFileName.value &&
+    !!imageSearchPreview.value &&
+    !!uploadedImageUrl.value,
+);
 
 const resetState = (): void => {
   imageSearchFileName.value = '';
@@ -243,30 +260,39 @@ const removeSelectedImage = (): void => {
 onUnmounted(() => {
   if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
 });
+
+const syncViewportWidth = (): void => {
+  viewportWidth.value = window.innerWidth;
+};
+
+onMounted(() => {
+  syncViewportWidth();
+  window.addEventListener('resize', syncViewportWidth, { passive: true });
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', syncViewportWidth);
+});
 </script>
 
 <style scoped lang="scss">
 
 .image-search__hint {
   margin: 0;
-  color: color-mix(in srgb, var(--color-zinc-text) 92%, #fff);
+  color: color-mix(in srgb, var(--color-zinc-text) 90%, #fff);
   font-size: 13px;
-  line-height: 1.55;
+  line-height: 1.5;
   font-weight: 500;
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 88%,
-    var(--color-primary-amber-08)
-  );
-  border: 1px solid var(--color-primary-amber-14);
-  border-radius: 10px;
-  padding: 10px 13px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 92%, var(--color-primary-amber-06));
+  border: 1px solid color-mix(in srgb, var(--color-primary-amber-16) 60%, transparent);
+  border-radius: 8px;
+  padding: 9px 12px;
+  box-shadow: none;
 }
 
 .image-search__panel {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .upload-area {
@@ -278,63 +304,48 @@ onUnmounted(() => {
 }
 
 :deep(.upload-area .el-upload-dragger) {
-  border: 1px solid var(--color-primary-amber-24);
-  border-radius: 12px;
-  padding: 1.25rem 1.1rem 1.1rem;
+  border: 1px dashed color-mix(in srgb, var(--color-primary-amber-35) 72%, transparent);
+  border-radius: 10px;
+  padding: 1rem;
   text-align: center;
-  background:
-    radial-gradient(
-      circle at 30% 20%,
-      var(--color-primary-amber-16) 0%,
-      var(--color-primary-amber-06) 42%,
-      transparent 80%
-    ),
-    linear-gradient(
-      145deg,
-      var(--color-cockpit-bg-mid-97) 0%,
-      color-mix(in srgb, var(--color-cockpit-bg-mid-96) 92%, black 8%) 100%
-    );
+  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 94%, var(--color-primary-amber-05));
   color: var(--color-zinc-text);
   transition:
-    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: 0 10px 22px
-    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 75%, transparent);
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 :deep(.upload-area:hover .el-upload-dragger) {
-  border-color: var(--color-primary-amber-36);
-  transform: translateY(-2px);
-  box-shadow: 0 16px 30px var(--color-primary-amber-18);
+  border-color: var(--color-primary-amber-45);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-primary-amber-20) 56%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 :deep(.upload-area.is-dragover .el-upload-dragger) {
   border-color: var(--color-primary-amber-55);
   box-shadow:
-    0 18px 34px var(--color-primary-amber-20),
+    0 10px 20px color-mix(in srgb, var(--color-primary-amber-18) 56%, transparent),
     inset 0 0 0 1px var(--color-primary-amber-24);
 }
 
 .upload-area__icon {
-  width: 52px;
-  height: 52px;
+  width: 42px;
+  height: 42px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: color-mix(in srgb, var(--color-primary-amber) 88%, #fff);
-  font-size: 22px;
-  background: linear-gradient(
-    160deg,
-    color-mix(in srgb, #fff 62%, var(--color-primary-amber-24)) 0%,
-    color-mix(in srgb, #fff 48%, var(--color-primary-amber-32)) 100%
-  );
-  border: 1px solid var(--color-primary-amber-35);
+  font-size: 18px;
+  background: color-mix(in srgb, var(--color-primary-amber-16) 66%, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--color-primary-amber-30);
   box-shadow:
-    0 6px 14px var(--color-primary-amber-16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    0 4px 10px color-mix(in srgb, var(--color-primary-amber-16) 52%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .upload-area__icon :deep(.el-icon) {
@@ -346,16 +357,16 @@ onUnmounted(() => {
 }
 
 .upload-area__title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
   letter-spacing: 0.01em;
   color: color-mix(in srgb, var(--color-zinc-text) 96%, #fff);
 }
 
 .upload-area__file {
-  margin-top: 9px;
+  margin-top: 8px;
   padding: 3px 11px;
-  border-radius: 999px;
+  border-radius: 8px;
   border: 1px solid var(--color-primary-amber-26);
   background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 82%, var(--color-primary-amber-12));
   color: color-mix(in srgb, var(--color-zinc-text) 94%, #fff);
@@ -375,18 +386,13 @@ onUnmounted(() => {
 
 .img-preview {
   position: relative;
-  margin-top: 0.95rem;
+  margin-top: 0.8rem;
   border: 1px solid var(--color-primary-amber-24);
-  border-radius: 12px;
-  padding: 0.9rem;
+  border-radius: 10px;
+  padding: 0.75rem;
   text-align: center;
-  background: linear-gradient(
-    145deg,
-    var(--color-cockpit-bg-mid-97) 0%,
-    color-mix(in srgb, var(--color-cockpit-bg-mid-96) 92%, black 8%) 100%
-  );
-  box-shadow: 0 10px 22px
-    color-mix(in srgb, var(--color-cockpit-bg-mid-97) 75%, transparent);
+  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 93%, var(--color-primary-amber-06));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
   &__image-wrap {
     position: relative;
@@ -397,8 +403,8 @@ onUnmounted(() => {
 
   img {
     max-width: 100%;
-    max-height: 210px;
-    border-radius: 10px;
+    max-height: 180px;
+    border-radius: 8px;
     object-fit: contain;
     border: 1px solid var(--color-primary-amber-20);
     background:
@@ -576,12 +582,13 @@ onUnmounted(() => {
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.7rem;
+  gap: 0.55rem;
 }
 
 .image-btn {
-  min-width: 96px;
-  border-radius: 9px;
+  min-width: 92px;
+  border-radius: 8px;
+  height: 34px;
   font-weight: 600;
   letter-spacing: 0.01em;
 }
@@ -610,28 +617,114 @@ onUnmounted(() => {
   box-shadow:
     0 2px 8px var(--color-primary-amber-10),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: var(--color-zinc-text) !important;
+}
+
+:deep(.image-btn--ghost.el-button) {
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 90%,
+    var(--color-primary-amber-06)
+  ) !important;
+  border-color: var(--color-primary-amber-30) !important;
+}
+
+:deep(.image-btn--ghost.el-button:hover) {
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 84%,
+    var(--color-primary-amber-10)
+  ) !important;
+  border-color: var(--color-primary-amber-55) !important;
+}
+
+:deep(.image-btn--ghost.el-button:active) {
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 78%,
+    var(--color-primary-amber-12)
+  ) !important;
+  border-color: var(--color-primary-amber-55) !important;
+}
+
+:deep(.image-btn--ghost.is-disabled),
+:deep(.image-btn--ghost.is-disabled:hover) {
+  opacity: 0.55;
+  box-shadow: none;
+  color: color-mix(in srgb, #fff 62%, var(--color-zinc-muted)) !important;
 }
 
 :deep(.image-btn--ghost > span) {
-  color: var(--color-zinc-text);
+  color: var(--color-zinc-text) !important;
   font-weight: 600;
 }
 
 :deep(.image-btn--ghost:hover > span) {
-  color: var(--color-zinc-text);
+  color: var(--color-zinc-text) !important;
 }
 
 .image-btn--primary {
-  --el-button-bg-color: var(--color-primary-amber-70);
-  --el-button-border-color: var(--color-primary-amber-70);
+  --el-button-bg-color: var(--color-primary-amber);
+  --el-button-border-color: var(--color-primary-amber);
   --el-button-text-color: #fff;
-  --el-button-hover-bg-color: var(--color-primary-amber);
-  --el-button-hover-border-color: var(--color-primary-amber);
+  --el-button-hover-bg-color: color-mix(in srgb, var(--color-primary-amber) 88%, #fff);
+  --el-button-hover-border-color: color-mix(in srgb, var(--color-primary-amber) 88%, #fff);
   --el-button-hover-text-color: #fff;
+  --el-button-active-bg-color: color-mix(in srgb, var(--color-primary-amber) 82%, #000);
+  --el-button-active-border-color: color-mix(in srgb, var(--color-primary-amber) 82%, #000);
   --el-button-active-text-color: #fff;
   box-shadow:
-    0 8px 18px var(--color-primary-amber-20),
+    0 8px 18px var(--color-primary-amber-24),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: #fff !important;
+}
+
+:deep(.image-btn--primary.el-button) {
+  background: var(--color-primary-amber) !important;
+  border-color: var(--color-primary-amber) !important;
+}
+
+:deep(.image-btn--primary.el-button:hover) {
+  background: color-mix(in srgb, var(--color-primary-amber) 88%, #fff) !important;
+  border-color: color-mix(in srgb, var(--color-primary-amber) 88%, #fff) !important;
+}
+
+:deep(.image-btn--primary.el-button:active) {
+  background: color-mix(in srgb, var(--color-primary-amber) 82%, #000) !important;
+  border-color: color-mix(in srgb, var(--color-primary-amber) 82%, #000) !important;
+}
+
+:deep(.image-btn--primary.is-disabled),
+:deep(.image-btn--primary.is-disabled:hover) {
+  --el-button-bg-color: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 88%,
+    var(--color-primary-amber-10)
+  );
+  --el-button-border-color: color-mix(in srgb, var(--color-primary-amber-24) 65%, transparent);
+  --el-button-text-color: color-mix(in srgb, #fff 64%, var(--color-zinc-muted));
+  box-shadow: none;
+  color: color-mix(in srgb, #fff 64%, var(--color-zinc-muted)) !important;
+}
+
+:deep(.image-btn--ghost.el-button.is-disabled),
+:deep(.image-btn--ghost.el-button.is-disabled:hover) {
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 90%,
+    var(--color-primary-amber-06)
+  ) !important;
+  border-color: var(--color-primary-amber-24) !important;
+}
+
+:deep(.image-btn--primary.el-button.is-disabled),
+:deep(.image-btn--primary.el-button.is-disabled:hover) {
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 88%,
+    var(--color-primary-amber-10)
+  ) !important;
+  border-color: color-mix(in srgb, var(--color-primary-amber-24) 65%, transparent) !important;
 }
 
 :deep(.image-btn.el-button) {
@@ -653,6 +746,151 @@ onUnmounted(() => {
 :deep(.image-btn--primary > span),
 :deep(.image-btn--primary:hover > span),
 :deep(.image-btn--primary:active > span) {
-  color: #fff;
+  color: #fff !important;
+}
+
+@media (max-width: 768px) {
+  :deep(.image-search-dialog.el-dialog) {
+    width: 94vw !important;
+    max-width: 94vw !important;
+  }
+
+  .image-search__hint {
+    font-size: 12px;
+    padding: 9px 11px;
+    border-radius: 8px;
+  }
+
+  :deep(.upload-area .el-upload-dragger) {
+    padding: 1rem 0.9rem 0.9rem;
+    border-radius: 10px;
+  }
+
+  .upload-area__icon {
+    width: 46px;
+    height: 46px;
+    margin-bottom: 8px;
+    font-size: 20px;
+  }
+
+  .upload-area__title {
+    font-size: 13px;
+  }
+
+  .img-preview {
+    margin-top: 0.8rem;
+    border-radius: 10px;
+    padding: 0.75rem;
+  }
+
+  .img-preview img {
+    max-height: 180px;
+    border-radius: 8px;
+  }
+
+  .img-preview__error {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .img-preview__retry {
+    width: 100%;
+    height: 30px;
+  }
+
+  .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .image-btn {
+    width: 100%;
+    min-width: 0;
+    height: 36px;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  :deep(.image-search-dialog.el-dialog) {
+    width: 96vw !important;
+    max-width: 96vw !important;
+  }
+
+  .image-search__panel {
+    gap: 8px;
+  }
+
+  .image-search__hint {
+    font-size: 11px;
+    line-height: 1.45;
+    padding: 8px 9px;
+    border-radius: 7px;
+  }
+
+  :deep(.upload-area .el-upload-dragger) {
+    padding: 0.85rem 0.75rem 0.78rem;
+    border-radius: 8px;
+  }
+
+  .upload-area__icon {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .upload-area__title {
+    font-size: 12px;
+  }
+
+  .upload-area small {
+    font-size: 11px;
+  }
+
+  .upload-area__file {
+    max-width: 100%;
+    font-size: 11px;
+  }
+
+  .img-preview {
+    padding: 0.65rem;
+    border-radius: 8px;
+  }
+
+  .img-preview img {
+    max-height: 148px;
+    border-radius: 7px;
+  }
+
+  .img-preview__remove {
+    top: 7px;
+    right: 7px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+  }
+
+  .img-preview__remove svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .img-preview p {
+    font-size: 11px;
+  }
+
+  .modal-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .image-btn {
+    height: 34px;
+    border-radius: 7px;
+    font-size: 12px;
+  }
 }
 </style>

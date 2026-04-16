@@ -3,6 +3,8 @@
     trigger="click"
     :teleported="true"
     :placement="appearance === 'floating' ? 'top-end' : 'bottom-end'"
+    :offset="appearance === 'embedded' ? 0 : 12"
+    :popper-options="popperOptions"
     popper-class="theme-palette-dropdown"
     @command="onCommand"
   >
@@ -37,24 +39,28 @@
       </svg>
     </button>
     <template #dropdown>
-      <el-dropdown-menu class="theme-palette-menu">
-        <el-dropdown-item
-          v-for="opt in options"
-          :key="opt.value"
-          :command="opt.value"
-          :class="{ 'is-active': appStore.theme === opt.value }"
-        >
-          <span
-            class="theme-palette-menu__swatch"
-            :class="`theme-palette-menu__swatch--${opt.value}`"
-            aria-hidden="true"
-          />
-          <span class="theme-palette-menu__label">{{ opt.label }}</span>
-          <el-icon v-if="appStore.theme === opt.value" class="theme-palette-menu__check">
-            <Check />
-          </el-icon>
-        </el-dropdown-item>
-      </el-dropdown-menu>
+      <div class="theme-palette-scroll" @wheel.prevent="onPaletteWheel">
+        <el-dropdown-menu class="theme-palette-menu">
+          <el-dropdown-item
+            v-for="opt in options"
+            :key="opt.value"
+            :command="opt.value"
+            :class="{
+              'is-active': appStore.theme === opt.value,
+            }"
+          >
+            <span
+              class="theme-palette-menu__swatch"
+              :class="`theme-palette-menu__swatch--${opt.value}`"
+              aria-hidden="true"
+            />
+            <span class="theme-palette-menu__label">{{ opt.label }}</span>
+            <el-icon v-if="appStore.theme === opt.value" class="theme-palette-menu__check">
+              <Check />
+            </el-icon>
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </div>
     </template>
   </el-dropdown>
 </template>
@@ -103,6 +109,26 @@ const options: Array<{ value: ThemeName; label: string }> = [
 
 const onCommand = (command: string): void => {
   appStore.setTheme(command as ThemeName);
+};
+
+const onPaletteWheel = (event: WheelEvent): void => {
+  const el = event.currentTarget as HTMLElement | null;
+  if (!el) return;
+  if (el.scrollWidth <= el.clientWidth) return;
+  const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+  el.scrollLeft += delta;
+};
+
+const popperOptions = {
+  modifiers: [
+    {
+      name: 'eventListeners',
+      options: {
+        scroll: false,
+        resize: true,
+      },
+    },
+  ],
 };
 </script>
 
@@ -178,11 +204,19 @@ const onCommand = (command: string): void => {
 .theme-palette-dropdown.el-popper {
   border-radius: 10px !important;
   padding: 6px !important;
-  min-width: 760px !important;
+  width: min(760px, calc(100vw - 24px)) !important;
+  min-width: min(760px, calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px) !important;
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, #0a0d12 92%, var(--color-primary-amber-16)) 0%,
+      color-mix(in srgb, #06080d 96%, var(--color-primary-amber-10)) 100%
+    ) !important;
   box-shadow:
     0 6px 16px rgba(0, 0, 0, 0.08),
     0 3px 6px rgba(0, 0, 0, 0.04) !important;
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid color-mix(in srgb, var(--color-primary-amber-30) 54%, rgba(0, 0, 0, 0.3)) !important;
 }
 
 .theme-palette-menu.el-dropdown-menu {
@@ -190,10 +224,17 @@ const onCommand = (command: string): void => {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 2px;
   padding: 4px;
-  min-width: 720px;
+  width: 100%;
+  min-width: 0;
   border: none;
   box-shadow: none;
   background: transparent;
+}
+
+.theme-palette-scroll {
+  max-height: min(62vh, 480px);
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .theme-palette-menu .el-dropdown-menu__item {
@@ -208,15 +249,42 @@ const onCommand = (command: string): void => {
   transition: background-color 0.15s ease;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: color-mix(in srgb, var(--color-primary-amber-16) 30%, rgba(255, 255, 255, 0.02));
     color: inherit;
   }
 
   &.is-active {
-    background-color: color-mix(in srgb, var(--color-primary-amber) 12%, transparent);
+    background-color: color-mix(in srgb, var(--color-primary-amber-20) 32%, rgba(255, 255, 255, 0.03));
     color: var(--color-primary-amber);
     font-weight: 500;
   }
+
+  &.is-active:hover {
+    background-color: color-mix(in srgb, var(--color-primary-amber-24) 42%, rgba(255, 255, 255, 0.04));
+    color: color-mix(in srgb, #fff 94%, var(--color-primary-amber));
+    border-color: color-mix(in srgb, var(--color-primary-amber-45) 72%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--color-primary-amber-24) 52%, transparent);
+  }
+}
+
+/* Override Element Plus focus/active fallback background to avoid white flash */
+.theme-palette-menu .el-dropdown-menu__item:focus,
+.theme-palette-menu .el-dropdown-menu__item:not(.is-disabled):focus,
+.theme-palette-menu .el-dropdown-menu__item:active,
+.theme-palette-menu .el-dropdown-menu__item:not(.is-disabled):active {
+  background-color: color-mix(in srgb, var(--color-primary-amber) 12%, transparent) !important;
+  color: inherit !important;
+}
+
+.theme-palette-menu .el-dropdown-menu__item.is-active:focus,
+.theme-palette-menu .el-dropdown-menu__item.is-active:active {
+  background-color: color-mix(in srgb, var(--color-primary-amber) 18%, transparent) !important;
+}
+
+.theme-palette-menu .el-dropdown-menu__item.is-active:hover .theme-palette-menu__label {
+  color: color-mix(in srgb, #fff 95%, var(--color-primary-amber));
 }
 
 .theme-palette-menu__swatch {
@@ -255,7 +323,7 @@ const onCommand = (command: string): void => {
 .theme-palette-menu__label {
   flex: 1;
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.88);
+  color: color-mix(in srgb, #fff 86%, var(--color-zinc-muted));
 }
 
 .theme-palette-menu .el-dropdown-menu__item.is-active .theme-palette-menu__label {
@@ -267,14 +335,88 @@ const onCommand = (command: string): void => {
   font-size: 14px;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .theme-palette-dropdown.el-popper {
-    min-width: 420px !important;
+    width: calc(100vw - 20px) !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 20px) !important;
+    border-radius: 8px !important;
+    padding: 5px !important;
   }
 
   .theme-palette-menu.el-dropdown-menu {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    min-width: 400px;
+    gap: 3px;
+  }
+}
+
+@media (max-width: 560px) {
+  .theme-palette-dropdown.el-popper {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    border-radius: 6px !important;
+    padding: 4px !important;
+    background:
+      linear-gradient(
+        165deg,
+        color-mix(in srgb, #07090d 88%, var(--color-primary-amber-20)) 0%,
+        color-mix(in srgb, #05070b 94%, var(--color-primary-amber-12)) 100%
+      ) !important;
+    border: 1px solid color-mix(in srgb, var(--color-primary-amber-35) 44%, rgba(0, 0, 0, 0.58)) !important;
+    box-shadow:
+      0 16px 30px rgba(0, 0, 0, 0.52),
+      inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent) !important;
+  }
+
+  .theme-palette-menu.el-dropdown-menu {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding: 4px 2px 6px;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .theme-palette-scroll {
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .theme-palette-menu .el-dropdown-menu__item {
+    flex: 0 0 auto;
+    min-width: 104px;
+    min-height: 38px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary-amber-16) 30%, rgba(255, 255, 255, 0.02));
+      border-color: color-mix(in srgb, var(--color-primary-amber-28) 58%, transparent);
+    }
+
+    &.is-active {
+      background: color-mix(in srgb, var(--color-primary-amber-20) 32%, rgba(255, 255, 255, 0.03));
+      border-color: color-mix(in srgb, var(--color-primary-amber-38) 66%, transparent);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary-amber-22) 48%, transparent);
+    }
+  }
+
+  .theme-palette-menu__label {
+    font-size: 13px;
+    white-space: nowrap;
+    color: color-mix(in srgb, #fff 86%, var(--color-zinc-muted));
+  }
+
+  .theme-palette-menu .el-dropdown-menu__item.is-active .theme-palette-menu__label {
+    color: color-mix(in srgb, #fff 94%, var(--color-primary-amber));
+  }
+
+  .theme-palette-menu__check {
+    color: color-mix(in srgb, #fff 88%, var(--color-primary-amber));
   }
 }
 </style>

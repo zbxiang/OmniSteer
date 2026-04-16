@@ -17,7 +17,7 @@ withDefaults(
   }>(),
   {
     homeLabel: '产品列表',
-    homeTo: '/',
+    homeTo: '/products',
   },
 );
 </script>

@@ -4,7 +4,6 @@
       :is-home="route.name === 'home' || route.name === 'productDetail' || route.name === 'productEdit'"
       :is-product-create="route.name === 'productCreate'"
     />
-    <div class="product-detail__warm-base" aria-hidden="true" />
     <div class="product-detail__vignette" aria-hidden="true" />
 
     <div class="product-list__main">
@@ -23,7 +22,6 @@
             </div>
 
             <div class="product-detail__info">
-              <p class="product-detail__badge">{{ appStore.systemName }}</p>
               <h1>{{ product.name }}</h1>
               <p class="product-detail__price">¥{{ productPriceText }}</p>
               <span :class="['status-badge', productState === ProductStatusEnum.UP ? 'status-badge--on' : 'status-badge--off']">
@@ -43,21 +41,32 @@
               </ul>
 
               <div class="product-detail__actions">
-                <router-link
-                  :to="`/products/${product.id}/edit`"
+                <el-button
                   class="action-btn action-btn--primary"
+                  @click="goToEdit(product.id)"
                 >
-                  <span class="action-btn__icon" aria-hidden="true">
-                    <el-icon><EditPen /></el-icon>
-                  </span>
+                  <template #icon>
+                    <el-icon class="action-btn__icon"><EditPen /></el-icon>
+                  </template>
                   编辑
-                </router-link>
-                <router-link to="/" class="action-btn action-btn--secondary">
-                  <span class="action-btn__icon" aria-hidden="true">
-                    <el-icon><ArrowLeft /></el-icon>
-                  </span>
+                </el-button>
+                <el-button
+                  v-if="productState === ProductStatusEnum.UP"
+                  class="action-btn action-btn--danger"
+                  :loading="togglingState"
+                  @click="takeDownProduct"
+                >
+                  <template #icon>
+                    <el-icon class="action-btn__icon"><RemoveFilled /></el-icon>
+                  </template>
+                  下架
+                </el-button>
+                <el-button class="action-btn action-btn--secondary action-btn--back" @click="goToList">
+                  <template #icon>
+                    <el-icon class="action-btn__icon"><ArrowLeft /></el-icon>
+                  </template>
                   返回列表
-                </router-link>
+                </el-button>
               </div>
             </div>
           </div>
@@ -65,12 +74,12 @@
           <div class="product-detail__empty" v-else-if="!loading">
             <h2>暂无详情</h2>
             <p>未找到该产品信息，可能已下架或数据尚未同步。</p>
-            <router-link to="/" class="action-btn action-btn--secondary">
-              <span class="action-btn__icon" aria-hidden="true">
-                <el-icon><ArrowLeft /></el-icon>
-              </span>
+            <el-button class="action-btn action-btn--secondary action-btn--back" @click="goToList">
+              <template #icon>
+                <el-icon class="action-btn__icon"><ArrowLeft /></el-icon>
+              </template>
               返回列表
-            </router-link>
+            </el-button>
           </div>
           <div class="product-detail__empty" v-else>
             <h2>加载中...</h2>
@@ -84,22 +93,80 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
-import { ElMessage } from 'element-plus';
-import { ArrowLeft, EditPen } from '@element-plus/icons-vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { ArrowLeft, EditPen, RemoveFilled } from '@element-plus/icons-vue';
 import type { ProductOut } from '@/types/product';
 import { ProductStatusEnum } from '@/enums/product';
 import { normalizeProductStateFromOut } from '@/utils/productState';
-import { getProductDetail } from '@/api/product';
+import { getProductDetail, saveOrUpdateProduct } from '@/api/product';
 import { isRequestCanceled, RequestError } from '@/utils/request';
-import { useAppStore } from '@/stores/app';
 import AppBreadcrumb from '@/components/AppBreadcrumb.vue';
 import TopBar from '@/components/topBar.vue';
 
-const appStore = useAppStore();
 const route = useRoute();
+const router = useRouter();
 const product = ref<ProductOut | null>(null);
 const loading = ref<boolean>(false);
+const togglingState = ref<boolean>(false);
+
+const goToEdit = (id: string): void => {
+  void router.push(`/products/${id}/edit`);
+};
+
+const goToList = (): void => {
+  void router.push('/products');
+};
+
+const takeDownProduct = async (): Promise<void> => {
+  const current = product.value;
+  if (!current || togglingState.value) return;
+  if (normalizeProductStateFromOut(current) === ProductStatusEnum.DOWN) return;
+
+  try {
+    await ElMessageBox.confirm(
+      '确认将该产品下架？下架后将不会在售展示。',
+      '确认下架',
+      {
+        type: 'warning',
+        confirmButtonText: '确认下架',
+        cancelButtonText: '取消',
+      },
+    );
+  } catch {
+    return;
+  }
+
+  togglingState.value = true;
+  try {
+    await saveOrUpdateProduct({
+      id: current.id,
+      name: current.name,
+      brand: current.brand,
+      model: current.model,
+      price: current.price,
+      state: ProductStatusEnum.DOWN,
+      material: current.material || undefined,
+      diameter: current.diameter ?? undefined,
+      weight: current.weight ?? undefined,
+      mount: current.mount || undefined,
+      description: current.description || undefined,
+      images: current.images || [],
+    });
+    product.value = {
+      ...current,
+      state: ProductStatusEnum.DOWN,
+    };
+    ElMessage.success('产品已下架');
+  } catch (e) {
+    if (isRequestCanceled(e)) return;
+    if (e instanceof RequestError && e.isNotified) return;
+    const msg = e instanceof RequestError ? e.message : '下架失败，请稍后重试';
+    ElMessage.error(msg);
+  } finally {
+    togglingState.value = false;
+  }
+};
 
 const createdDateText = computed<string>(() => {
   if (!product.value?.created_at) return '-';
@@ -162,15 +229,10 @@ onMounted((): void => {
     ),
     linear-gradient(168deg, v.$cockpit-bg-top 0%, v.$cockpit-bg-mid 48%, v.$cockpit-bg-bottom 100%);
 
-  &__warm-base,
   &__vignette {
     position: absolute;
     inset: 0;
     pointer-events: none;
-  }
-
-  &__warm-base {
-    background: radial-gradient(ellipse 95% 60% at 50% 110%, var(--color-primary-amber-20) 0%, transparent 55%);
   }
 
   &__vignette {
@@ -240,13 +302,6 @@ onMounted((): void => {
     padding: 1rem;
   }
 
-  &__badge {
-    margin: 0;
-    color: var(--color-primary-amber-85);
-    letter-spacing: 0.2em;
-    font-size: 11px;
-  }
-
   &__price {
     margin: 0.4rem 0 0.6rem;
     color: v.$accent-warm;
@@ -305,12 +360,35 @@ onMounted((): void => {
 .status-badge {
   display: inline-block;
   font-size: 12px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
-.status-badge--on { background: rgba(34, 197, 94, 0.2); color: #86efac; }
-.status-badge--off { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+.status-badge--on {
+  color: #fff;
+  border-color: var(--color-primary-amber-55);
+  background: linear-gradient(
+    145deg,
+    var(--color-primary-amber-70) 0%,
+    var(--color-primary-amber) 100%
+  );
+  box-shadow:
+    0 6px 12px color-mix(in srgb, var(--color-primary-amber-24) 58%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.status-badge--off {
+  color: color-mix(in srgb, #fff 78%, var(--color-zinc-text));
+  border-color: var(--color-primary-amber-24);
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 90%,
+    var(--color-primary-amber-10)
+  );
+}
 
 .product-list__main {
   flex: 1;

@@ -1,0 +1,268 @@
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+}
+
+/* 主题色系切换时整页过渡（支持 View Transitions 的浏览器） */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.4s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+.action-btn {
+  box-sizing: border-box;
+  width: 124px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.el-button.action-btn {
+  --el-button-bg-color: transparent;
+  --el-button-border-color: transparent;
+  --el-button-text-color: inherit;
+  --el-button-hover-bg-color: transparent;
+  --el-button-hover-border-color: transparent;
+  --el-button-hover-text-color: inherit;
+  --el-button-active-bg-color: transparent;
+  --el-button-active-border-color: transparent;
+  --el-button-active-text-color: inherit;
+  --el-button-disabled-bg-color: transparent;
+  --el-button-disabled-border-color: transparent;
+  border: 1px solid transparent;
+  margin: 0;
+}
+
+.action-btn__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  opacity: 0.92;
+}
+
+.action-btn--primary {
+  background: linear-gradient(
+    145deg,
+    var(--color-primary-amber-70) 0%,
+    var(--color-primary-amber) 100%
+  );
+  color: #fff;
+  border-color: var(--color-primary-amber);
+  box-shadow:
+    0 8px 18px color-mix(in srgb, var(--color-primary-amber-24) 70%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.action-btn--primary:hover,
+.action-btn--primary:focus-visible {
+  border-color: var(--color-primary-amber);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-primary-amber) 86%, #fff) 0%,
+    var(--color-primary-amber) 100%
+  );
+  box-shadow:
+    0 9px 18px color-mix(in srgb, var(--color-primary-amber-24) 70%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.action-btn--secondary {
+  border-color: color-mix(in srgb, rgba(255, 255, 255, 0.24) 72%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 94%,
+    transparent
+  );
+  color: color-mix(in srgb, #fff 86%, var(--color-zinc-text));
+}
+
+.action-btn--secondary:hover,
+.action-btn--secondary:focus-visible {
+  border-color: var(--color-primary-amber-55);
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 74%,
+    var(--color-primary-amber-24)
+  );
+  color: #fff;
+  box-shadow: 0 6px 12px color-mix(in srgb, var(--color-primary-amber-22) 55%, transparent);
+}
+
+.action-btn--danger {
+  border-color: color-mix(in srgb, #ef4444 42%, var(--color-primary-amber-35));
+  background: color-mix(
+    in srgb,
+    rgba(127, 29, 29, 0.26) 62%,
+    var(--color-cockpit-bg-mid-97)
+  );
+  color: color-mix(in srgb, #fff 84%, #fca5a5);
+}
+
+.action-btn--danger:hover,
+.action-btn--danger:focus-visible {
+  border-color: color-mix(in srgb, #f87171 55%, var(--color-primary-amber-48));
+  background: color-mix(
+    in srgb,
+    rgba(153, 27, 27, 0.34) 66%,
+    var(--color-cockpit-bg-mid-97)
+  );
+  color: #fff;
+  box-shadow: 0 8px 16px color-mix(in srgb, #ef4444 20%, transparent);
+}
+
+.action-btn--back {
+  width: 132px;
+  height: 34px;
+  border-radius: 9px;
+  border-color: color-mix(in srgb, var(--color-primary-amber-70) 42%, transparent);
+  background: transparent;
+  color: color-mix(in srgb, #fff 88%, var(--color-zinc-text));
+  box-shadow: none;
+}
+
+.action-btn--back:hover,
+.action-btn--back:focus-visible {
+  border-color: var(--color-primary-amber-85);
+  background: transparent;
+  color: #fff;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary-amber-24) 60%, transparent);
+}
+
+.action-btn--back:active {
+  background: transparent;
+  border-color: var(--color-primary-amber);
+  box-shadow: none;
+}
+
+@media (max-width: 680px) {
+  .action-btn {
+    width: 100%;
+  }
+}
+
+.cockpit-dialog-overlay {
+  .el-dialog.cockpit-dialog {
+    border: 1px solid var(--color-primary-amber-28);
+    border-radius: 14px;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        ellipse 95% 60% at 50% 110%,
+        var(--color-primary-amber-20) 0%,
+        transparent 55%
+      ),
+      linear-gradient(
+        168deg,
+        var(--color-cockpit-bg-top) 0%,
+        var(--color-cockpit-bg-mid) 48%,
+        var(--color-cockpit-bg-bottom) 100%
+      ) !important;
+    background-color: transparent !important;
+    box-shadow:
+      0 22px 56px rgba(0, 0, 0, 0.5),
+      0 1px 0 rgba(255, 255, 255, 0.06) inset;
+    backdrop-filter: saturate(1.04) blur(8px);
+    -webkit-backdrop-filter: saturate(1.04) blur(8px);
+  }
+
+  .el-dialog__header,
+  .el-dialog__body,
+  .el-dialog__footer {
+    background: transparent !important;
+  }
+
+  .el-dialog__header {
+    margin-right: 0;
+    padding: 18px 22px 10px;
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--color-primary-amber-24) 72%, transparent);
+  }
+
+  .el-dialog__body {
+    padding: 16px 22px 12px;
+  }
+
+  .el-dialog__footer {
+    padding: 10px 22px 18px;
+  }
+
+  .el-dialog__header .el-dialog__title {
+    color: color-mix(in srgb, var(--color-zinc-text) 94%, #fff) !important;
+    text-shadow: 0 0 10px var(--color-primary-amber-12) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em !important;
+    font-size: 18px;
+  }
+
+  .el-dialog__headerbtn {
+    width: 28px !important;
+    height: 28px !important;
+    top: 14px !important;
+    right: 14px !important;
+    border: 1px solid var(--color-primary-amber-20) !important;
+    border-radius: 7px !important;
+    background: color-mix(
+      in srgb,
+      var(--color-cockpit-bg-mid-97) 88%,
+      var(--color-primary-amber-08)
+    ) !important;
+    transition:
+      background-color 0.14s ease,
+      box-shadow 0.14s ease,
+      transform 0.14s ease,
+      border-color 0.14s ease !important;
+  }
+
+  .el-dialog__headerbtn .el-dialog__close {
+    color: var(--color-primary-amber-70) !important;
+    width: 15px !important;
+    height: 15px !important;
+    transition: color 0.14s ease !important;
+  }
+
+  .el-dialog__headerbtn:hover {
+    border-color: var(--color-primary-amber) !important;
+    background: var(--color-primary-amber-85) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  .el-dialog__headerbtn:hover .el-dialog__close,
+  .el-dialog__headerbtn:focus-visible .el-dialog__close {
+    color: #fff !important;
+  }
+
+  .el-dialog__headerbtn:active {
+    transform: translateY(0) !important;
+    background: var(--color-primary-amber) !important;
+  }
+
+  .el-dialog__headerbtn:focus-visible {
+    outline: none !important;
+    box-shadow:
+      0 0 0 2px var(--color-primary-amber-18),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.14) !important;
+  }
+}

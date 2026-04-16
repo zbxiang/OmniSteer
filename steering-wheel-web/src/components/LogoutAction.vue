@@ -118,6 +118,11 @@ const onLogout = async (): Promise<void> => {
 }
 
 .logout-confirm-dialog.el-message-box {
+  margin: 0 !important;
+  position: relative;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   border: 1px solid var(--color-primary-amber-26);
   border-radius: 12px;
   background:
@@ -263,6 +268,90 @@ const onLogout = async (): Promise<void> => {
   box-shadow:
     0 6px 14px var(--color-primary-amber-18),
     inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+@media (max-width: 560px) {
+  .logout-confirm-dialog.el-message-box {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    border-radius: 10px;
+  }
+
+  .logout-confirm-dialog .el-message-box__header {
+    padding: 14px 14px 6px;
+  }
+
+  .logout-confirm-dialog .el-message-box__title {
+    font-size: 15px;
+  }
+
+  .logout-confirm-dialog .el-message-box__content {
+    padding: 6px 14px 12px;
+  }
+
+  .logout-confirm-dialog .el-message-box__message p {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .logout-confirm-dialog .el-message-box__btns {
+    padding: 8px 14px 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .logout-confirm-dialog .el-message-box__btns .el-button {
+    margin-left: 0 !important;
+  }
+
+  .logout-confirm-dialog__confirm-btn.el-button--primary,
+  .logout-confirm-dialog__cancel-btn.el-button {
+    width: 100%;
+    min-width: 0;
+    height: 36px;
+    font-size: 13px;
+    line-height: 36px;
+    border-radius: 8px !important;
+  }
+
+  .logout-confirm-dialog .el-message-box__headerbtn {
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    border-radius: 8px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .logout-confirm-dialog.el-message-box {
+    width: calc(100vw - 12px) !important;
+    max-width: calc(100vw - 12px) !important;
+    border-radius: 8px;
+  }
+
+  .logout-confirm-dialog .el-message-box__header {
+    padding: 12px 12px 5px;
+  }
+
+  .logout-confirm-dialog .el-message-box__content {
+    padding: 5px 12px 10px;
+  }
+
+  .logout-confirm-dialog .el-message-box__btns {
+    padding: 8px 12px 12px;
+    gap: 6px;
+  }
+
+  .logout-confirm-dialog__confirm-btn.el-button--primary,
+  .logout-confirm-dialog__cancel-btn.el-button {
+    height: 34px;
+    font-size: 12px;
+    line-height: 34px;
+    border-radius: 7px !important;
+  }
 }
 </style>
 

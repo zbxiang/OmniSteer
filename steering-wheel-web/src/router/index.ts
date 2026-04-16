@@ -35,6 +35,10 @@ const router = createRouter({
     },
     {
       path: '/',
+      redirect: '/products',
+    },
+    {
+      path: '/products',
       name: 'home',
       component: ProductView,
       meta: { requiresAuth: true },
@@ -83,7 +87,7 @@ router.beforeEach((to: RouteLocationNormalized): NavigationGuardReturn => {
     const redirect =
       typeof to.query.redirect === 'string' && to.query.redirect.startsWith('/')
         ? to.query.redirect
-        : '/';
+        : '/products';
     return redirect;
   }
   return true;

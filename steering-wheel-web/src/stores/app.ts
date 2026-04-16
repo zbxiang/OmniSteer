@@ -51,7 +51,13 @@ export const useAppStore = defineStore('app', () => {
     };
 
     if (typeof document !== 'undefined' && typeof document.startViewTransition === 'function') {
-      document.startViewTransition(commit);
+      const transition = document.startViewTransition(commit);
+      // Chromium may reject transition promises with AbortError when it decides to skip animation.
+      // Swallow that expected case to avoid noisy "Uncaught (in promise)" in console.
+      void transition.finished.catch((error: unknown): void => {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        throw error;
+      });
     } else {
       commit();
     }
