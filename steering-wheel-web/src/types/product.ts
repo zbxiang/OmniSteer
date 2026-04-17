@@ -55,7 +55,7 @@ export type ProductCreateBody = {
 };
 
 export type ProductSaveOrUpdateParams = ProductCreateBody & {
-  id?: number;
+  id?: string | number;
 };
 
 export type ProductStatusUpdateBody = {

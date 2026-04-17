@@ -90,7 +90,8 @@
             data-wow-duration="0.42s"
             :data-wow-delay="`${Math.min(idx % 12, 11) * 0.04}s`"
           >
-            <div
+            <router-link
+              :to="getProductDetailPath(p.id)"
               :class="[
                 'product-card',
                 { 'product-card--off': p.state === ProductStatusEnum.DOWN },
@@ -115,24 +116,6 @@
             </div>
             <div class="product-card__title-row">
               <h3 class="product-card__title">{{ p.name }}</h3>
-              <div class="product-card__actions">
-                <router-link
-                  class="product-card__icon-btn"
-                  :to="`/products/${p.id}`"
-                  aria-label="查看详情"
-                  title="详情"
-                >
-                  <el-icon><View /></el-icon>
-                </router-link>
-                <router-link
-                  class="product-card__icon-btn"
-                  :to="`/products/${p.id}/edit`"
-                  aria-label="编辑产品"
-                  title="编辑"
-                >
-                  <el-icon><EditPen /></el-icon>
-                </router-link>
-              </div>
             </div>
             <p class="product-card__price">¥{{ p.price.toLocaleString() }}</p>
             <div class="product-card__meta-row">
@@ -148,7 +131,7 @@
                 {{ p.state === ProductStatusEnum.UP ? '在售' : '下架' }}
               </span>
             </div>
-          </div>
+          </router-link>
           </div>
         </section>
         <p
@@ -183,11 +166,9 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import {
-  EditPen,
   Picture,
   RefreshRight,
   Search,
-  View,
 } from '@element-plus/icons-vue';
 import type { ProductCardItem, ProductOut } from '@/types/product';
 import { ProductStatusEnum } from '@/enums/product';
@@ -213,6 +194,7 @@ const wowController = createWowController();
 
 const products = ref<ProductCardItem[]>([]);
 const loadedImageKeys = ref<Set<string>>(new Set<string>());
+const getProductDetailPath = (id: string | number): string => `/products/${String(id)}`;
 
 const getImageLoadKey = (product: Pick<ProductCardItem, 'id' | 'imageUrl'>): string =>
   `${product.id}-${product.imageUrl || ''}`;
@@ -1187,73 +1169,6 @@ if (typeof ResizeObserver !== 'undefined') {
     gap: 10px;
   }
 
-  &__actions {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-
-  &__icon-btn {
-    width: 24px;
-    height: 24px;
-    border-radius: 7px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--color-primary-amber-22);
-    color: color-mix(in srgb, var(--color-zinc-muted) 80%, #fff);
-    text-decoration: none;
-    background: color-mix(
-      in srgb,
-      var(--color-cockpit-bg-mid-97) 88%,
-      transparent
-    );
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    opacity: 0;
-    transform: translateX(10px);
-    pointer-events: none;
-    transition:
-      opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-      color 0.22s ease,
-      border-color 0.22s ease,
-      background 0.22s ease;
-  }
-
-  &__icon-btn :deep(svg) {
-    width: 13px;
-    height: 13px;
-  }
-
-  &:hover &__icon-btn {
-    opacity: 1;
-    transform: translateX(0);
-    pointer-events: auto;
-  }
-
-  &:hover &__icon-btn:nth-child(2) {
-    transition-delay: 0.06s;
-  }
-
-  &__icon-btn:hover {
-    color: #fff;
-    border-color: var(--color-primary-amber-55);
-    background: linear-gradient(
-      135deg,
-      var(--color-primary-amber-70) 0%,
-      var(--color-primary-amber) 100%
-    );
-  }
-
-  &__icon-btn:focus-visible {
-    opacity: 1;
-    transform: translateX(0);
-    pointer-events: auto;
-    outline: 2px solid var(--color-primary-amber-55);
-    outline-offset: 2px;
-  }
 }
 
 .product-card--off {
@@ -1723,19 +1638,14 @@ if (typeof ResizeObserver !== 'undefined') {
     box-shadow: none;
   }
 
-  .product-list__image-search-btn:hover {
-    border-color: transparent;
-    box-shadow: none;
-    background: transparent;
-    color: #71717a;
-  }
-
+  .product-list__image-search-btn:hover,
   .product-list__image-search-btn:active,
   .product-list__image-search-btn:focus-visible {
-    border-color: transparent;
-    box-shadow: none;
-    background: transparent;
-    color: #71717a;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: #71717a !important;
+    transform: none !important;
   }
 
   .product-list__reset-btn:hover {
@@ -1785,13 +1695,6 @@ if (typeof ResizeObserver !== 'undefined') {
     &__img {
       min-height: 0;
       aspect-ratio: auto;
-    }
-
-    /* 手机端无 hover，直接显示操作按钮 */
-    &__icon-btn {
-      opacity: 1;
-      transform: translateX(0);
-      pointer-events: auto;
     }
 
     &__meta-row {

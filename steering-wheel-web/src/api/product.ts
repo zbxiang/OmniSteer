@@ -38,11 +38,23 @@ export const saveOrUpdateProduct = (
   });
 };
 
-// 产品详情
-export const getProductDetail = (productId: string): Promise<ProductOut> => {
-  return request.post<ProductOut>(`${apiPrefix}/product/detail`, {id: productId}, {
-    cancelKey: `post:${apiPrefix}/product/detail/${productId}`,
-  });
+// 产品详情（兼容后端直出对象 / data 包裹对象）
+export const getProductDetail = (productId: string | number): Promise<ProductOut> => {
+  return request
+    .post<ProductOut | { data?: ProductOut }>(
+      `${apiPrefix}/product/detail`,
+      { id: productId },
+      {
+        cancelKey: `POST:${apiPrefix}/product/detail/${productId}`,
+      },
+    )
+    .then((res): ProductOut => {
+      const wrapped = (res as { data?: ProductOut } | null)?.data;
+      if (wrapped && typeof wrapped === 'object' && 'id' in wrapped) {
+        return wrapped;
+      }
+      return res as ProductOut;
+    });
 };
 
 // 上传图片文件

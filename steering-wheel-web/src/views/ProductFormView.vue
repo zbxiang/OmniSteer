@@ -468,8 +468,8 @@ const fillFormByDetail = (detail: ProductOut): void => {
 const loadEditDetail = async (): Promise<void> => {
   if (!isEdit.value) return;
   const routeId = route.params.id;
-  const productId =
-    typeof routeId === 'string' ? routeId : Array.isArray(routeId) ? routeId[0] : '';
+  const rawId = Array.isArray(routeId) ? routeId[0] : routeId;
+  const productId = String(rawId ?? '').trim();
   if (!productId?.trim()) {
     ElMessage.error('产品 ID 无效');
     await router.replace('/');
@@ -522,7 +522,7 @@ const submit = async (): Promise<void> => {
       state: form.state,
       description: form.description || undefined,
       images,
-      ...(isEdit.value ? { id: Number(route.params.id) } : {}),
+      ...(isEdit.value ? { id: String(route.params.id) } : {}),
     };
     await saveOrUpdateProduct(payload);
     if (isEdit.value) {

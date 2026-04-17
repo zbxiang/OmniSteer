@@ -74,6 +74,10 @@ export default defineConfig(({ mode }) => {
       assetsInlineLimit: 0,
       minify: 'esbuild',
       rollupOptions: {
+        onLog(level, log, handler) {
+          if (log.code === 'PLUGIN_TIMINGS') return;
+          handler(level, log);
+        },
         output: {
           manualChunks: (id) => {
             if (['vue-router', 'pinia'].some(chunk => id.includes(chunk))) {

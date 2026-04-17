@@ -682,14 +682,15 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 @media (max-width: 640px) {
   .product-list__topbar-inner {
     grid-template-columns: 1fr auto;
-    min-height: 54px;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    min-height: 58px;
+    padding-top: 8px;
+    padding-bottom: 8px;
     gap: 8px;
   }
 
   .product-list__brand {
     grid-column: 1 / 2;
+    padding: 2px 0;
   }
 
   .product-list__mobile-menu-btn {
@@ -718,6 +719,7 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
     overflow: hidden;
+    box-sizing: border-box;
   }
 
   #topbar-mobile-nav {
@@ -753,7 +755,7 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     width: 100%;
     box-sizing: border-box;
     border-radius: 8px;
-    padding: 11px 12px;
+    padding: 11px 14px;
     text-align: left;
     font-size: 13px;
     color: #3f3f46;
@@ -806,12 +808,13 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     flex-direction: column;
     gap: 6px;
     z-index: 2;
+    padding-top: 10px;
   }
 
   .product-list__mobile-section-title {
     display: block;
     margin: 0;
-    padding: 0 2px;
+    padding: 0 6px;
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -823,6 +826,7 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     align-items: center;
     gap: 8px;
     min-width: 0;
+    padding: 0 6px;
   }
 
   .product-list__mobile-user-main .product-list__user-name {
@@ -926,13 +930,13 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     padding-left: 8px;
     padding-right: 8px;
     row-gap: 4px;
-    min-height: 52px;
+    min-height: 56px;
   }
 
   .product-list__brand {
     gap: 6px;
     margin: 0;
-    padding: 0;
+    padding: 2px 0;
   }
 
   .product-list__mobile-menu-btn {

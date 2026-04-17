@@ -21,30 +21,33 @@
           <div class="product-detail__layout" v-if="product">
             <div class="product-detail__media">
               <div class="product-detail__img">
-                <button
-                  v-if="productImages.length > 1"
-                  type="button"
-                  class="product-detail__img-nav product-detail__img-nav--prev"
-                  aria-label="上一张图片"
-                  @click="showPrevImage"
-                >
-                  ‹
-                </button>
                 <img
                   v-if="currentImage"
                   :src="currentImage"
                   :alt="product.name"
                 />
                 <div v-else class="product-detail__img-placeholder">⚙</div>
-                <button
+                <div
                   v-if="productImages.length > 1"
-                  type="button"
-                  class="product-detail__img-nav product-detail__img-nav--next"
-                  aria-label="下一张图片"
-                  @click="showNextImage"
+                  :key="indicatorRenderKey"
+                  class="product-detail__indicators"
+                  aria-label="产品图片切换下标"
                 >
-                  ›
-                </button>
+                  <button
+                    v-for="(_, idx) in productImages"
+                    :key="`indicator-${product.id}-${idx}`"
+                    type="button"
+                    :class="[
+                      'product-detail__indicator',
+                      {
+                        'product-detail__indicator--active':
+                          idx === currentImageIndex,
+                      },
+                    ]"
+                    :aria-label="`切换到第 ${idx + 1} 张图片`"
+                    @click="onManualImageSwitch(idx)"
+                  />
+                </div>
               </div>
               <div
                 v-if="productImages.length > 1"
@@ -62,7 +65,7 @@
                         idx === currentImageIndex,
                     },
                   ]"
-                  @click="setCurrentImageIndex(idx)"
+                  @click="onManualImageSwitch(idx)"
                 >
                   <img
                     :src="imageUrl"
@@ -157,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { ArrowLeft, EditPen, RemoveFilled } from '@element-plus/icons-vue';
@@ -175,6 +178,9 @@ const product = ref<ProductOut | null>(null);
 const loading = ref<boolean>(false);
 const togglingState = ref<boolean>(false);
 const currentImageIndex = ref<number>(0);
+let imageAutoSwitchTimer: ReturnType<typeof setInterval> | null = null;
+const AUTO_SWITCH_INTERVAL_MS = 5000;
+const indicatorRenderKey = ref<number>(0);
 
 const parseImageSource = (source: unknown): string[] => {
   if (Array.isArray(source)) {
@@ -220,16 +226,31 @@ const setCurrentImageIndex = (idx: number): void => {
   currentImageIndex.value = idx;
 };
 
-const showPrevImage = (): void => {
-  const total = productImages.value.length;
-  if (total <= 1) return;
-  currentImageIndex.value = (currentImageIndex.value - 1 + total) % total;
+const onManualImageSwitch = (idx: number): void => {
+  setCurrentImageIndex(idx);
+  startImageAutoSwitch();
 };
 
 const showNextImage = (): void => {
   const total = productImages.value.length;
   if (total <= 1) return;
   currentImageIndex.value = (currentImageIndex.value + 1) % total;
+};
+
+const stopImageAutoSwitch = (): void => {
+  if (!imageAutoSwitchTimer) return;
+  clearInterval(imageAutoSwitchTimer);
+  imageAutoSwitchTimer = null;
+};
+
+const startImageAutoSwitch = (): void => {
+  stopImageAutoSwitch();
+  // 重新挂载指示器，确保手动切换时进度条动画从头开始
+  indicatorRenderKey.value += 1;
+  if (productImages.value.length <= 1) return;
+  imageAutoSwitchTimer = setInterval((): void => {
+    showNextImage();
+  }, AUTO_SWITCH_INTERVAL_MS);
 };
 
 const goToEdit = (id: string | number): void => {
@@ -265,7 +286,7 @@ const takeDownProduct = async (): Promise<void> => {
   togglingState.value = true;
   try {
     await saveOrUpdateProduct({
-      id: current.id,
+      id: String(current.id),
       name: current.name,
       brand: current.brand,
       model: current.model,
@@ -335,6 +356,18 @@ const fetchDetail = async (): Promise<void> => {
 
 onMounted((): void => {
   void fetchDetail();
+  startImageAutoSwitch();
+});
+
+watch(
+  () => productImages.value.length,
+  (): void => {
+    startImageAutoSwitch();
+  },
+);
+
+onUnmounted((): void => {
+  stopImageAutoSwitch();
 });
 </script>
 
@@ -342,6 +375,7 @@ onMounted((): void => {
 .product-detail {
   position: relative;
   min-height: 100vh;
+  overflow-x: clip;
   color: v.$zinc-text;
   background:
     radial-gradient(
@@ -370,6 +404,7 @@ onMounted((): void => {
     position: relative;
     z-index: 2;
     max-width: 980px;
+    min-width: 0;
     margin: 0 auto;
   }
 
@@ -384,6 +419,8 @@ onMounted((): void => {
     border-radius: 12px;
     border: 1px solid #e4e4e7;
     padding: 1rem;
+    max-width: 100%;
+    min-width: 0;
     background: #ffffff;
     box-shadow: 0 8px 20px color-mix(in srgb, #000 8%, transparent);
   }
@@ -392,6 +429,7 @@ onMounted((): void => {
     display: grid;
     grid-template-columns: 360px 1fr;
     gap: 1rem;
+    min-width: 0;
 
     @media (max-width: 920px) {
       grid-template-columns: 1fr;
@@ -403,6 +441,7 @@ onMounted((): void => {
     border-radius: 12px;
     border: 1px solid #e4e4e7;
     background: #fafafa;
+    max-width: 100%;
     min-height: 360px;
     display: grid;
     place-items: center;
@@ -416,38 +455,72 @@ onMounted((): void => {
     }
   }
 
-  &__img-nav {
+  &__indicators {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
     z-index: 2;
-    width: 34px;
-    height: 34px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding: 6px 10px;
     border-radius: 999px;
-    border: 1px solid #d4d4d8;
-    color: #3f3f46;
-    font-size: 24px;
-    line-height: 1;
+    background: color-mix(in srgb, #fff 72%, transparent);
+    box-shadow:
+      0 4px 10px color-mix(in srgb, #000 12%, transparent),
+      inset 0 1px 0 color-mix(in srgb, #fff 60%, transparent);
+    backdrop-filter: blur(3px);
+    max-width: calc(100% - 16px);
+  }
+
+  &__indicator {
+    position: relative;
+    width: 30px;
+    height: 5px;
+    border-radius: 999px;
+    border: 0;
+    background: color-mix(in srgb, #a1a1aa 62%, #e5e7eb);
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    background: #ffffff;
-    box-shadow: 0 4px 10px color-mix(in srgb, #000 10%, transparent);
-    transition: all 0.2s ease;
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
-  &__img-nav:hover {
-    border-color: #a1a1aa;
-    background: #fafafa;
+  &__indicator::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, #18181b 84%, #3f3f46) 0%,
+      #18181b 100%
+    );
+    box-shadow: 0 0 8px color-mix(in srgb, #18181b 30%, transparent);
   }
 
-  &__img-nav--prev {
-    left: 10px;
+  &__indicator:hover {
+    background: #9ca3af;
+    transform: scaleY(1.12);
+    box-shadow: 0 0 0 1px color-mix(in srgb, #fff 50%, transparent);
   }
 
-  &__img-nav--next {
-    right: 10px;
+  &__indicator--active {
+    background: color-mix(in srgb, #18181b 58%, #9ca3af);
+    transform: scaleY(1.16);
+  }
+
+  &__indicator--active::after {
+    animation: product-detail-indicator-progress 5s linear forwards;
   }
 
   &__thumbs {
@@ -455,6 +528,8 @@ onMounted((): void => {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
   }
 
   &__thumb {
@@ -499,6 +574,7 @@ onMounted((): void => {
     border: 1px solid #e4e4e7;
     background: #ffffff;
     padding: 1rem;
+    min-width: 0;
   }
 
   &__price {
@@ -622,6 +698,7 @@ onMounted((): void => {
   box-sizing: border-box;
   width: 100%;
   max-width: 1280px;
+  min-width: 0;
   margin: 0 auto;
   padding: 20px 24px 40px;
 }
@@ -641,6 +718,18 @@ onMounted((): void => {
 }
 
 @media (max-width: 760px) {
+  .product-detail,
+  .product-list__main,
+  .product-detail__content,
+  .product-detail__panel,
+  .product-detail__layout,
+  .product-detail__media,
+  .product-detail__img,
+  .product-detail__info {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   .product-list__main {
     padding: 12px 12px 22px;
   }
@@ -664,21 +753,26 @@ onMounted((): void => {
     border-radius: 10px;
   }
 
-  .product-detail__img-nav {
-    width: 30px;
-    height: 30px;
-    font-size: 20px;
+  .product-detail__indicator {
+    width: 26px;
+  }
+
+  .product-detail__indicators {
+    left: 8px;
+    right: 8px;
+    transform: none;
+    justify-content: center;
   }
 
   .product-detail__thumbs {
-    grid-template-columns: repeat(5, minmax(56px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.45rem;
-    overflow-x: auto;
+    overflow-x: hidden;
     padding-bottom: 2px;
   }
 
   .product-detail__thumb {
-    min-width: 56px;
+    min-width: 0;
   }
 
   .product-detail__info {
@@ -724,11 +818,12 @@ onMounted((): void => {
     margin-top: 0.8rem;
     gap: 0.55rem;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .product-detail__actions .action-btn {
     width: 100%;
+    min-width: 0;
     margin-left: 0;
     justify-content: center;
   }
@@ -754,12 +849,17 @@ onMounted((): void => {
 
   .product-detail__empty .action-btn {
     width: 100%;
+    min-width: 0;
     margin-left: 0;
     justify-content: center;
   }
 }
 
 @media (max-width: 520px) {
+  .product-detail {
+    overflow-x: hidden;
+  }
+
   .product-list__main {
     padding: 10px 8px 18px;
   }
@@ -774,20 +874,19 @@ onMounted((): void => {
     border-radius: 9px;
   }
 
-  .product-detail__img-nav {
-    width: 28px;
-    height: 28px;
-    font-size: 18px;
+  .product-detail__indicator {
+    width: 24px;
+    height: 3px;
   }
 
   .product-detail__thumbs {
     margin-top: 0.5rem;
-    grid-template-columns: repeat(5, minmax(52px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.4rem;
   }
 
   .product-detail__thumb {
-    min-width: 52px;
+    min-width: 0;
     border-radius: 7px;
   }
 
@@ -834,6 +933,15 @@ onMounted((): void => {
   .product-detail__empty p {
     margin: 0.55rem 0 0.8rem;
     font-size: 12px;
+  }
+}
+
+@keyframes product-detail-indicator-progress {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
   }
 }
 </style>
