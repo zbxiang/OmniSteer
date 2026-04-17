@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
   const isBuild = mode === 'production' || mode === 'test'
 
   return {
+    base: '/car-web/',
     plugins: [
       vue(),
       tailwindcss(),

@@ -443,15 +443,18 @@ if (typeof ResizeObserver !== 'undefined') {
   }
 
   &__warm-base {
-    background: radial-gradient(
-      ellipse 95% 60% at 50% 110%,
-      var(--color-primary-amber-20) 0%,
-      transparent 55%
+    background: var(
+      --product-list-warm-base-bg,
+      radial-gradient(
+        ellipse 95% 60% at 50% 110%,
+        var(--color-primary-amber-20) 0%,
+        transparent 55%
+      )
     );
   }
 
   &__vignette {
-    box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--product-list-vignette-shadow, inset 0 0 120px rgba(0, 0, 0, 0.5));
   }
 
   &__content {
@@ -506,16 +509,18 @@ if (typeof ResizeObserver !== 'undefined') {
     margin-bottom: 1.35rem;
     padding: 12px 24px 14px;
     border-bottom: 1px solid
-      color-mix(in srgb, var(--color-primary-amber-28) 28%, transparent);
+      var(--search-toolbar-border, color-mix(in srgb, var(--color-primary-amber-28) 28%, transparent));
     /* 实色座舱底，不用 backdrop-filter，避免列表图透过条带 */
-    background:
+    background: var(
+      --search-toolbar-bg,
       linear-gradient(
         180deg,
         rgba(0, 0, 0, 0.22) 0%,
         rgba(0, 0, 0, 0.08) 100%
       ),
-      var(--color-cockpit-bg-mid);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      var(--color-cockpit-bg-mid)
+    );
+    box-shadow: var(--search-toolbar-shadow, 0 10px 28px rgba(0, 0, 0, 0.35));
 
     /* 向上补一条实色，盖住 sticky 与导航之间可能出现的透光缝 */
     &::before {
@@ -526,7 +531,7 @@ if (typeof ResizeObserver !== 'undefined') {
       right: 0;
       top: -12px;
       height: 12px;
-      background: var(--color-cockpit-bg-mid);
+      background: var(--search-toolbar-cap-bg, var(--color-cockpit-bg-mid));
       pointer-events: none;
     }
 
@@ -545,8 +550,8 @@ if (typeof ResizeObserver !== 'undefined') {
 
     :deep(.el-input__wrapper) {
       border-radius: 10px;
-      border: 1px solid var(--color-primary-amber-28);
-      background: v.$input-bg;
+      border: 1px solid var(--search-input-border, var(--color-primary-amber-28));
+      background: var(--search-input-bg, v.$input-bg);
       box-shadow: none;
       transition:
         border-color 0.18s ease,
@@ -555,11 +560,16 @@ if (typeof ResizeObserver !== 'undefined') {
     }
 
     :deep(.el-input__wrapper.is-focus) {
-      border-color: var(--color-primary-amber-45);
-      box-shadow:
+      border-color: var(--search-input-focus-border, var(--color-primary-amber-45));
+      box-shadow: var(
+        --search-input-focus-shadow,
         0 0 0 2px var(--color-primary-amber-16),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
-      background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 92%, var(--color-primary-amber-06));
+        inset 0 1px 0 rgba(255, 255, 255, 0.08)
+      );
+      background: var(
+        --search-input-focus-bg,
+        color-mix(in srgb, var(--color-cockpit-bg-mid-97) 92%, var(--color-primary-amber-06))
+      );
     }
 
     :deep(.el-input__inner) {
@@ -593,21 +603,24 @@ if (typeof ResizeObserver !== 'undefined') {
     margin: -0.65rem 0 1rem;
     padding: 9px 12px;
     border-radius: 10px;
-    border: 1px solid var(--color-primary-amber-22);
-    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 90%, transparent);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
+    border: 1px solid var(--image-filter-border, var(--color-primary-amber-22));
+    background: var(
+      --image-filter-bg,
+      color-mix(in srgb, var(--color-cockpit-bg-mid-97) 90%, transparent)
+    );
+    box-shadow: var(--image-filter-shadow, 0 6px 18px rgba(0, 0, 0, 0.24));
   }
 
   &__image-filter-label {
     flex-shrink: 0;
     font-size: 12px;
-    color: color-mix(in srgb, var(--color-primary-amber-80) 80%, #fff);
+    color: var(--image-filter-label-color, color-mix(in srgb, var(--color-primary-amber-80) 80%, #fff));
   }
 
   &__image-filter-link {
     min-width: 0;
     flex: 1;
-    color: v.$zinc-text;
+    color: var(--image-filter-link-color, v.$zinc-text);
     font-size: 12px;
     text-decoration: none;
     overflow: hidden;
@@ -616,7 +629,7 @@ if (typeof ResizeObserver !== 'undefined') {
   }
 
   &__image-filter-link:hover {
-    color: var(--color-primary-amber);
+    color: var(--image-filter-link-hover-color, var(--color-primary-amber));
     text-decoration: underline;
   }
 
@@ -625,21 +638,30 @@ if (typeof ResizeObserver !== 'undefined') {
     height: 28px;
     padding: 0 10px;
     border-radius: 8px;
-    border: 1px solid var(--color-primary-amber-28);
-    background: color-mix(in srgb, var(--color-primary-amber-12) 70%, transparent);
-    color: v.$zinc-text;
+    border: 1px solid var(--image-filter-btn-border, var(--color-primary-amber-28));
+    background: var(
+      --image-filter-btn-bg,
+      color-mix(in srgb, var(--color-primary-amber-12) 70%, transparent)
+    );
+    color: var(--image-filter-btn-color, v.$zinc-text);
     font-size: 12px;
     cursor: pointer;
   }
 
   &__image-filter-btn:hover {
-    border-color: var(--color-primary-amber-48);
-    background: color-mix(in srgb, var(--color-primary-amber-18) 72%, transparent);
+    border-color: var(--image-filter-btn-hover-border, var(--color-primary-amber-48));
+    background: var(
+      --image-filter-btn-hover-bg,
+      color-mix(in srgb, var(--color-primary-amber-18) 72%, transparent)
+    );
   }
 
   &__image-filter-btn--danger {
-    border-color: color-mix(in srgb, var(--color-primary-amber-35) 72%, #ef4444);
-    color: color-mix(in srgb, #fff 84%, #fda4af);
+    border-color: var(
+      --image-filter-btn-danger-border,
+      color-mix(in srgb, var(--color-primary-amber-35) 72%, #ef4444)
+    );
+    color: var(--image-filter-btn-danger-color, color-mix(in srgb, #fff 84%, #fda4af));
   }
 
   &__empty {
@@ -767,31 +789,31 @@ if (typeof ResizeObserver !== 'undefined') {
 }
 
 .btn-primary {
-  background: var(--color-primary-amber-85);
-  color: #fff;
-  border-color: var(--color-primary-amber);
+  background: var(--search-btn-primary-bg, var(--color-primary-amber-85));
+  color: var(--search-btn-primary-color, #fff);
+  border-color: var(--search-btn-primary-border, var(--color-primary-amber));
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-amber);
-  border-color: var(--color-accent-warm);
-  box-shadow: 0 0 16px var(--color-primary-amber-24);
+  background: var(--search-btn-primary-hover-bg, var(--color-primary-amber));
+  border-color: var(--search-btn-primary-hover-border, var(--color-accent-warm));
+  box-shadow: var(--search-btn-primary-hover-shadow, 0 0 16px var(--color-primary-amber-24));
 }
 
 .btn-outline {
-  background: transparent;
-  color: v.$zinc-label;
-  border-color: var(--color-primary-amber-35);
+  background: var(--search-btn-outline-bg, transparent);
+  color: var(--search-btn-outline-color, v.$zinc-label);
+  border-color: var(--search-btn-outline-border, var(--color-primary-amber-35));
 }
 
 .btn-outline:hover:not(:disabled) {
-  color: v.$zinc-text;
-  border-color: var(--color-primary-amber-55);
-  background: var(--color-primary-amber-10);
+  color: var(--search-btn-outline-hover-color, v.$zinc-text);
+  border-color: var(--search-btn-outline-hover-border, var(--color-primary-amber-55));
+  background: var(--search-btn-outline-hover-bg, var(--color-primary-amber-10));
 }
 
 .btn-ghost {
-  background: linear-gradient(
+  background: var(--search-btn-ghost-bg, linear-gradient(
     145deg,
     color-mix(
         in srgb,
@@ -800,16 +822,16 @@ if (typeof ResizeObserver !== 'undefined') {
       )
       0%,
     color-mix(in srgb, var(--color-cockpit-bg-mid-97) 90%, transparent) 100%
-  );
-  color: color-mix(in srgb, var(--color-zinc-muted) 84%, #fff);
-  border-color: color-mix(in srgb, var(--color-primary-amber-24) 72%, #94a3b8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  ));
+  color: var(--search-btn-ghost-color, color-mix(in srgb, var(--color-zinc-muted) 84%, #fff));
+  border-color: var(--search-btn-ghost-border, color-mix(in srgb, var(--color-primary-amber-24) 72%, #94a3b8));
+  box-shadow: var(--search-btn-ghost-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.08));
 }
 
 .btn-ghost:hover:not(:disabled) {
-  color: v.$zinc-text;
-  border-color: var(--color-primary-amber-42);
-  background: linear-gradient(
+  color: var(--search-btn-ghost-hover-color, v.$zinc-text);
+  border-color: var(--search-btn-ghost-hover-border, var(--color-primary-amber-42));
+  background: var(--search-btn-ghost-hover-bg, linear-gradient(
     145deg,
     color-mix(
         in srgb,
@@ -823,8 +845,8 @@ if (typeof ResizeObserver !== 'undefined') {
         var(--color-primary-amber-08)
       )
       100%
-  );
-  box-shadow: 0 8px 16px var(--color-primary-amber-12);
+  ));
+  box-shadow: var(--search-btn-ghost-hover-shadow, 0 8px 16px var(--color-primary-amber-12));
 }
 
 .btn-ghost:active:not(:disabled) {
@@ -1698,8 +1720,11 @@ if (typeof ResizeObserver !== 'undefined') {
       margin-right: -16px;
       padding: 9px 16px 10px;
       gap: 0.48rem;
-      border-bottom-color: color-mix(in srgb, var(--color-primary-amber-26) 44%, transparent);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.34);
+      border-bottom-color: var(
+        --search-toolbar-border-mobile,
+        color-mix(in srgb, var(--color-primary-amber-26) 44%, transparent)
+      );
+      box-shadow: var(--search-toolbar-shadow-mobile, 0 8px 20px rgba(0, 0, 0, 0.34));
     }
 
     &__search {

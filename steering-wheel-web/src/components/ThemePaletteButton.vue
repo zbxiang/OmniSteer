@@ -81,6 +81,7 @@ withDefaults(
 const appStore = useAppStore();
 
 const options: Array<{ value: ThemeName; label: string }> = [
+  { value: 'white', label: '白色' },
   { value: 'red', label: '红色' },
   { value: 'orange', label: '橙色' },
   { value: 'amber', label: '琥珀色' },
@@ -296,6 +297,7 @@ const popperOptions = {
 }
 
 .theme-palette-menu__swatch--blue { background: #3b82f6; }
+.theme-palette-menu__swatch--white { background: #ffffff; }
 .theme-palette-menu__swatch--amber { background: #f59e0b; }
 .theme-palette-menu__swatch--yellow { background: #eab308; }
 .theme-palette-menu__swatch--lime { background: #84cc16; }

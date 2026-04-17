@@ -125,35 +125,17 @@ const onLogout = async (): Promise<void> => {
 <style lang="scss">
 .logout-confirm-dialog .el-message-box__headerbtn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-primary-amber-20);
-  border-radius: 0;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #18181b 14%, transparent);
+  border-radius: var(--el-border-radius-base, 4px);
 }
 
 .logout-confirm-dialog.el-message-box {
   margin: 0 !important;
   position: relative;
-  border: 1px solid var(--color-primary-amber-26);
-  border-radius: 12px;
-  background:
-    radial-gradient(
-      circle at 12% -18%,
-      var(--color-primary-amber-16) 0%,
-      transparent 48%
-    ),
-    radial-gradient(
-      circle at 100% 120%,
-      var(--color-primary-amber-10) 0%,
-      transparent 56%
-    ),
-    color-mix(
-      in srgb,
-      var(--color-cockpit-bg-mid-97) 94%,
-      var(--color-primary-amber-06)
-    );
-  box-shadow:
-    0 16px 34px
-      color-mix(in srgb, var(--color-cockpit-bg-mid-97) 78%, transparent),
-    0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  border: 1px solid #d4d4d8;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px color-mix(in srgb, #000 12%, transparent);
   overflow: hidden;
 }
 
@@ -162,15 +144,14 @@ const onLogout = async (): Promise<void> => {
 }
 
 .logout-confirm-dialog .el-message-box__title {
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.01em;
-  color: color-mix(in srgb, var(--color-zinc-text) 96%, #fff);
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.32);
+  color: #18181b;
 }
 
 .logout-confirm-dialog .el-message-box__content {
   padding: 6px 20px 18px;
-  color: color-mix(in srgb, var(--color-zinc-muted) 90%, #fff);
+  color: #52525b;
 }
 
 .logout-confirm-dialog .el-message-box__message p {
@@ -188,18 +169,12 @@ const onLogout = async (): Promise<void> => {
   box-sizing: border-box;
   height: 32px;
   padding: 0 12px;
-  color: color-mix(in srgb, var(--color-zinc-text) 90%, #fff);
-  border-radius: 0 !important;
-  border: 1px solid var(--color-primary-amber-32) !important;
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 92%,
-    var(--color-primary-amber-06)
-  ) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 0 0 1px color-mix(in srgb, var(--color-cockpit-bg-low) 68%, transparent);
-  font-weight: 650 !important;
+  color: #3f3f46;
+  border-radius: var(--el-border-radius-base, 4px) !important;
+  border: 1px solid #d4d4d8 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  font-weight: 500 !important;
   letter-spacing: 0.01em;
   line-height: 32px;
   transition:
@@ -215,77 +190,58 @@ const onLogout = async (): Promise<void> => {
   width: 32px;
   min-width: 32px;
   padding: 0;
-  color: var(--color-primary-amber-70);
+  color: #71717a;
   border-radius: 8px !important;
 }
 
 .logout-confirm-dialog .el-message-box__headerbtn:hover {
-  color: var(--color-primary-amber);
-  border-color: var(--color-primary-amber-55) !important;
-  background-color: color-mix(
-    in srgb,
-    var(--color-primary-amber-16) 78%,
-    transparent
-  ) !important;
+  color: #27272a;
+  border-color: #a1a1aa !important;
+  background-color: #fafafa !important;
 }
 
 .logout-confirm-dialog .el-message-box__headerbtn:hover .el-icon,
 .logout-confirm-dialog .el-message-box__headerbtn:hover .el-message-box__close {
-  color: var(--color-primary-amber) !important;
+  color: #27272a !important;
 }
 
 .logout-confirm-dialog__confirm-btn.el-button--primary,
 .logout-confirm-dialog__cancel-btn.el-button {
   min-width: 82px;
   border-radius: 8px !important;
+  box-shadow: none !important;
 }
 
 .logout-confirm-dialog__confirm-btn.el-button--primary {
-  background: linear-gradient(
-    145deg,
-    var(--color-primary-amber-70) 0%,
-    var(--color-primary-amber) 56%,
-    var(--color-primary-amber-85) 100%
-  ) !important;
-  box-shadow:
-    0 2px 8px var(--color-primary-amber-24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  color: #ffffff !important;
+  border-color: #18181b !important;
+  background: #18181b !important;
 }
 
 .logout-confirm-dialog__confirm-btn.el-button--primary:hover {
-  color: #fff !important;
-  border-color: var(--color-primary-amber) !important;
-  background: linear-gradient(
-    145deg,
-    var(--color-primary-amber) 0%,
-    var(--color-primary-amber-90) 100%
-  ) !important;
-  box-shadow:
-    0 6px 14px var(--color-primary-amber-26),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+  border-color: #27272a !important;
+  background: #27272a !important;
+  box-shadow: none !important;
 }
 
 .logout-confirm-dialog__confirm-btn.el-button--primary:focus-visible,
 .logout-confirm-dialog__cancel-btn.el-button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-primary-amber-20);
+  box-shadow: 0 0 0 2px color-mix(in srgb, #18181b 14%, transparent);
 }
 
 .logout-confirm-dialog__cancel-btn.el-button {
-  color: color-mix(in srgb, var(--color-zinc-text) 90%, #fff) !important;
+  color: #3f3f46 !important;
+  border-color: #d4d4d8 !important;
+  background: #ffffff !important;
 }
 
 .logout-confirm-dialog__cancel-btn.el-button:hover {
-  color: #fff !important;
-  border-color: var(--color-primary-amber-46) !important;
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 82%,
-    var(--color-primary-amber-16)
-  ) !important;
-  box-shadow:
-    0 6px 14px var(--color-primary-amber-18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  color: #18181b !important;
+  border-color: #a1a1aa !important;
+  background: #fafafa !important;
+  box-shadow: none !important;
 }
 
 @media (max-width: 560px) {

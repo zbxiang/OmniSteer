@@ -594,57 +594,31 @@ onUnmounted(() => {
 }
 
 .image-btn--ghost {
-  --el-button-bg-color: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 90%,
-    var(--color-primary-amber-06)
-  );
-  --el-button-border-color: var(--color-primary-amber-30);
-  --el-button-text-color: var(--color-zinc-text);
-  --el-button-hover-bg-color: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 84%,
-    var(--color-primary-amber-10)
-  );
-  --el-button-hover-border-color: var(--color-primary-amber-55);
-  --el-button-hover-text-color: var(--color-zinc-text);
-  --el-button-active-bg-color: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 78%,
-    var(--color-primary-amber-12)
-  );
-  --el-button-active-border-color: var(--color-primary-amber-55);
-  box-shadow:
-    0 2px 8px var(--color-primary-amber-10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  color: var(--color-zinc-text) !important;
+  --el-button-bg-color: #ffffff;
+  --el-button-border-color: #d4d4d8;
+  --el-button-text-color: #3f3f46;
+  --el-button-hover-bg-color: #fafafa;
+  --el-button-hover-border-color: #a1a1aa;
+  --el-button-hover-text-color: #18181b;
+  --el-button-active-bg-color: #f4f4f5;
+  --el-button-active-border-color: #a1a1aa;
+  box-shadow: none;
+  color: #3f3f46 !important;
 }
 
 :deep(.image-btn--ghost.el-button) {
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 90%,
-    var(--color-primary-amber-06)
-  ) !important;
-  border-color: var(--color-primary-amber-30) !important;
+  background: #ffffff !important;
+  border-color: #d4d4d8 !important;
 }
 
 :deep(.image-btn--ghost.el-button:hover) {
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 84%,
-    var(--color-primary-amber-10)
-  ) !important;
-  border-color: var(--color-primary-amber-55) !important;
+  background: #fafafa !important;
+  border-color: #a1a1aa !important;
 }
 
 :deep(.image-btn--ghost.el-button:active) {
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 78%,
-    var(--color-primary-amber-12)
-  ) !important;
-  border-color: var(--color-primary-amber-55) !important;
+  background: #f4f4f5 !important;
+  border-color: #a1a1aa !important;
 }
 
 :deep(.image-btn--ghost.is-disabled),
@@ -664,47 +638,41 @@ onUnmounted(() => {
 }
 
 .image-btn--primary {
-  --el-button-bg-color: var(--color-primary-amber);
-  --el-button-border-color: var(--color-primary-amber);
+  --el-button-bg-color: #18181b;
+  --el-button-border-color: #18181b;
   --el-button-text-color: #fff;
-  --el-button-hover-bg-color: color-mix(in srgb, var(--color-primary-amber) 88%, #fff);
-  --el-button-hover-border-color: color-mix(in srgb, var(--color-primary-amber) 88%, #fff);
+  --el-button-hover-bg-color: #27272a;
+  --el-button-hover-border-color: #27272a;
   --el-button-hover-text-color: #fff;
-  --el-button-active-bg-color: color-mix(in srgb, var(--color-primary-amber) 82%, #000);
-  --el-button-active-border-color: color-mix(in srgb, var(--color-primary-amber) 82%, #000);
+  --el-button-active-bg-color: #3f3f46;
+  --el-button-active-border-color: #3f3f46;
   --el-button-active-text-color: #fff;
-  box-shadow:
-    0 8px 18px var(--color-primary-amber-24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: none;
   color: #fff !important;
 }
 
 :deep(.image-btn--primary.el-button) {
-  background: var(--color-primary-amber) !important;
-  border-color: var(--color-primary-amber) !important;
+  background: #18181b !important;
+  border-color: #18181b !important;
 }
 
 :deep(.image-btn--primary.el-button:hover) {
-  background: color-mix(in srgb, var(--color-primary-amber) 88%, #fff) !important;
-  border-color: color-mix(in srgb, var(--color-primary-amber) 88%, #fff) !important;
+  background: #27272a !important;
+  border-color: #27272a !important;
 }
 
 :deep(.image-btn--primary.el-button:active) {
-  background: color-mix(in srgb, var(--color-primary-amber) 82%, #000) !important;
-  border-color: color-mix(in srgb, var(--color-primary-amber) 82%, #000) !important;
+  background: #3f3f46 !important;
+  border-color: #3f3f46 !important;
 }
 
 :deep(.image-btn--primary.is-disabled),
 :deep(.image-btn--primary.is-disabled:hover) {
-  --el-button-bg-color: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 88%,
-    var(--color-primary-amber-10)
-  );
-  --el-button-border-color: color-mix(in srgb, var(--color-primary-amber-24) 65%, transparent);
-  --el-button-text-color: color-mix(in srgb, #fff 64%, var(--color-zinc-muted));
+  --el-button-bg-color: #e4e4e7;
+  --el-button-border-color: #d4d4d8;
+  --el-button-text-color: #52525b;
   box-shadow: none;
-  color: color-mix(in srgb, #fff 64%, var(--color-zinc-muted)) !important;
+  color: #52525b !important;
 }
 
 :deep(.image-btn--ghost.el-button.is-disabled),
@@ -719,12 +687,8 @@ onUnmounted(() => {
 
 :deep(.image-btn--primary.el-button.is-disabled),
 :deep(.image-btn--primary.el-button.is-disabled:hover) {
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 88%,
-    var(--color-primary-amber-10)
-  ) !important;
-  border-color: color-mix(in srgb, var(--color-primary-amber-24) 65%, transparent) !important;
+  background: #e4e4e7 !important;
+  border-color: #d4d4d8 !important;
 }
 
 :deep(.image-btn.el-button) {
@@ -736,7 +700,7 @@ onUnmounted(() => {
 }
 
 :deep(.image-btn.el-button:hover) {
-  transform: translateY(-1px);
+  transform: none;
 }
 
 :deep(.image-btn.el-button:active) {

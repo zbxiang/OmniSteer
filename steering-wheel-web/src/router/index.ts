@@ -13,7 +13,7 @@ const ForbiddenView = (): Promise<typeof import('@/views/ForbiddenView.vue')> =>
 const NotFoundView = (): Promise<typeof import('@/views/NotFoundView.vue')> => import('@/views/NotFoundView.vue');
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/login',

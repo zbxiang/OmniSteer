@@ -1,14 +1,21 @@
 <template>
   <div class="product-list product-detail">
     <TopBar
-      :is-home="route.name === 'home' || route.name === 'productDetail' || route.name === 'productEdit'"
+      :is-home="
+        route.name === 'home' ||
+        route.name === 'productDetail' ||
+        route.name === 'productEdit'
+      "
       :is-product-create="route.name === 'productCreate'"
     />
     <div class="product-detail__vignette" aria-hidden="true" />
 
     <div class="product-list__main">
       <div class="product-detail__content">
-        <AppBreadcrumb class="product-detail__breadcrumb" current-label="产品详情" />
+        <AppBreadcrumb
+          class="product-detail__breadcrumb"
+          current-label="产品详情"
+        />
 
         <div class="product-detail__panel">
           <div class="product-detail__layout" v-if="product">
@@ -27,7 +34,7 @@
                   v-if="currentImage"
                   :src="currentImage"
                   :alt="product.name"
-                >
+                />
                 <div v-else class="product-detail__img-placeholder">⚙</div>
                 <button
                   v-if="productImages.length > 1"
@@ -50,11 +57,17 @@
                   type="button"
                   :class="[
                     'product-detail__thumb',
-                    { 'product-detail__thumb--active': idx === currentImageIndex },
+                    {
+                      'product-detail__thumb--active':
+                        idx === currentImageIndex,
+                    },
                   ]"
                   @click="setCurrentImageIndex(idx)"
                 >
-                  <img :src="imageUrl" :alt="`${product.name} 缩略图 ${idx + 1}`">
+                  <img
+                    :src="imageUrl"
+                    :alt="`${product.name} 缩略图 ${idx + 1}`"
+                  />
                 </button>
               </div>
             </div>
@@ -62,20 +75,28 @@
             <div class="product-detail__info">
               <h1>{{ product.name }}</h1>
               <p class="product-detail__price">¥{{ productPriceText }}</p>
-              <span :class="['status-badge', productState === ProductStatusEnum.UP ? 'status-badge--on' : 'status-badge--off']">
+              <span
+                :class="[
+                  'status-badge',
+                  productState === ProductStatusEnum.UP
+                    ? 'status-badge--on'
+                    : 'status-badge--off',
+                ]"
+              >
                 {{ productState === ProductStatusEnum.UP ? '在售' : '下架' }}
               </span>
 
-              <p class="product-detail__desc">{{ product.description || '暂无描述' }}</p>
+              <p class="product-detail__desc">
+                {{ product.description || '暂无描述' }}
+              </p>
 
               <ul class="product-detail__attrs">
-                <li><span>品牌</span><span>{{ product.brand }}</span></li>
-                <li><span>型号</span><span>{{ product.model }}</span></li>
-                <li><span>材质</span><span>{{ product.material }}</span></li>
-                <li><span>直径</span><span>{{ product.diameter }}mm</span></li>
-                <li><span>重量</span><span>{{ product.weight }}g</span></li>
-                <li><span>安装方式</span><span>{{ product.mount }}</span></li>
-                <li><span>上架时间</span><span>{{ createdDateText }}</span></li>
+                <li>
+                  <span>品牌</span><span>{{ product.brand }}</span>
+                </li>
+                <li>
+                  <span>型号</span><span>{{ product.model }}</span>
+                </li>
               </ul>
 
               <div class="product-detail__actions">
@@ -99,7 +120,10 @@
                   </template>
                   下架
                 </el-button>
-                <el-button class="action-btn action-btn--secondary action-btn--back" @click="goToList">
+                <el-button
+                  class="action-btn action-btn--secondary action-btn--back"
+                  @click="goToList"
+                >
                   <template #icon>
                     <el-icon class="action-btn__icon"><ArrowLeft /></el-icon>
                   </template>
@@ -112,7 +136,10 @@
           <div class="product-detail__empty" v-else-if="!loading">
             <h2>暂无详情</h2>
             <p>未找到该产品信息，可能已下架或数据尚未同步。</p>
-            <el-button class="action-btn action-btn--secondary action-btn--back" @click="goToList">
+            <el-button
+              class="action-btn action-btn--secondary action-btn--back"
+              @click="goToList"
+            >
               <template #icon>
                 <el-icon class="action-btn__icon"><ArrowLeft /></el-icon>
               </template>
@@ -166,15 +193,25 @@ const parseImageSource = (source: unknown): string[] => {
 };
 
 const productImages = computed<string[]>(() =>
-  parseImageSource((product.value as ProductOut & { imageUrl?: unknown } | null)?.images)
-    .concat(parseImageSource((product.value as ProductOut & { imageUrl?: unknown } | null)?.imageUrl))
+  parseImageSource(
+    (product.value as (ProductOut & { imageUrl?: unknown }) | null)?.images,
+  )
+    .concat(
+      parseImageSource(
+        (product.value as (ProductOut & { imageUrl?: unknown }) | null)
+          ?.imageUrl,
+      ),
+    )
     .filter((url, index, list) => list.indexOf(url) === index),
 );
 
 const currentImage = computed<string>(() => {
   const images = productImages.value;
   if (!images.length) return '';
-  const safeIndex = Math.min(Math.max(currentImageIndex.value, 0), images.length - 1);
+  const safeIndex = Math.min(
+    Math.max(currentImageIndex.value, 0),
+    images.length - 1,
+  );
   return images[safeIndex] || '';
 });
 
@@ -234,10 +271,6 @@ const takeDownProduct = async (): Promise<void> => {
       model: current.model,
       price: current.price,
       state: ProductStatusEnum.DOWN,
-      material: current.material || undefined,
-      diameter: current.diameter ?? undefined,
-      weight: current.weight ?? undefined,
-      mount: current.mount || undefined,
       description: current.description || undefined,
       images: current.images || [],
     });
@@ -256,12 +289,6 @@ const takeDownProduct = async (): Promise<void> => {
   }
 };
 
-const createdDateText = computed<string>(() => {
-  if (!product.value?.created_at) return '-';
-  const date = new Date(product.value.created_at);
-  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString();
-});
-
 const productPriceText = computed<string>(() => {
   const price = product.value?.price;
   return typeof price === 'number' && Number.isFinite(price)
@@ -270,13 +297,19 @@ const productPriceText = computed<string>(() => {
 });
 
 const productState = computed(() =>
-  product.value ? normalizeProductStateFromOut(product.value) : ProductStatusEnum.UP,
+  product.value
+    ? normalizeProductStateFromOut(product.value)
+    : ProductStatusEnum.UP,
 );
 
 const fetchDetail = async (): Promise<void> => {
   const routeId = route.params.id;
   const productId =
-    typeof routeId === 'string' ? routeId : Array.isArray(routeId) ? routeId[0] : '';
+    typeof routeId === 'string'
+      ? routeId
+      : Array.isArray(routeId)
+        ? routeId[0]
+        : '';
   if (!productId?.trim()) {
     product.value = null;
     return;
@@ -292,7 +325,8 @@ const fetchDetail = async (): Promise<void> => {
       return;
     }
     if (e instanceof RequestError && e.isNotified) return;
-    const msg = e instanceof RequestError ? e.message : '加载产品详情失败，请稍后重试';
+    const msg =
+      e instanceof RequestError ? e.message : '加载产品详情失败，请稍后重试';
     ElMessage.error(msg);
   } finally {
     loading.value = false;
@@ -312,11 +346,15 @@ onMounted((): void => {
   background:
     radial-gradient(
       1200px 420px at 50% -140px,
-      var(--color-primary-amber-20) 0%,
-      var(--color-primary-amber-08) 45%,
-      transparent 78%
+      rgba(24, 24, 27, 0.03) 0%,
+      transparent 65%
     ),
-    linear-gradient(168deg, v.$cockpit-bg-top 0%, v.$cockpit-bg-mid 48%, v.$cockpit-bg-bottom 100%);
+    linear-gradient(
+      168deg,
+      v.$cockpit-bg-top 0%,
+      v.$cockpit-bg-mid 48%,
+      v.$cockpit-bg-bottom 100%
+    );
 
   &__vignette {
     position: absolute;
@@ -325,7 +363,7 @@ onMounted((): void => {
   }
 
   &__vignette {
-    box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.5);
+    box-shadow: none;
   }
 
   &__content {
@@ -344,12 +382,10 @@ onMounted((): void => {
 
   &__panel {
     border-radius: 12px;
-    border: 1px solid var(--color-primary-amber-24);
+    border: 1px solid #e4e4e7;
     padding: 1rem;
-    background: linear-gradient(145deg, v.$panel-bg 0%, var(--color-cockpit-bg-mid-96) 100%);
-    box-shadow:
-      0 14px 30px color-mix(in srgb, var(--color-cockpit-bg-mid-97) 72%, transparent),
-      0 1px 0 rgba(255, 255, 255, 0.08) inset;
+    background: #ffffff;
+    box-shadow: 0 8px 20px color-mix(in srgb, #000 8%, transparent);
   }
 
   &__layout {
@@ -365,8 +401,8 @@ onMounted((): void => {
   &__img {
     position: relative;
     border-radius: 12px;
-    border: 1px solid var(--color-primary-amber-24);
-    background: linear-gradient(145deg, v.$panel-bg 0%, var(--color-cockpit-bg-mid-96) 100%);
+    border: 1px solid #e4e4e7;
+    background: #fafafa;
     min-height: 360px;
     display: grid;
     place-items: center;
@@ -388,22 +424,22 @@ onMounted((): void => {
     width: 34px;
     height: 34px;
     border-radius: 999px;
-    border: 1px solid var(--color-primary-amber-30);
-    color: #fff;
+    border: 1px solid #d4d4d8;
+    color: #3f3f46;
     font-size: 24px;
     line-height: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 76%, var(--color-primary-amber-16));
-    box-shadow: 0 8px 16px color-mix(in srgb, #000 36%, transparent);
+    background: #ffffff;
+    box-shadow: 0 4px 10px color-mix(in srgb, #000 10%, transparent);
     transition: all 0.2s ease;
   }
 
   &__img-nav:hover {
-    border-color: var(--color-primary-amber-56);
-    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 70%, var(--color-primary-amber-25));
+    border-color: #a1a1aa;
+    background: #fafafa;
   }
 
   &__img-nav--prev {
@@ -423,10 +459,10 @@ onMounted((): void => {
 
   &__thumb {
     appearance: none;
-    border: 1px solid var(--color-primary-amber-22);
+    border: 1px solid #e4e4e7;
     border-radius: 8px;
     padding: 0;
-    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 92%, transparent);
+    background: #ffffff;
     overflow: hidden;
     cursor: pointer;
     transition:
@@ -443,16 +479,14 @@ onMounted((): void => {
   }
 
   &__thumb:hover {
-    border-color: var(--color-primary-amber-48);
-    box-shadow: 0 6px 14px color-mix(in srgb, var(--color-primary-amber-18) 50%, transparent);
-    transform: translateY(-1px);
+    border-color: #a1a1aa;
+    box-shadow: none;
+    transform: none;
   }
 
   &__thumb--active {
-    border-color: var(--color-primary-amber-70);
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--color-primary-amber-28) 72%, transparent),
-      0 8px 16px color-mix(in srgb, var(--color-primary-amber-20) 52%, transparent);
+    border-color: #18181b;
+    box-shadow: inset 0 0 0 1px #18181b;
   }
 
   &__img-placeholder {
@@ -462,20 +496,20 @@ onMounted((): void => {
 
   &__info {
     border-radius: 12px;
-    border: 1px solid var(--color-primary-amber-24);
-    background: linear-gradient(145deg, v.$panel-bg 0%, var(--color-cockpit-bg-mid-96) 100%);
+    border: 1px solid #e4e4e7;
+    background: #ffffff;
     padding: 1rem;
   }
 
   &__price {
     margin: 0.4rem 0 0.6rem;
-    color: v.$accent-warm;
+    color: #18181b;
     font-size: 1.4rem;
     font-weight: 700;
   }
 
   &__desc {
-    color: v.$zinc-label;
+    color: #52525b;
     margin: 1rem 0;
   }
 
@@ -483,15 +517,15 @@ onMounted((): void => {
     margin: 0;
     padding: 0;
     list-style: none;
-    border-top: 1px solid var(--color-primary-amber-18);
+    border-top: 1px solid #e4e4e7;
 
     li {
       display: flex;
       justify-content: space-between;
       gap: 1rem;
       padding: 0.65rem 0;
-      border-bottom: 1px solid var(--color-primary-amber-12);
-      color: v.$zinc-label;
+      border-bottom: 1px solid #f1f5f9;
+      color: #52525b;
     }
   }
 
@@ -504,8 +538,8 @@ onMounted((): void => {
 
   &__empty {
     border-radius: 12px;
-    border: 1px solid var(--color-primary-amber-24);
-    background: linear-gradient(145deg, v.$panel-bg 0%, var(--color-cockpit-bg-mid-96) 100%);
+    border: 1px solid #e4e4e7;
+    background: #ffffff;
     padding: 1.5rem;
     text-align: center;
 
@@ -517,7 +551,7 @@ onMounted((): void => {
 
     p {
       margin: 0.8rem 0 1rem;
-      color: v.$zinc-label;
+      color: #52525b;
     }
   }
 }
@@ -527,32 +561,60 @@ onMounted((): void => {
   font-size: 12px;
   padding: 3px 10px;
   border-radius: 999px;
-  border: 1px solid transparent;
+  border: 1px solid #d4d4d8;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 .status-badge--on {
-  color: #fff;
-  border-color: var(--color-primary-amber-55);
-  background: linear-gradient(
-    145deg,
-    var(--color-primary-amber-70) 0%,
-    var(--color-primary-amber) 100%
-  );
-  box-shadow:
-    0 6px 12px color-mix(in srgb, var(--color-primary-amber-24) 58%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  border-color: #18181b;
+  background: #18181b;
+  box-shadow: none;
 }
 
 .status-badge--off {
-  color: color-mix(in srgb, #fff 78%, var(--color-zinc-text));
-  border-color: var(--color-primary-amber-24);
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 90%,
-    var(--color-primary-amber-10)
-  );
+  color: #52525b;
+  border-color: #d4d4d8;
+  background: #f4f4f5;
+}
+
+.product-detail :deep(.action-btn) {
+  min-width: 104px;
+  height: 36px;
+  border-radius: var(--el-border-radius-base, 4px);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: none !important;
+  transition:
+    border-color 0.14s ease,
+    background-color 0.14s ease,
+    color 0.14s ease !important;
+}
+
+.product-detail :deep(.action-btn--primary),
+.product-detail :deep(.action-btn--danger) {
+  border: 1px solid #18181b !important;
+  background: #18181b !important;
+  color: #fff !important;
+}
+
+.product-detail :deep(.action-btn--primary:hover),
+.product-detail :deep(.action-btn--danger:hover) {
+  border-color: #27272a !important;
+  background: #27272a !important;
+}
+
+.product-detail :deep(.action-btn--secondary) {
+  border: 1px solid #d4d4d8 !important;
+  background: #ffffff !important;
+  color: #3f3f46 !important;
+}
+
+.product-detail :deep(.action-btn--secondary:hover) {
+  border-color: #a1a1aa !important;
+  background: #fafafa !important;
+  color: #18181b !important;
 }
 
 .product-list__main {

@@ -4,8 +4,9 @@ import type { ThemeName } from '@/types/theme';
 
 export const useAppStore = defineStore('app', () => {
   const systemName = ref('方向盘产品管理系统');
-  const theme = ref<ThemeName>('blue');
+  const theme = ref<ThemeName>('white');
   const themeList: ThemeName[] = [
+    'white',
     'red',
     'orange',
     'amber',
@@ -67,6 +68,8 @@ export const useAppStore = defineStore('app', () => {
     const savedTheme = localStorage.getItem('omnisteer-theme');
     if (savedTheme && themeList.includes(savedTheme as ThemeName)) {
       theme.value = savedTheme as ThemeName;
+    } else {
+      theme.value = 'white';
     }
     applyTheme(theme.value);
   };

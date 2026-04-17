@@ -131,6 +131,7 @@
               <el-col :xs="24" :md="12">
                 <el-form-item label="价格（元）" prop="price">
                   <el-input-number
+                    class="product-create__price-input"
                     v-model="form.price"
                     :min="1"
                     :step="100"
@@ -150,49 +151,6 @@
                     <el-option label="在售" value="UP" />
                     <el-option label="下架" value="DOWN" />
                   </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
-
-            <el-row :gutter="16">
-              <el-col :xs="24" :md="12">
-                <el-form-item label="材质">
-                  <el-input
-                    v-model="form.material"
-                    placeholder="例如：碳纤维 + 翻毛皮"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :xs="24" :md="12">
-                <el-form-item label="直径（mm）">
-                  <el-input-number
-                    class="product-create__diameter-input"
-                    v-model="form.diameter"
-                    :min="1"
-                    :step="1"
-                    style="width: 100%"
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
-
-            <el-row :gutter="16">
-              <el-col :xs="24" :md="12">
-                <el-form-item label="重量（g）">
-                  <el-input-number
-                    v-model="form.weight"
-                    :min="1"
-                    :step="10"
-                    style="width: 100%"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :xs="24" :md="12">
-                <el-form-item label="安装方式">
-                  <el-input
-                    v-model="form.mount"
-                    placeholder="例如：通用六孔 + 快拆"
-                  />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -401,10 +359,6 @@ const form = reactive<ProductFormData>({
   model: '',
   price: 0,
   state: ProductStatusEnum.UP,
-  material: '',
-  diameter: undefined as number | undefined,
-  weight: undefined as number | undefined,
-  mount: '',
   description: '',
   images: [] as string[],
 });
@@ -501,10 +455,6 @@ const fillFormByDetail = (detail: ProductOut): void => {
   form.model = detail.model;
   form.price = detail.price;
   form.state = normalizeProductStateFromOut(detail);
-  form.material = detail.material || '';
-  form.diameter = detail.diameter ?? undefined;
-  form.weight = detail.weight ?? undefined;
-  form.mount = detail.mount || '';
   form.description = detail.description || '';
   uploadFiles.value = (detail.images || []).map(
       (url, idx): UploadUserFile => ({
@@ -570,10 +520,6 @@ const submit = async (): Promise<void> => {
       model: form.model,
       price: form.price,
       state: form.state,
-      material: form.material || undefined,
-      diameter: form.diameter,
-      weight: form.weight,
-      mount: form.mount || undefined,
       description: form.description || undefined,
       images,
       ...(isEdit.value ? { id: Number(route.params.id) } : {}),
@@ -719,15 +665,60 @@ onUnmounted((): void => {
     flex-shrink: 0;
   }
 
+  :deep(.action-btn) {
+    min-width: 104px;
+    height: 36px;
+    border-radius: var(--el-border-radius-base, 4px);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: none !important;
+    transition:
+      border-color 0.14s ease,
+      background-color 0.14s ease,
+      color 0.14s ease !important;
+  }
+
+  :deep(.action-btn--secondary) {
+    border: 1px solid var(--color-primary-amber-26) !important;
+    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 96%, transparent) !important;
+    color: var(--color-zinc-text) !important;
+  }
+
+  :deep(.action-btn--secondary:hover),
+  :deep(.action-btn--secondary:focus-visible) {
+    border-color: var(--color-primary-amber-34) !important;
+    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 94%, transparent) !important;
+    color: var(--color-zinc-text) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.action-btn--primary) {
+    border: 1px solid #18181b !important;
+    background: #18181b !important;
+    color: #ffffff !important;
+  }
+
+  :deep(.action-btn--primary:hover),
+  :deep(.action-btn--primary:focus-visible) {
+    border-color: #27272a !important;
+    background: #27272a !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.action-btn--primary.is-disabled),
+  :deep(.action-btn--primary.is-disabled:hover) {
+    border-color: #a1a1aa !important;
+    background: #a1a1aa !important;
+    color: #fafafa !important;
+    box-shadow: none !important;
+  }
+
   &__btn-cancel--edit:hover,
   &__btn-cancel--edit:focus-visible {
-    border-color: color-mix(in srgb, rgba(255, 255, 255, 0.24) 72%, transparent);
-    background: color-mix(
-      in srgb,
-      var(--color-cockpit-bg-mid-97) 94%,
-      transparent
-    );
-    color: color-mix(in srgb, #fff 90%, var(--color-zinc-text));
+    border-color: var(--color-primary-amber-34) !important;
+    background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 94%, transparent) !important;
+    color: var(--color-zinc-text) !important;
     box-shadow: none;
   }
 
@@ -929,6 +920,56 @@ onUnmounted((): void => {
   box-shadow: none !important;
 }
 
+/* 价格输入框：与普通 input 保持一致的极简样式 */
+:deep(.product-create__price-input.el-input-number .el-input__wrapper) {
+  min-height: var(--product-create-field-height) !important;
+  height: var(--product-create-field-height) !important;
+  border-radius: var(--el-border-radius-base, 4px) !important;
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 94%,
+    var(--color-primary-amber-06)
+  ) !important;
+  box-shadow: 0 0 0 1px var(--color-primary-amber-26) inset !important;
+}
+
+:deep(.product-create__price-input.el-input-number:hover .el-input__wrapper) {
+  box-shadow: 0 0 0 1px var(--color-primary-amber-30) inset !important;
+}
+
+:deep(.product-create__price-input.el-input-number .el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px var(--color-primary-amber-38) inset !important;
+}
+
+:deep(.product-create__price-input.el-input-number .el-input-number__decrease),
+:deep(.product-create__price-input.el-input-number .el-input-number__increase) {
+  background: transparent !important;
+  border-color: color-mix(in srgb, var(--color-primary-amber-12) 42%, transparent) !important;
+  color: color-mix(in srgb, var(--color-zinc-text) 78%, #fff) !important;
+  border-radius: var(--el-border-radius-base, 4px) !important;
+  box-shadow: none !important;
+  transition:
+    border-color 0.14s ease,
+    color 0.14s ease,
+    background-color 0.14s ease !important;
+}
+
+:deep(.product-create__price-input.el-input-number .el-input-number__decrease:hover),
+:deep(.product-create__price-input.el-input-number .el-input-number__increase:hover) {
+  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 96%, transparent) !important;
+  border-color: color-mix(in srgb, var(--color-primary-amber-18) 50%, transparent) !important;
+  color: color-mix(in srgb, var(--color-zinc-text) 88%, #fff) !important;
+  box-shadow: none !important;
+}
+
+:deep(.product-create__price-input.el-input-number .el-input-number__decrease:active),
+:deep(.product-create__price-input.el-input-number .el-input-number__increase:active) {
+  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 94%, transparent) !important;
+  border-color: color-mix(in srgb, var(--color-primary-amber-24) 56%, transparent) !important;
+  color: color-mix(in srgb, var(--color-zinc-text) 92%, #fff) !important;
+  box-shadow: none !important;
+}
+
 :deep(.el-segmented) {
   background: color-mix(
     in srgb,
@@ -1026,41 +1067,30 @@ onUnmounted((): void => {
   background: color-mix(
     in srgb,
     var(--color-cockpit-bg-mid-97) 94%,
-    var(--color-primary-amber-08)
+    var(--color-primary-amber-06)
   );
-  border-radius: 0 !important;
-  box-shadow:
-    inset 0 0 0 1px var(--color-primary-amber-38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  border-radius: var(--el-border-radius-base, 4px) !important;
+  box-shadow: 0 0 0 1px var(--color-primary-amber-26) inset !important;
 }
 
 :deep(.product-create__status-select .el-select__selected-item),
 :deep(.product-create__status-select .el-select__placeholder) {
-  color: color-mix(in srgb, var(--color-zinc-text) 94%, #fff) !important;
-  font-weight: 600;
+  color: var(--color-zinc-text) !important;
+  font-weight: 500;
 }
 
 :deep(.product-create__status-select .el-select__caret) {
-  color: var(--color-primary-amber-70) !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
+  color: color-mix(in srgb, var(--color-zinc-muted) 82%, #fff) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
 }
 
 :deep(.product-create__status-select:hover .el-select__wrapper) {
-  box-shadow:
-    inset 0 0 0 1px var(--color-primary-amber-56),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 0 0 1px var(--color-primary-amber-30) inset !important;
 }
 
 :deep(.product-create__status-select.is-focus .el-select__wrapper) {
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 84%,
-    var(--color-primary-amber-16)
-  );
-  box-shadow:
-    0 0 0 1px var(--color-primary-amber-70) inset,
-    0 0 0 2px var(--color-primary-amber-26) !important;
+  box-shadow: 0 0 0 1px var(--color-primary-amber-38) inset !important;
 }
 
 :deep(.el-upload-list--picture-card .el-upload-list__item) {
@@ -1410,44 +1440,33 @@ onUnmounted((): void => {
 
 <style lang="scss">
 .product-create-status-popper {
-  border: 1px solid var(--color-primary-amber-42) !important;
-  border-radius: 0 !important;
-  box-shadow:
-    0 14px 30px var(--color-primary-amber-18),
-    0 0 0 1px color-mix(in srgb, var(--color-cockpit-bg-low) 70%, transparent),
-    0 1px 0 rgba(255, 255, 255, 0.1) inset !important;
+  border: 1px solid var(--color-primary-amber-26) !important;
+  border-radius: var(--el-border-radius-base, 4px) !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, #000 10%, transparent) !important;
   background: color-mix(
     in srgb,
-    var(--color-cockpit-bg-mid-97) 92%,
-    var(--color-primary-amber-08)
+    var(--color-cockpit-bg-mid-97) 94%,
+    var(--color-primary-amber-06)
   );
 }
 
 .product-create-status-popper .el-select-dropdown__item {
-  color: color-mix(in srgb, var(--color-zinc-text) 88%, #fff);
-  font-weight: 560;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-primary-amber-12) 60%, transparent);
+  color: var(--color-zinc-text);
+  font-weight: 500;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary-amber-12) 36%, transparent);
 }
 
 .product-create-status-popper .el-select-dropdown__item.hover,
 .product-create-status-popper .el-select-dropdown__item:hover {
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 76%,
-    var(--color-primary-amber-22)
-  );
-  color: #fff;
+  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 96%, transparent);
+  color: var(--color-zinc-text);
 }
 
 .product-create-status-popper .el-select-dropdown__item.is-selected {
-  color: #fff;
-  font-weight: 700;
-  background: color-mix(
-    in srgb,
-    var(--color-cockpit-bg-mid-97) 64%,
-    var(--color-primary-amber-34)
-  );
-  box-shadow: inset 0 0 0 1px var(--color-primary-amber-60);
+  color: var(--color-zinc-text);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 94%, var(--color-primary-amber-08));
+  box-shadow: inset 0 0 0 1px var(--color-primary-amber-30);
 }
 
 .product-create__preview-dialog {

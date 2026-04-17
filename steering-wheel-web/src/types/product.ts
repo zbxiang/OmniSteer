@@ -35,10 +35,6 @@ export type ProductFormData = {
   price: number;
   /** 上架状态：UP 上架 / DOWN 下架 */
   state: ProductStatus;
-  material: string;
-  diameter: number | undefined;
-  weight: number | undefined;
-  mount: string;
   description: string;
   images: string[];
 };
@@ -54,10 +50,6 @@ export type ProductCreateBody = {
   model: string;
   price: number;
   state: ProductStatus;
-  material?: string;
-  diameter?: number;
-  weight?: number;
-  mount?: string;
   description?: string;
   images: string[];
 };

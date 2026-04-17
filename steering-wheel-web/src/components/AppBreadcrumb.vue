@@ -41,7 +41,7 @@ withDefaults(
 }
 
 .app-breadcrumb__link {
-  color: rgba(255, 255, 255, 0.82);
+  color: #71717a;
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
@@ -51,16 +51,16 @@ withDefaults(
 .app-breadcrumb__link:hover,
 .app-breadcrumb__link:focus-visible,
 .app-breadcrumb__link:active {
-  color: var(--color-primary-amber);
+  color: #3f3f46;
 }
 
 .app-breadcrumb__separator {
-  color: rgba(255, 255, 255, 0.56);
+  color: #a1a1aa;
   font-size: 12px;
 }
 
 .app-breadcrumb__current {
-  color: rgba(255, 255, 255, 0.96);
+  color: #18181b;
   font-size: 13px;
   font-weight: 600;
 }

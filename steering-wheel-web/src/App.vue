@@ -12,9 +12,11 @@
 import { computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import ThemePaletteButton from '@/components/ThemePaletteButton.vue';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const isAuthShellRoute = computed(
   (): boolean =>
@@ -45,6 +47,7 @@ const checkSession = (): void => {
     return;
   }
   if (!routeNeedsAuth()) return;
+  if (authStore.isAuthenticated()) return;
   void router.replace({
     name: 'login',
     query: { redirect: route.fullPath },

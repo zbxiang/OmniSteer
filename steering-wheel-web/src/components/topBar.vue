@@ -60,15 +60,12 @@
             <span class="product-list__user-name product-list__user-name--mobile">{{ displayName }}</span>
           </div>
           <div class="product-list__mobile-user-actions">
-            <ThemePaletteButton appearance="embedded" />
             <LogoutAction />
           </div>
         </div>
       </nav>
 
       <div class="product-list__user">
-        <ThemePaletteButton appearance="embedded" />
-        <span class="product-list__user-sep" aria-hidden="true" />
         <span class="product-list__avatar" aria-hidden="true">{{ userInitial }}</span>
         <span class="product-list__user-name">{{ displayName }}</span>
         <LogoutAction />
@@ -81,7 +78,6 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import LogoutAction from '@/components/LogoutAction.vue';
-import ThemePaletteButton from '@/components/ThemePaletteButton.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useAppStore } from '@/stores/app';
 
@@ -181,7 +177,8 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 50;
   flex-shrink: 0;
   /* 主题色导航：深色基底 + 主题色柔和泛光 */
-  background:
+  background: var(
+    --topbar-bg,
     linear-gradient(
       180deg,
       color-mix(in srgb, #000 70%, var(--color-primary-amber-20)) 0%,
@@ -201,23 +198,29 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
       175deg,
       color-mix(in srgb, var(--color-cockpit-bg-mid-97) 86%, var(--color-primary-amber-14)) 0%,
       color-mix(in srgb, var(--color-cockpit-bg-mid-96) 90%, var(--color-primary-amber-10)) 100%
-    );
+    )
+  );
   backdrop-filter: saturate(1.04) blur(14px);
   -webkit-backdrop-filter: saturate(1.04) blur(14px);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-primary-amber-35) 48%, transparent);
-  box-shadow:
+  border-bottom: 1px solid
+    var(--topbar-border-color, color-mix(in srgb, var(--color-primary-amber-35) 48%, transparent));
+  box-shadow: var(
+    --topbar-shadow,
     0 14px 36px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent);
+    inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent)
+  );
   transition:
     box-shadow 0.32s $topbar-ease,
     border-color 0.32s ease;
 }
 
 .product-list__topbar--compact {
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-  box-shadow:
+  border-bottom-color: var(--topbar-compact-border-color, rgba(255, 255, 255, 0.06));
+  box-shadow: var(
+    --topbar-compact-shadow,
     0 10px 28px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent);
+    inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent)
+  );
 }
 
 .product-list__topbar::before {
@@ -304,16 +307,22 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  background: linear-gradient(
-    145deg,
-    var(--color-primary-amber-70) 0%,
-    var(--color-primary-amber) 52%,
-    var(--color-primary-amber-85) 100%
+  color: var(--topbar-brand-mark-color, #fff);
+  background: var(
+    --topbar-brand-mark-bg,
+    linear-gradient(
+      145deg,
+      var(--color-primary-amber-70) 0%,
+      var(--color-primary-amber) 52%,
+      var(--color-primary-amber-85) 100%
+    )
   );
-  box-shadow:
+  border: var(--topbar-brand-mark-border, none);
+  box-shadow: var(
+    --topbar-brand-mark-shadow,
     0 1px 3px var(--color-primary-amber-45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    inset 0 1px 0 rgba(255, 255, 255, 0.24)
+  );
   transition:
     width 0.32s $topbar-ease,
     height 0.32s $topbar-ease,
@@ -341,7 +350,7 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 .product-list__brand-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--color-zinc-text);
+  color: var(--topbar-brand-title-color, var(--color-zinc-text));
   letter-spacing: 0.03em;
   line-height: 1.25;
   transition: font-size 0.32s $topbar-ease;
@@ -353,7 +362,7 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
 .product-list__brand-sub {
   font-size: 10px;
-  color: color-mix(in srgb, var(--color-zinc-muted) 88%, transparent);
+  color: var(--topbar-brand-sub-color, color-mix(in srgb, var(--color-zinc-muted) 88%, transparent));
   line-height: 1.2;
   max-width: min(220px, 28vw);
   overflow: hidden;
@@ -371,18 +380,11 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: 1px solid color-mix(in srgb, var(--color-primary-amber-35) 58%, rgba(255, 255, 255, 0.08));
+  border: 1px solid #d4d4d8;
   border-radius: 9px;
-  background:
-    linear-gradient(
-      165deg,
-      color-mix(in srgb, var(--color-cockpit-bg-mid-96) 86%, var(--color-primary-amber-16)) 0%,
-      color-mix(in srgb, var(--color-cockpit-bg-mid-97) 91%, #000) 100%
-    );
-  box-shadow:
-    0 7px 14px rgba(0, 0, 0, 0.26),
-    inset 0 1px 0 color-mix(in srgb, #fff 16%, transparent);
-  color: color-mix(in srgb, #fff 90%, var(--color-primary-amber-30));
+  background: #ffffff;
+  box-shadow: none;
+  color: #52525b;
   cursor: pointer;
   transition:
     border-color 0.2s ease,
@@ -392,11 +394,10 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .product-list__mobile-menu-btn:hover {
-  border-color: color-mix(in srgb, var(--color-primary-amber-55) 72%, rgba(255, 255, 255, 0.12));
-  box-shadow:
-    0 9px 17px rgba(0, 0, 0, 0.3),
-    0 0 0 1px color-mix(in srgb, var(--color-primary-amber-25) 56%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 19%, transparent);
+  border-color: #a1a1aa;
+  background: #fafafa;
+  color: #27272a;
+  box-shadow: none;
 }
 
 .product-list__mobile-menu-btn:focus-visible {
@@ -405,19 +406,12 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .product-list__mobile-menu-btn[aria-expanded='true'] {
-  transform: translateY(1px);
-  border-color: color-mix(in srgb, var(--color-primary-amber-65) 76%, rgba(255, 255, 255, 0.16));
-  background:
-    linear-gradient(
-      165deg,
-      color-mix(in srgb, var(--color-primary-amber-20) 32%, var(--color-cockpit-bg-mid-96)) 0%,
-      color-mix(in srgb, var(--color-cockpit-bg-mid-97) 86%, #000) 100%
-    );
-  box-shadow:
-    0 6px 12px rgba(0, 0, 0, 0.28),
-    0 0 0 1px color-mix(in srgb, var(--color-primary-amber-30) 62%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 24%, transparent);
-  animation: product-list__toggle-pulse 0.9s ease-in-out infinite alternate;
+  transform: none;
+  border-color: #18181b;
+  background: #ffffff;
+  color: #18181b;
+  box-shadow: none;
+  animation: none;
 }
 
 .product-list__mobile-menu-icon {
@@ -465,7 +459,7 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
   padding: 18px 20px;
   font-size: 15px;
-  color: color-mix(in srgb, #fff 68%, var(--color-zinc-muted));
+  color: var(--topbar-tab-color, color-mix(in srgb, #fff 68%, var(--color-zinc-muted)));
   text-decoration: none;
   transition:
     color 0.2s ease,
@@ -477,9 +471,9 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   padding: 10px 16px;
   font-size: 14px;
 }
-.product-list__tab:hover { color: color-mix(in srgb, #fff 90%, var(--color-primary-amber)); }
+.product-list__tab:hover { color: var(--topbar-tab-hover-color, color-mix(in srgb, #fff 90%, var(--color-primary-amber))); }
 .product-list__tab--active {
-  color: color-mix(in srgb, #fff 88%, var(--color-primary-amber));
+  color: var(--topbar-tab-active-color, color-mix(in srgb, #fff 88%, var(--color-primary-amber)));
   font-weight: 600;
 }
 .product-list__tab--active::before {
@@ -490,12 +484,16 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   bottom: 8px;
   height: 22px;
   border-radius: 999px;
-  background: color-mix(
-    in srgb,
-    var(--color-primary-amber-12) 26%,
-    var(--color-cockpit-bg-mid-97) 74%
+  background: var(
+    --topbar-tab-active-bg,
+    color-mix(
+      in srgb,
+      var(--color-primary-amber-12) 26%,
+      var(--color-cockpit-bg-mid-97) 74%
+    )
   );
-  border: 1px solid color-mix(in srgb, rgba(255, 255, 255, 0.24) 55%, transparent);
+  border: 1px solid
+    var(--topbar-tab-active-border, color-mix(in srgb, rgba(255, 255, 255, 0.24) 55%, transparent));
   z-index: -1;
   transition:
     left 0.32s $topbar-ease,
@@ -518,11 +516,14 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   bottom: 0;
   height: 3px;
   border-radius: 2px 2px 0 0;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--color-primary-amber-55) 72%, transparent) 0%,
-    color-mix(in srgb, var(--color-primary-amber) 82%, transparent) 50%,
-    color-mix(in srgb, var(--color-primary-amber-55) 72%, transparent) 100%
+  background: var(
+    --topbar-tab-active-underline,
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-primary-amber-55) 72%, transparent) 0%,
+      color-mix(in srgb, var(--color-primary-amber) 82%, transparent) 50%,
+      color-mix(in srgb, var(--color-primary-amber-55) 72%, transparent) 100%
+    )
   );
   transition: left 0.32s $topbar-ease, right 0.32s $topbar-ease;
 }
@@ -543,18 +544,6 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
 .product-list__topbar--compact .product-list__user {
   gap: 9px;
-}
-
-.product-list__user-sep {
-  width: 1px;
-  height: 18px;
-  background: color-mix(in srgb, var(--color-primary-amber-28) 58%, transparent);
-  flex-shrink: 0;
-  transition: height 0.32s $topbar-ease;
-}
-
-.product-list__topbar--compact .product-list__user-sep {
-  height: 14px;
 }
 
 /* 退出按钮与头像尺寸对齐（常态 30 / 收缩态 26） */
@@ -626,15 +615,9 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     width: 31px;
     height: 31px;
     border-radius: 8px;
-    border-color: color-mix(in srgb, var(--color-primary-amber-45) 64%, rgba(255, 255, 255, 0.1));
-    background: linear-gradient(
-      165deg,
-      color-mix(in srgb, var(--color-cockpit-bg-mid-96) 90%, var(--color-primary-amber-12)) 0%,
-      color-mix(in srgb, var(--color-cockpit-bg-mid-97) 93%, #000) 100%
-    );
-    box-shadow:
-      0 6px 12px rgba(0, 0, 0, 0.24),
-      inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent);
+    border-color: #d4d4d8;
+    background: #ffffff;
+    box-shadow: none;
   }
 
   .product-list__topbar--compact .product-list__mobile-menu-icon,
@@ -652,32 +635,12 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .product-list__topbar--menu-open {
-    border-bottom-color: color-mix(in srgb, var(--color-primary-amber-45) 58%, transparent);
-    box-shadow:
-      0 12px 30px rgba(0, 0, 0, 0.44),
-      0 0 0 1px color-mix(in srgb, var(--color-primary-amber-20) 44%, transparent),
-      0 0 26px color-mix(in srgb, var(--color-primary-amber-28) 34%, transparent),
-      inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent);
+    border-bottom-color: #e4e4e7;
+    box-shadow: none;
   }
 
   .product-list__topbar--menu-open::after {
-    content: '';
-    position: absolute;
-    left: 14px;
-    right: 14px;
-    bottom: -1px;
-    height: 2px;
-    border-radius: 999px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(in srgb, var(--color-primary-amber-45) 80%, transparent) 18%,
-      color-mix(in srgb, var(--color-primary-amber) 88%, transparent) 50%,
-      color-mix(in srgb, var(--color-primary-amber-45) 80%, transparent) 82%,
-      transparent 100%
-    );
-    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-primary-amber-45) 48%, transparent));
-    pointer-events: none;
+    content: none;
   }
 }
 
@@ -689,8 +652,7 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .product-list__brand-sub,
-  .product-list__user-name,
-  .product-list__user-sep {
+  .product-list__user-name {
     display: none;
   }
 
@@ -739,20 +701,18 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   .product-list__tabs {
     position: absolute;
     top: 100%;
-    left: 16px;
-    right: 16px;
+    left: 0;
+    right: 0;
     z-index: 70;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-    padding: 10px 0;
+    padding: 0 16px;
     border-radius: 0;
-    background: #07090d;
-    border: 1px solid #2a210f;
-    box-shadow:
-      0 24px 38px rgba(0, 0, 0, 0.7),
-      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background: #ffffff;
+    border: 1px solid #e4e4e7;
+    box-shadow: 0 8px 20px color-mix(in srgb, #000 10%, transparent);
     opacity: 0;
     transform: translateY(-6px);
     pointer-events: none;
@@ -765,32 +725,11 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .product-list__tabs::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.04) 50%,
-      transparent 100%
-    );
-    pointer-events: none;
-    z-index: 1;
+    content: none;
   }
 
   .product-list__tabs::after {
-    content: '';
-    position: absolute;
-    top: -45%;
-    left: -40%;
-    width: 42%;
-    height: 190%;
-    transform: rotate(14deg);
-    background: none;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 1;
+    content: none;
   }
 
   .product-list__tabs--open {
@@ -817,9 +756,9 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     padding: 11px 12px;
     text-align: left;
     font-size: 13px;
-    color: color-mix(in srgb, #fff 74%, var(--color-zinc-muted));
-    background: transparent;
-    border: 1px solid transparent;
+    color: #3f3f46;
+    background: #ffffff;
+    border: 1px solid #e4e4e7;
     transition:
       color 0.2s ease,
       border-color 0.2s ease,
@@ -829,27 +768,18 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .product-list__tab:hover {
-    color: color-mix(in srgb, #fff 94%, var(--color-primary-amber));
-    border-color: color-mix(in srgb, var(--color-primary-amber-26) 66%, transparent);
-    background: color-mix(in srgb, var(--color-primary-amber-12) 16%, rgba(255, 255, 255, 0.03));
-    transform: translateX(1px);
+    color: #18181b;
+    border-color: #a1a1aa;
+    background: #fafafa;
+    transform: none;
   }
 
   .product-list__tab--active {
-    color: color-mix(in srgb, #fff 95%, var(--color-primary-amber));
-    border-color: color-mix(in srgb, var(--color-primary-amber-45) 70%, transparent);
-    background:
-      linear-gradient(
-        120deg,
-        color-mix(in srgb, var(--color-primary-amber-16) 42%, transparent) 0%,
-        color-mix(in srgb, var(--color-cockpit-bg-mid-96) 70%, transparent) 100%
-      );
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--color-primary-amber-22) 58%, transparent),
-      inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent),
-      inset 2px 0 0 color-mix(in srgb, var(--color-primary-amber) 78%, transparent),
-      0 0 12px color-mix(in srgb, var(--color-primary-amber-28) 30%, transparent);
-    text-shadow: 0 0 9px color-mix(in srgb, var(--color-primary-amber-35) 52%, transparent);
+    color: #18181b;
+    border-color: #18181b;
+    background: #ffffff;
+    box-shadow: inset 2px 0 0 #18181b;
+    text-shadow: none;
   }
 
   .product-list__tab--active::selection {
@@ -863,7 +793,7 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   .product-list__mobile-user {
     padding: 10px 0 0;
-    border-top: 1px solid color-mix(in srgb, rgba(255, 255, 255, 0.14) 78%, transparent);
+    border-top: 1px solid #f1f5f9;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -885,7 +815,7 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: color-mix(in srgb, #fff 52%, var(--color-zinc-muted));
+    color: #a1a1aa;
   }
 
   .product-list__mobile-user-main {
@@ -1033,10 +963,10 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .product-list__tabs {
-    left: 8px;
-    right: 8px;
+    left: 0;
+    right: 0;
     top: 100%;
-    padding: 8px 0;
+    padding: 0 8px;
     gap: 8px;
   }
 
@@ -1119,10 +1049,11 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .product-list__tabs {
-    left: 6px;
-    right: 6px;
+    left: 0;
+    right: 0;
     top: 100%;
     gap: 7px;
+    padding: 0 6px;
   }
 
   .product-list__tab {

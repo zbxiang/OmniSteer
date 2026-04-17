@@ -1,0 +1,132 @@
+[data-theme='white'] {
+  --color-primary-amber: rgb(39 39 42);
+  --color-accent-warm: rgb(24 24 27);
+  --color-panel-bg: rgba(250, 250, 250, 0.94);
+  --color-input-bg: rgba(250, 250, 250, 0.92);
+  --color-cockpit-bg-top: #ffffff;
+  --color-cockpit-bg-mid: #ffffff;
+  --color-cockpit-bg-bottom: #ffffff;
+  --color-cockpit-bg-mid-96: rgba(255, 255, 255, 0.96);
+  --color-cockpit-bg-mid-97: rgba(255, 255, 255, 0.97);
+  --color-zinc-label: rgb(82 82 91);
+  --color-zinc-text: rgb(24 24 27);
+  --color-zinc-muted: rgb(82 82 91);
+  --color-zinc-faint: rgb(161 161 170);
+
+  --color-primary-amber-04: rgba(39, 39, 42, 0.04);
+  --color-primary-amber-05: rgba(39, 39, 42, 0.05);
+  --color-primary-amber-06: rgba(39, 39, 42, 0.06);
+  --color-primary-amber-07: rgba(39, 39, 42, 0.07);
+  --color-primary-amber-08: rgba(39, 39, 42, 0.08);
+  --color-primary-amber-09: rgba(39, 39, 42, 0.09);
+  --color-primary-amber-10: rgba(39, 39, 42, 0.1);
+  --color-primary-amber-12: rgba(39, 39, 42, 0.12);
+  --color-primary-amber-14: rgba(39, 39, 42, 0.14);
+  --color-primary-amber-15: rgba(39, 39, 42, 0.15);
+  --color-primary-amber-16: rgba(39, 39, 42, 0.16);
+  --color-primary-amber-18: rgba(39, 39, 42, 0.18);
+  --color-primary-amber-20: rgba(39, 39, 42, 0.2);
+  --color-primary-amber-22: rgba(39, 39, 42, 0.22);
+  --color-primary-amber-24: rgba(39, 39, 42, 0.24);
+  --color-primary-amber-25: rgba(39, 39, 42, 0.25);
+  --color-primary-amber-26: rgba(39, 39, 42, 0.26);
+  --color-primary-amber-28: rgba(39, 39, 42, 0.28);
+  --color-primary-amber-30: rgba(39, 39, 42, 0.3);
+  --color-primary-amber-32: rgba(39, 39, 42, 0.32);
+  --color-primary-amber-35: rgba(39, 39, 42, 0.35);
+  --color-primary-amber-36: rgba(39, 39, 42, 0.36);
+  --color-primary-amber-38: rgba(39, 39, 42, 0.38);
+  --color-primary-amber-42: rgba(39, 39, 42, 0.42);
+  --color-primary-amber-45: rgba(39, 39, 42, 0.45);
+  --color-primary-amber-48: rgba(39, 39, 42, 0.48);
+  --color-primary-amber-55: rgba(39, 39, 42, 0.55);
+  --color-primary-amber-65: rgba(39, 39, 42, 0.65);
+  --color-primary-amber-70: rgba(39, 39, 42, 0.7);
+  --color-primary-amber-80: rgba(39, 39, 42, 0.8);
+  --color-primary-amber-85: rgba(39, 39, 42, 0.85);
+  --color-primary-amber-90: rgba(39, 39, 42, 0.9);
+
+  --color-accent-warm-07: rgba(24, 24, 27, 0.07);
+  --color-accent-warm-11: rgba(24, 24, 27, 0.11);
+  --color-accent-warm-20: rgba(24, 24, 27, 0.2);
+  --color-accent-warm-32: rgba(24, 24, 27, 0.32);
+  --color-input-bg-55: rgba(250, 250, 250, 0.55);
+  --color-input-bg-72: rgba(250, 250, 250, 0.72);
+  --product-card-sheen:
+    radial-gradient(circle at 18% 14%, rgba(250, 250, 250, 0.72) 0%, rgba(39, 39, 42, 0.12) 34%, transparent 64%),
+    linear-gradient(150deg, rgba(250, 250, 250, 0.44) 0%, transparent 48%);
+  --product-card-hover-glow: rgba(39, 39, 42, 0.18);
+
+  --topbar-bg: #ffffff;
+  --topbar-border-color: #e4e4e7;
+  --topbar-shadow: none;
+  --topbar-compact-border-color: #d4d4d8;
+  --topbar-compact-shadow: none;
+  --topbar-brand-mark-color: #18181b;
+  --topbar-brand-mark-bg: #ffffff;
+  --topbar-brand-mark-border: 1px solid #d4d4d8;
+  --topbar-brand-mark-shadow: none;
+  --topbar-brand-title-color: #18181b;
+  --topbar-brand-sub-color: #71717a;
+  --topbar-tab-color: #71717a;
+  --topbar-tab-hover-color: #52525b;
+  --topbar-tab-active-color: #18181b;
+  --topbar-tab-active-bg: transparent;
+  --topbar-tab-active-border: transparent;
+  --topbar-tab-active-underline: none;
+  --topbar-mobile-btn-bg: #ffffff;
+  --topbar-mobile-btn-border: #d4d4d8;
+  --topbar-mobile-btn-color: #52525b;
+
+  --search-input-bg: #ffffff;
+  --search-input-border: #d4d4d8;
+  --search-input-focus-bg: #ffffff;
+  --search-input-focus-border: #a1a1aa;
+  --search-input-focus-shadow: none;
+
+  --search-btn-primary-bg: #18181b;
+  --search-btn-primary-color: #ffffff;
+  --search-btn-primary-border: #18181b;
+  --search-btn-primary-hover-bg: #27272a;
+  --search-btn-primary-hover-border: #27272a;
+  --search-btn-primary-hover-shadow: none;
+
+  --search-btn-outline-bg: #ffffff;
+  --search-btn-outline-color: #52525b;
+  --search-btn-outline-border: #d4d4d8;
+  --search-btn-outline-hover-bg: #fafafa;
+  --search-btn-outline-hover-color: #3f3f46;
+  --search-btn-outline-hover-border: #a1a1aa;
+
+  --search-btn-ghost-bg: #ffffff;
+  --search-btn-ghost-color: #52525b;
+  --search-btn-ghost-border: #d4d4d8;
+  --search-btn-ghost-shadow: none;
+  --search-btn-ghost-hover-bg: #fafafa;
+  --search-btn-ghost-hover-color: #3f3f46;
+  --search-btn-ghost-hover-border: #a1a1aa;
+  --search-btn-ghost-hover-shadow: none;
+
+  --image-filter-border: #e4e4e7;
+  --image-filter-bg: #ffffff;
+  --image-filter-shadow: none;
+  --image-filter-label-color: #71717a;
+  --image-filter-link-color: #3f3f46;
+  --image-filter-link-hover-color: #18181b;
+  --image-filter-btn-border: #d4d4d8;
+  --image-filter-btn-bg: #ffffff;
+  --image-filter-btn-color: #52525b;
+  --image-filter-btn-hover-border: #a1a1aa;
+  --image-filter-btn-hover-bg: #fafafa;
+  --image-filter-btn-danger-border: #a1a1aa;
+  --image-filter-btn-danger-color: #3f3f46;
+
+  --search-toolbar-bg: #ffffff;
+  --search-toolbar-border: #e4e4e7;
+  --search-toolbar-shadow: none;
+  --search-toolbar-cap-bg: #ffffff;
+  --search-toolbar-border-mobile: #e4e4e7;
+  --search-toolbar-shadow-mobile: none;
+  --product-list-warm-base-bg: none;
+  --product-list-vignette-shadow: none;
+}
