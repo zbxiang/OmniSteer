@@ -76,20 +76,36 @@
       </div>
 
       <div
-        class="product-list__result"
-        v-loading="loading"
-        element-loading-text="加载中..."
-        element-loading-background="rgba(10, 12, 16, 0.36)"
-        element-loading-custom-class="product-list-loading-mask"
+        :class="[
+          'product-list__result',
+          { 'product-list__result--loading-screen': isListLoadingScreen },
+        ]"
       >
-        <section class="product-grid">
-          <div
-            v-for="(p, idx) in filteredPaged"
-            :key="p.id"
-            class="wow animate__animated animate__fadeInLift product-card-wow"
-            data-wow-duration="0.42s"
-            :data-wow-delay="`${Math.min(idx % 12, 11) * 0.04}s`"
-          >
+        <div
+          v-if="isListLoadingScreen"
+          class="product-list__screen-loading"
+          aria-live="polite"
+        >
+          <span class="product-list__screen-loading-spinner" aria-hidden="true" />
+          <span class="product-list__screen-loading-text">加载中...</span>
+        </div>
+        <Waterfall
+          v-else
+          class="product-waterfall"
+          :list="filteredPaged"
+          row-key="id"
+          img-selector="imageUrl"
+          :breakpoints="waterfallBreakpoints"
+          :gutter="waterfallGapPx"
+          :space="waterfallGapPx"
+          :has-around-gutter="false"
+          background-color="transparent"
+          :animation-duration="420"
+          :animation-delay="0"
+          animation-effect="animate__fadeInLift"
+          :cross-origin="false"
+        >
+          <template #default="{ item: p, url }">
             <router-link
               :to="getProductDetailPath(p.id)"
               :class="[
@@ -97,43 +113,35 @@
                 { 'product-card--off': p.state === ProductStatusEnum.DOWN },
               ]"
             >
-            <div class="product-card__img">
-              <div
-                v-if="p.imageUrl && !isImageLoaded(p)"
-                class="product-card__img-placeholder"
-                aria-hidden="true"
-              />
-              <img
-                v-if="p.imageUrl"
-                :src="p.imageUrl"
-                :alt="p.name"
-                loading="lazy"
-                decoding="async"
-                :class="{ 'product-card__img-el--loaded': isImageLoaded(p) }"
-                @load="onProductImageLoad(p)"
-              />
-              <span v-else>⚙</span>
-            </div>
-            <div class="product-card__title-row">
-              <h3 class="product-card__title">{{ p.name }}</h3>
-            </div>
-            <p class="product-card__price">¥{{ p.price.toLocaleString() }}</p>
-            <div class="product-card__meta-row">
-              <p class="product-card__meta">
-                品牌: {{ p.brand }} · 型号: {{ p.model }}
-              </p>
-              <span
-                :class="[
-                  'badge',
-                  p.state === ProductStatusEnum.UP ? 'badge-on' : 'badge-off',
-                ]"
-              >
-                {{ p.state === ProductStatusEnum.UP ? '在售' : '下架' }}
-              </span>
-            </div>
-          </router-link>
-          </div>
-        </section>
+              <div class="product-card__img" :class="{ 'product-card__img--empty': !url }">
+                <LazyImg
+                  v-if="url"
+                  :url="url"
+                  :title="p.name"
+                  :alt="p.name"
+                />
+                <span v-else>⚙</span>
+              </div>
+              <div class="product-card__title-row">
+                <h3 class="product-card__title">{{ p.name }}</h3>
+              </div>
+              <p class="product-card__price">¥{{ p.price.toLocaleString() }}</p>
+              <div class="product-card__meta-row">
+                <p class="product-card__meta">
+                  品牌: {{ p.brand }} · 型号: {{ p.model }}
+                </p>
+                <span
+                  :class="[
+                    'badge',
+                    p.state === ProductStatusEnum.UP ? 'badge-on' : 'badge-off',
+                  ]"
+                >
+                  {{ p.state === ProductStatusEnum.UP ? '在售' : '下架' }}
+                </span>
+              </div>
+            </router-link>
+          </template>
+        </Waterfall>
         <p
           v-if="!loading && filteredPaged.length === 0"
           class="product-list__empty"
@@ -142,7 +150,7 @@
         </p>
 
         <div
-          v-show="!showModal"
+          v-show="!showModal && !isListLoadingScreen"
           ref="loadMoreRef"
           class="product-list__load-more-trigger"
         >
@@ -170,9 +178,11 @@ import {
   RefreshRight,
   Search,
 } from '@element-plus/icons-vue';
+import { LazyImg, Waterfall } from 'vue-waterfall-plugin-next';
+import 'vue-waterfall-plugin-next/dist/style.css';
 import type { ProductCardItem, ProductOut } from '@/types/product';
 import { ProductStatusEnum } from '@/enums/product';
-import { normalizeProductStateFromOut } from '@/utils/productState';
+import { normalizeProductStateFromOut } from '@/utils/common';
 import { getProductPage } from '@/api/product';
 import { isRequestCanceled, RequestError } from '@/utils/request';
 import { ElMessage } from 'element-plus';
@@ -193,17 +203,25 @@ let loadMoreObserver: IntersectionObserver | null = null;
 const wowController = createWowController();
 
 const products = ref<ProductCardItem[]>([]);
-const loadedImageKeys = ref<Set<string>>(new Set<string>());
+const waterfallGapPx = 16;
+const waterfallBreakpoints = Object.freeze({
+  99999: {
+    rowPerView: 4,
+  },
+  900: {
+    rowPerView: 2,
+  },
+});
 const getProductDetailPath = (id: string | number): string => `/products/${String(id)}`;
-
-const getImageLoadKey = (product: Pick<ProductCardItem, 'id' | 'imageUrl'>): string =>
-  `${product.id}-${product.imageUrl || ''}`;
 
 const totalPages = computed<number>(
   () => Math.ceil(total.value / PRODUCT_VIEW_CONSTANTS.PAGE_SIZE) || 1,
 );
 const hasMore = computed<boolean>(() => currentPage.value < totalPages.value);
 const filteredPaged = computed<ProductCardItem[]>(() => products.value);
+const isListLoadingScreen = computed<boolean>(
+  () => loading.value && filteredPaged.value.length === 0,
+);
 
 const isHome = computed<boolean>(() => route.name === 'home');
 const isProductCreate = computed<boolean>(() => route.name === 'productCreate');
@@ -266,13 +284,6 @@ const fetchProducts = async (append = false): Promise<void> => {
         description: x.description || '',
       }),
     );
-    if (!append) {
-      const currentKeys = new Set(mapped.map((item) => getImageLoadKey(item)));
-      // 保留当前列表仍在使用的已加载图片，避免搜索后节点复用导致 load 不再触发
-      loadedImageKeys.value = new Set(
-        [...loadedImageKeys.value].filter((key) => currentKeys.has(key)),
-      );
-    }
     products.value = append ? [...products.value, ...mapped] : mapped;
     total.value = res.data?.totalElements ?? list.length;
   } catch (e) {
@@ -285,13 +296,6 @@ const fetchProducts = async (append = false): Promise<void> => {
     loading.value = false;
   }
 };
-
-const onProductImageLoad = (product: ProductCardItem): void => {
-  loadedImageKeys.value.add(getImageLoadKey(product));
-};
-
-const isImageLoaded = (product: ProductCardItem): boolean =>
-  loadedImageKeys.value.has(getImageLoadKey(product));
 
 const refreshFirstPage = (): void => {
   currentPage.value = 1;
@@ -906,7 +910,8 @@ if (typeof ResizeObserver !== 'undefined') {
   }
 }
 
-.animate__fadeInLift {
+.animate__fadeInLift,
+:deep(.animate__fadeInLift) {
   animation-name: product-fade-in-lift;
   animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
@@ -914,7 +919,8 @@ if (typeof ResizeObserver !== 'undefined') {
 /* WOW.js + 自定义 animate；无障碍降级 */
 @media (prefers-reduced-motion: reduce) {
   .product-list__toolbar.wow,
-  .product-card-wow.wow {
+  .product-list__image-filter.wow,
+  :deep(.product-waterfall .animate__animated) {
     visibility: visible !important;
     animation: none !important;
   }
@@ -930,9 +936,47 @@ if (typeof ResizeObserver !== 'undefined') {
   margin-bottom: 1rem;
 }
 
+.product-waterfall {
+  overflow: visible !important;
+  background: transparent !important;
+}
+
+:deep(.product-waterfall .waterfall-card) {
+  background: transparent;
+}
+
 .product-list__result {
   position: relative;
   min-height: 220px;
+}
+
+.product-list__result--loading-screen {
+  min-height: 100dvh;
+}
+
+.product-list__screen-loading {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.product-list__screen-loading-spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--color-primary-amber-18) 72%, transparent);
+  border-top-color: var(--color-primary-amber);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-primary-amber-10) 55%, transparent);
+  animation: product-list-spin 0.72s linear infinite;
+}
+
+.product-list__screen-loading-text {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--color-primary-amber) 84%, #fff);
+  letter-spacing: 0.08em;
 }
 
 .product-list__load-more-trigger {
@@ -946,15 +990,6 @@ if (typeof ResizeObserver !== 'undefined') {
   font-size: 12px;
   color: color-mix(in srgb, var(--color-primary-amber-80) 72%, #fff);
   letter-spacing: 0.03em;
-}
-
-:deep(.product-list-loading-mask .el-loading-spinner .path) {
-  stroke: var(--color-primary-amber);
-}
-
-:deep(.product-list-loading-mask .el-loading-text) {
-  color: color-mix(in srgb, var(--color-primary-amber) 84%, #fff);
-  letter-spacing: 0.02em;
 }
 
 .product-list__toolbar .btn {
@@ -1058,24 +1093,11 @@ if (typeof ResizeObserver !== 'undefined') {
       0.65rem;
     border-radius: 12px 12px 8px 8px;
 
-    img {
+    :deep(.lazy__box) {
       width: 100%;
-      height: auto;
-      object-fit: contain;
-      display: block;
-      opacity: 0;
-      transition:
-        transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.28s ease;
     }
 
-    .product-card__img-el--loaded {
-      opacity: 1;
-    }
-
-    .product-card__img-placeholder {
-      position: absolute;
-      inset: 0;
+    :deep(.lazy__resource) {
       background:
         linear-gradient(
           100deg,
@@ -1089,9 +1111,37 @@ if (typeof ResizeObserver !== 'undefined') {
           transparent 60%
         );
       background-size: 240% 100%, 100% 100%;
+    }
+
+    :deep(.lazy__resource:has(.lazy__img[lazy='loading'])) {
       animation: product-image-placeholder-shimmer 1.25s ease-in-out infinite;
-      pointer-events: none;
-      z-index: 0;
+    }
+
+    :deep(.lazy__resource:has(.lazy__img[lazy='loaded'])) {
+      background: none;
+      animation: none;
+    }
+
+    :deep(.lazy__img) {
+      display: block;
+      transition:
+        transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.28s ease;
+    }
+
+    :deep(.lazy__img[lazy='loading']),
+    :deep(.lazy__img[lazy='error']) {
+      width: 28px;
+      height: auto;
+      opacity: 0.72;
+      padding: 4.25em 0;
+    }
+
+    :deep(.lazy__img[lazy='loaded']) {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 1;
     }
 
     span {
@@ -1105,7 +1155,11 @@ if (typeof ResizeObserver !== 'undefined') {
     }
   }
 
-  &:hover &__img img {
+  &__img--empty {
+    min-height: 180px;
+  }
+
+  &:hover .product-card__img :deep(.lazy__img[lazy='loaded']) {
     transform: scale(1.025);
   }
 
@@ -1288,6 +1342,12 @@ if (typeof ResizeObserver !== 'undefined') {
     background-position:
       -100% 0,
       0 0;
+  }
+}
+
+@keyframes product-list-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

@@ -228,7 +228,7 @@ import type {
 import { UploadFilled } from '@element-plus/icons-vue';
 import type { ProductFormData, ProductOut } from '@/types/product';
 import { ProductStatusEnum } from '@/enums/product';
-import { normalizeProductStateFromOut } from '@/utils/productState';
+import { normalizeProductStateFromOut } from '@/utils/common';
 import {
   getProductDetail,
   saveOrUpdateProduct,

@@ -166,7 +166,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { ArrowLeft, EditPen, RemoveFilled } from '@element-plus/icons-vue';
 import type { ProductOut } from '@/types/product';
 import { ProductStatusEnum } from '@/enums/product';
-import { normalizeProductStateFromOut } from '@/utils/productState';
+import { normalizeProductStateFromOut } from '@/utils/common';
 import { getProductDetail, saveOrUpdateProduct } from '@/api/product';
 import { isRequestCanceled, RequestError } from '@/utils/request';
 import AppBreadcrumb from '@/components/AppBreadcrumb.vue';
