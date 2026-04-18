@@ -16,7 +16,6 @@ const tipTime = 27 * 60 * 1000;
 const delay = 3 * 60 * 1000;
 const REDIRECT_URL_KEY = 'redirectUrl';
 const TOKEN_KEY = 'omnisteer_token';
-const THEME_KEY = 'omnisteer-theme';
 const LOGIN_REMEMBER_KEY = 'omnisteer-login-remember';
 
 // 页面操作事件
@@ -230,13 +229,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 清理
   const handleClearAll = (): void => {
-    const themeValue = getStorage(THEME_KEY);
     const loginRememberValue = getStorage(LOGIN_REMEMBER_KEY);
     // 清理存储
     clearStorage();
-    if (themeValue) {
-      setStorage(THEME_KEY, themeValue);
-    }
     if (loginRememberValue) {
       setStorage(LOGIN_REMEMBER_KEY, loginRememberValue);
     }

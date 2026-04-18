@@ -18,9 +18,17 @@ export type RequestErrorOptions = {
   isNotified?: boolean;
 };
 
+/** 与后端一致：message 可为字符串或 { code, desc } */
+export type ApiMessage =
+  | string
+  | {
+      code?: string | number;
+      desc?: string;
+    };
+
 export type ApiResponse<T = any> = {
   code?: number;
-  message?: string;
+  message?: ApiMessage;
   data?: T;
   success?: boolean;
 };

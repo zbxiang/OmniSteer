@@ -39,12 +39,27 @@ const getApiErrorMessage = (
   message: ApiResponse['message'],
   fallback = '请求失败',
 ): string => {
-  if (typeof message === 'string') return message;
+  if (typeof message === 'string') {
+    const t = message.trim();
+    return t || fallback;
+  }
   if (message && typeof message === 'object') {
-    const desc = (message as { desc?: string }).desc;
-    if (typeof desc === 'string' && desc.trim()) return desc;
+    const desc = message.desc;
+    if (typeof desc === 'string' && desc.trim()) return desc.trim();
   }
   return fallback;
+};
+
+/** 兼容 code 在根上或嵌在 message 内（如 { success, message: { code, desc } }） */
+const getApiErrorCode = (data: ApiResponse | undefined): string | undefined => {
+  if (!data) return undefined;
+  if (!isEmptyData(data.code)) return String(data.code);
+  const msg = data.message;
+  if (msg && typeof msg === 'object' && !Array.isArray(msg)) {
+    const c = msg.code;
+    if (!isEmptyData(c)) return String(c);
+  }
+  return undefined;
 };
 
 let lastErrorTip = '';
@@ -111,9 +126,9 @@ class Request {
           this.pendingControllers.delete(requestKey);
         }
 
-        // 兼容后端多种成功协议：success=true、code=0、code=200、code=00000（含字符串）
-        const codeValue = data?.code;
-        const normalizedCode = isEmptyData(codeValue) ? '' : String(codeValue);
+        // 兼容后端多种成功协议：success=true、code=0、code=200、code=00000（含字符串）；code 也可能在 message 内
+        const codeValue = getApiErrorCode(data);
+        const normalizedCode = codeValue ?? '';
         const successByCode =
           normalizedCode === '' ||
           normalizedCode === '0' ||
@@ -157,8 +172,8 @@ class Request {
         return data as unknown as AxiosResponse;
       },
       (error) => {
-        const config = error.response;
-  
+        const config = error.config as DefineInternalRequestConfig | undefined;
+
         const requestKey = config?.requestKey || config?.cancelTokenKey || config?.cancelKey;
 
         // 清理取消令牌
@@ -167,7 +182,9 @@ class Request {
         }
 
         // 日志接口失败不提示
-        const reqType = (config.headers as Record<string, unknown>)?.['x-request-type'];
+        const reqType = (config?.headers as Record<string, unknown> | undefined)?.[
+          'x-request-type'
+        ];
         if (reqType === 'log') {
           return Promise.reject(error);
         }
@@ -194,11 +211,13 @@ class Request {
     const auth = useAuthStore();
     let message = getApiErrorMessage(data?.message);
     switch (status) {
-      case 401:
-        message = '未登录或登录已过期，请重新登录';
+      case 401: {
+        const serverMsg = getApiErrorMessage(data?.message, '');
+        message = serverMsg || '未登录或登录已过期，请重新登录';
         showErrorMessage(message);
         auth.toJumpLogin();
         break;
+      }
       case 403:
         message = '没有权限访问该资源';
         showErrorMessage(message);
@@ -218,7 +237,7 @@ class Request {
     }
     return new RequestError(message, {
       status,
-      code: isEmptyData(data?.code) ? undefined : String(data?.code),
+      code: getApiErrorCode(data),
       isNotified: true,
     });
   }

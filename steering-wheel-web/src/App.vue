@@ -1,36 +1,17 @@
 <template>
   <div class="app-shell">
-    <!-- 顶栏已包含主题入口；仅在无顶栏场景保留右下角轻量入口 -->
-    <div v-if="showFloatingThemeButton" class="app-floating-theme">
-      <ThemePaletteButton appearance="floating" />
-    </div>
     <router-view />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import ThemePaletteButton from '@/components/ThemePaletteButton.vue';
 import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
-
-const isAuthShellRoute = computed(
-  (): boolean =>
-    route.name === 'login' ||
-    route.name === 'signup' ||
-    route.name === 'forbidden' ||
-    route.name === 'notFound',
-);
-
-const showFloatingThemeButton = computed((): boolean => {
-  if (isAuthShellRoute.value) return false;
-  // 顶栏已内嵌主题入口（包含编辑页）；不再在右下角显示悬浮按钮
-  return false;
-});
 
 let sessionTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -76,17 +57,5 @@ onUnmounted((): void => {
 <style scoped lang="scss">
 .app-shell {
   position: relative;
-}
-
-.app-floating-theme {
-  position: fixed;
-  right: 20px;
-  bottom: 22px;
-  z-index: 2100;
-  pointer-events: none;
-
-  :deep(.theme-palette-btn) {
-    pointer-events: auto;
-  }
 }
 </style>

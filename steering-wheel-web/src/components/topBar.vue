@@ -844,18 +844,6 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     flex-shrink: 0;
   }
 
-  .product-list__mobile-user-actions :deep(.theme-palette-btn--embedded) {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    margin: 0;
-  }
-
-  .product-list__mobile-user-actions :deep(.theme-palette-btn__icon) {
-    width: 16px;
-    height: 16px;
-  }
-
   .product-list__mobile-user-actions :deep(.product-list__logout) {
     margin-left: 0;
     border-radius: 50%;
@@ -866,10 +854,6 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   .product-list__mobile-user-actions :deep(.product-list__logout svg) {
     width: 14px;
     height: 14px;
-  }
-
-  .product-list__mobile-user-actions :deep(.theme-palette-btn--embedded) {
-    border-radius: 8px;
   }
 
   .product-list__avatar--mobile {
@@ -992,16 +976,6 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     letter-spacing: 0.06em;
   }
 
-  .product-list__mobile-user-actions :deep(.theme-palette-btn--embedded) {
-    width: 28px;
-    height: 28px;
-  }
-
-  .product-list__mobile-user-actions :deep(.theme-palette-btn__icon) {
-    width: 15px;
-    height: 15px;
-  }
-
   .product-list__mobile-user-actions :deep(.product-list__logout) {
     width: 28px;
     height: 28px;
@@ -1069,26 +1043,6 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     width: 18px;
     height: 18px;
     font-size: 7px;
-  }
-
-  :deep(.theme-palette-btn--embedded) {
-    width: 24px;
-    height: 24px;
-  }
-
-  :deep(.theme-palette-btn__icon) {
-    width: 14px;
-    height: 14px;
-  }
-
-  .product-list__mobile-user-actions :deep(.theme-palette-btn--embedded) {
-    width: 26px;
-    height: 26px;
-  }
-
-  .product-list__mobile-user-actions :deep(.theme-palette-btn__icon) {
-    width: 14px;
-    height: 14px;
   }
 
   :deep(.product-list__logout) {
