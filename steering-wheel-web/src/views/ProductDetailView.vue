@@ -104,6 +104,7 @@
 
               <div class="product-detail__actions">
                 <el-button
+                  v-permission="ADMIN_PERMISSION"
                   class="action-btn action-btn--primary"
                   @click="goToEdit(product.id)"
                 >
@@ -113,6 +114,7 @@
                   编辑
                 </el-button>
                 <el-button
+                  v-permission="ADMIN_PERMISSION"
                   v-if="productState === ProductStatusEnum.UP"
                   class="action-btn action-btn--danger"
                   :loading="togglingState"
@@ -168,6 +170,7 @@ import type { ProductOut } from '@/types/product';
 import { ProductStatusEnum } from '@/enums/product';
 import { normalizeProductStateFromOut } from '@/utils/common';
 import { getProductDetail, saveOrUpdateProduct } from '@/api/product';
+import { PERMISSIONS } from '@/utils/auth';
 import { isRequestCanceled, RequestError } from '@/utils/request';
 import AppBreadcrumb from '@/components/AppBreadcrumb.vue';
 import TopBar from '@/components/topBar.vue';
@@ -181,6 +184,7 @@ const currentImageIndex = ref<number>(0);
 let imageAutoSwitchTimer: ReturnType<typeof setInterval> | null = null;
 const AUTO_SWITCH_INTERVAL_MS = 5000;
 const indicatorRenderKey = ref<number>(0);
+const ADMIN_PERMISSION = PERMISSIONS.ADMIN;
 
 const parseImageSource = (source: unknown): string[] => {
   if (Array.isArray(source)) {

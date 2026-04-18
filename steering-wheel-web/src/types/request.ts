@@ -24,6 +24,9 @@ export type ApiMessage =
   | {
       code?: string | number;
       desc?: string;
+      dec?: string;
+      msg?: string;
+      message?: string;
     };
 
 export type ApiResponse<T = any> = {

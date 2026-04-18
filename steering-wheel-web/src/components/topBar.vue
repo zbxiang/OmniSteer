@@ -16,7 +16,13 @@
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <circle cx="12" cy="12" r="8.25" stroke="currentColor" stroke-width="1.65" />
+            <circle
+              cx="12"
+              cy="12"
+              r="8.25"
+              stroke="currentColor"
+              stroke-width="1.65"
+            />
             <circle cx="12" cy="12" r="2.35" fill="currentColor" />
             <path
               d="M12 3.75v3.2M12 17.05v3.2M3.75 12h3.2M17.05 12h3.2"
@@ -43,21 +49,44 @@
         <span class="product-list__mobile-menu-icon" aria-hidden="true" />
       </button>
 
-      <nav id="topbar-mobile-nav" class="product-list__tabs" :class="{ 'product-list__tabs--open': isMobileMenuOpen }" aria-label="主导航">
+      <nav
+        id="topbar-mobile-nav"
+        class="product-list__tabs"
+        :class="{ 'product-list__tabs--open': isMobileMenuOpen }"
+        aria-label="主导航"
+      >
         <div class="product-list__mobile-section">
           <p class="product-list__mobile-section-title">导航</p>
-          <router-link class="product-list__tab" :class="{ 'product-list__tab--active': isHome }" to="/" @click="closeMobileMenu">
+          <router-link
+            class="product-list__tab"
+            :class="{ 'product-list__tab--active': isHome }"
+            to="/"
+            @click="closeMobileMenu"
+          >
             产品列表
           </router-link>
-          <router-link class="product-list__tab" :class="{ 'product-list__tab--active': isProductCreate }" to="/products/new" @click="closeMobileMenu">
+          <router-link
+            v-permission="ADMIN_PERMISSION"
+            class="product-list__tab"
+            :class="{ 'product-list__tab--active': isProductCreate }"
+            to="/products/new"
+            @click="closeMobileMenu"
+          >
             上架产品
           </router-link>
         </div>
         <div class="product-list__mobile-user">
           <p class="product-list__mobile-section-title">账户</p>
           <div class="product-list__mobile-user-main">
-            <span class="product-list__avatar product-list__avatar--mobile" aria-hidden="true">{{ userInitial }}</span>
-            <span class="product-list__user-name product-list__user-name--mobile">{{ displayName }}</span>
+            <span
+              class="product-list__avatar product-list__avatar--mobile"
+              aria-hidden="true"
+              >{{ userInitial }}</span
+            >
+            <span
+              class="product-list__user-name product-list__user-name--mobile"
+              >{{ displayName }}</span
+            >
           </div>
           <div class="product-list__mobile-user-actions">
             <LogoutAction />
@@ -66,7 +95,9 @@
       </nav>
 
       <div class="product-list__user">
-        <span class="product-list__avatar" aria-hidden="true">{{ userInitial }}</span>
+        <span class="product-list__avatar" aria-hidden="true">{{
+          userInitial
+        }}</span>
         <span class="product-list__user-name">{{ displayName }}</span>
         <LogoutAction />
       </div>
@@ -80,6 +111,7 @@ import { useRoute } from 'vue-router';
 import LogoutAction from '@/components/LogoutAction.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useAppStore } from '@/stores/app';
+import { PERMISSIONS } from '@/utils/auth';
 
 defineProps<{
   isHome: boolean;
@@ -95,7 +127,10 @@ const displayName = computed<string>(() => {
   const name = authStore.userInfo?.userName;
   return typeof name === 'string' && name.trim() ? name : fallback;
 });
-const userInitial = computed<string>(() => displayName.value.slice(0, 1).toUpperCase());
+const userInitial = computed<string>(() =>
+  displayName.value.slice(0, 1).toUpperCase(),
+);
+const ADMIN_PERMISSION = PERMISSIONS.ADMIN;
 
 const emit = defineEmits<{
   /** 整块 header 实际高度（含底边），供下方 sticky 条紧贴定位 */
@@ -196,14 +231,27 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     ),
     linear-gradient(
       175deg,
-      color-mix(in srgb, var(--color-cockpit-bg-mid-97) 86%, var(--color-primary-amber-14)) 0%,
-      color-mix(in srgb, var(--color-cockpit-bg-mid-96) 90%, var(--color-primary-amber-10)) 100%
+      color-mix(
+          in srgb,
+          var(--color-cockpit-bg-mid-97) 86%,
+          var(--color-primary-amber-14)
+        )
+        0%,
+      color-mix(
+          in srgb,
+          var(--color-cockpit-bg-mid-96) 90%,
+          var(--color-primary-amber-10)
+        )
+        100%
     )
   );
   backdrop-filter: saturate(1.04) blur(14px);
   -webkit-backdrop-filter: saturate(1.04) blur(14px);
   border-bottom: 1px solid
-    var(--topbar-border-color, color-mix(in srgb, var(--color-primary-amber-35) 48%, transparent));
+    var(
+      --topbar-border-color,
+      color-mix(in srgb, var(--color-primary-amber-35) 48%, transparent)
+    );
   box-shadow: var(
     --topbar-shadow,
     0 14px 36px rgba(0, 0, 0, 0.38),
@@ -215,7 +263,10 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .product-list__topbar--compact {
-  border-bottom-color: var(--topbar-compact-border-color, rgba(255, 255, 255, 0.06));
+  border-bottom-color: var(
+    --topbar-compact-border-color,
+    rgba(255, 255, 255, 0.06)
+  );
   box-shadow: var(
     --topbar-compact-shadow,
     0 10px 28px rgba(0, 0, 0, 0.42),
@@ -249,7 +300,9 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 20px;
-  transition: min-height 0.32s $topbar-ease, gap 0.32s $topbar-ease;
+  transition:
+    min-height 0.32s $topbar-ease,
+    gap 0.32s $topbar-ease;
 }
 
 @media (min-width: 1440px) {
@@ -339,14 +392,22 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   width: 19px;
   height: 19px;
   display: block;
-  transition: width 0.32s $topbar-ease, height 0.32s $topbar-ease;
+  transition:
+    width 0.32s $topbar-ease,
+    height 0.32s $topbar-ease;
 }
 
 .product-list__topbar--compact .product-list__brand-wheel {
   width: 16px;
   height: 16px;
 }
-.product-list__brand-text { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; min-width: 0; }
+.product-list__brand-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+}
 .product-list__brand-title {
   font-size: 15px;
   font-weight: 600;
@@ -362,7 +423,10 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
 .product-list__brand-sub {
   font-size: 10px;
-  color: var(--topbar-brand-sub-color, color-mix(in srgb, var(--color-zinc-muted) 88%, transparent));
+  color: var(
+    --topbar-brand-sub-color,
+    color-mix(in srgb, var(--color-zinc-muted) 88%, transparent)
+  );
   line-height: 1.2;
   max-width: min(220px, 28vw);
   overflow: hidden;
@@ -370,10 +434,20 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   white-space: nowrap;
 }
 
-.product-list__tabs { display: flex; align-items: stretch; justify-self: center; }
-.product-list__mobile-user { display: none; }
-.product-list__mobile-section { display: contents; }
-.product-list__mobile-section-title { display: none; }
+.product-list__tabs {
+  display: flex;
+  align-items: stretch;
+  justify-self: center;
+}
+.product-list__mobile-user {
+  display: none;
+}
+.product-list__mobile-section {
+  display: contents;
+}
+.product-list__mobile-section-title {
+  display: none;
+}
 .product-list__mobile-menu-btn {
   display: none;
   align-items: center;
@@ -441,16 +515,19 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   top: 5px;
 }
 
-.product-list__mobile-menu-btn[aria-expanded='true'] .product-list__mobile-menu-icon {
+.product-list__mobile-menu-btn[aria-expanded='true']
+  .product-list__mobile-menu-icon {
   background: transparent;
 }
 
-.product-list__mobile-menu-btn[aria-expanded='true'] .product-list__mobile-menu-icon::before {
+.product-list__mobile-menu-btn[aria-expanded='true']
+  .product-list__mobile-menu-icon::before {
   top: 0;
   transform: rotate(45deg);
 }
 
-.product-list__mobile-menu-btn[aria-expanded='true'] .product-list__mobile-menu-icon::after {
+.product-list__mobile-menu-btn[aria-expanded='true']
+  .product-list__mobile-menu-icon::after {
   top: 0;
   transform: rotate(-45deg);
 }
@@ -459,7 +536,10 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
   padding: 18px 20px;
   font-size: 15px;
-  color: var(--topbar-tab-color, color-mix(in srgb, #fff 68%, var(--color-zinc-muted)));
+  color: var(
+    --topbar-tab-color,
+    color-mix(in srgb, #fff 68%, var(--color-zinc-muted))
+  );
   text-decoration: none;
   transition:
     color 0.2s ease,
@@ -471,9 +551,17 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   padding: 10px 16px;
   font-size: 14px;
 }
-.product-list__tab:hover { color: var(--topbar-tab-hover-color, color-mix(in srgb, #fff 90%, var(--color-primary-amber))); }
+.product-list__tab:hover {
+  color: var(
+    --topbar-tab-hover-color,
+    color-mix(in srgb, #fff 90%, var(--color-primary-amber))
+  );
+}
 .product-list__tab--active {
-  color: var(--topbar-tab-active-color, color-mix(in srgb, #fff 88%, var(--color-primary-amber)));
+  color: var(
+    --topbar-tab-active-color,
+    color-mix(in srgb, #fff 88%, var(--color-primary-amber))
+  );
   font-weight: 600;
 }
 .product-list__tab--active::before {
@@ -493,7 +581,10 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     )
   );
   border: 1px solid
-    var(--topbar-tab-active-border, color-mix(in srgb, rgba(255, 255, 255, 0.24) 55%, transparent));
+    var(
+      --topbar-tab-active-border,
+      color-mix(in srgb, rgba(255, 255, 255, 0.24) 55%, transparent)
+    );
   z-index: -1;
   transition:
     left 0.32s $topbar-ease,
@@ -525,7 +616,9 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
       color-mix(in srgb, var(--color-primary-amber-55) 72%, transparent) 100%
     )
   );
-  transition: left 0.32s $topbar-ease, right 0.32s $topbar-ease;
+  transition:
+    left 0.32s $topbar-ease,
+    right 0.32s $topbar-ease;
 }
 
 .product-list__topbar--compact .product-list__tab--active::after {
@@ -717,7 +810,9 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     opacity: 0;
     transform: translateY(-6px);
     pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
     overflow: hidden;
     box-sizing: border-box;
   }
@@ -785,7 +880,11 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .product-list__tab--active::selection {
-    background: color-mix(in srgb, var(--color-primary-amber-35) 60%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--color-primary-amber-35) 60%,
+      transparent
+    );
   }
 
   .product-list__tab--active::before,
@@ -896,15 +995,18 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   0% {
     box-shadow:
       0 6px 12px rgba(0, 0, 0, 0.28),
-      0 0 0 1px color-mix(in srgb, var(--color-primary-amber-30) 62%, transparent),
+      0 0 0 1px
+        color-mix(in srgb, var(--color-primary-amber-30) 62%, transparent),
       0 0 0 0 color-mix(in srgb, var(--color-primary-amber-22) 0%, transparent),
       inset 0 1px 0 color-mix(in srgb, #fff 24%, transparent);
   }
   100% {
     box-shadow:
       0 8px 14px rgba(0, 0, 0, 0.32),
-      0 0 0 1px color-mix(in srgb, var(--color-primary-amber-35) 72%, transparent),
-      0 0 0 5px color-mix(in srgb, var(--color-primary-amber-20) 22%, transparent),
+      0 0 0 1px
+        color-mix(in srgb, var(--color-primary-amber-35) 72%, transparent),
+      0 0 0 5px
+        color-mix(in srgb, var(--color-primary-amber-20) 22%, transparent),
       inset 0 1px 0 color-mix(in srgb, #fff 26%, transparent);
   }
 }
@@ -1055,6 +1157,4 @@ $topbar-ease: cubic-bezier(0.22, 1, 0.36, 1);
     height: 11px;
   }
 }
-
 </style>
-

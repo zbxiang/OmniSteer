@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import type { NavigationGuardReturn, RouteLocationNormalized } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { hasPermission, PERMISSIONS } from '@/utils/auth';
 
 const LoginView = (): Promise<typeof import('@/views/LoginView.vue')> => import('@/views/LoginView.vue');
 const SignupView = (): Promise<typeof import('@/views/SignupView.vue')> => import('@/views/SignupView.vue');
@@ -47,13 +48,13 @@ const router = createRouter({
       path: '/products/new',
       name: 'productCreate',
       component: ProductFormView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
       path: '/products/:id/edit',
       name: 'productEdit',
       component: ProductFormView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
       path: '/products/:id',
@@ -78,6 +79,11 @@ const routeNeedsAuth = (to: RouteLocationNormalized): boolean => {
   return to.matched.some((record) => record.meta.requiresAuth === true);
 };
 
+const routeNeedsAdmin = (to: RouteLocationNormalized): boolean => {
+  if (to.meta.requiresAdmin === true) return true;
+  return to.matched.some((record) => record.meta.requiresAdmin === true);
+};
+
 router.beforeEach((to: RouteLocationNormalized): NavigationGuardReturn => {
   const auth = useAuthStore();
   if (routeNeedsAuth(to) && !auth.isAuthenticated()) {
@@ -89,6 +95,9 @@ router.beforeEach((to: RouteLocationNormalized): NavigationGuardReturn => {
         ? to.query.redirect
         : '/products';
     return redirect;
+  }
+  if (routeNeedsAdmin(to) && !hasPermission(PERMISSIONS.ADMIN)) {
+    return { name: 'forbidden' };
   }
   return true;
 });

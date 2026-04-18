@@ -44,8 +44,14 @@ const getApiErrorMessage = (
     return t || fallback;
   }
   if (message && typeof message === 'object') {
-    const desc = message.desc;
-    if (typeof desc === 'string' && desc.trim()) return desc.trim();
+    const candidateTexts = [
+      message.desc,
+      message.msg,
+      message.message,
+    ];
+    for (const text of candidateTexts) {
+      if (typeof text === 'string' && text.trim()) return text.trim();
+    }
   }
   return fallback;
 };
@@ -126,20 +132,27 @@ class Request {
           this.pendingControllers.delete(requestKey);
         }
 
-        // 兼容后端多种成功协议：success=true、code=0、code=200、code=00000（含字符串）；code 也可能在 message 内
+        // 成功协议：优先按 success 字段判断；仅在缺失 success 时，兼容历史 code 兜底
         const codeValue = getApiErrorCode(data);
         const normalizedCode = codeValue ?? '';
         const successByCode =
-          normalizedCode === '' ||
           normalizedCode === '0' ||
           normalizedCode === '200' ||
           normalizedCode === '00000';
-        const successByFlag = data?.success === true;
-        const isNotSuccess = !successByFlag && !successByCode;
+        const hasSuccessFlag = typeof data?.success === 'boolean';
+        const successByFlagTrue = data?.success === true;
+        const successByFlagFalse = data?.success === false;
+        // 后端显式返回 success 时，严格按 success 判定；否则再走 code 兼容逻辑
+        const isNotSuccess = hasSuccessFlag
+          ? successByFlagFalse
+          : (!successByFlagTrue && !successByCode);
         if (isNotSuccess) {
           showErrorMessage(getApiErrorMessage(data?.message, '数据异常'));
           const auth = useAuthStore();
           const permissionCode = Number(codeValue);
+          if (normalizedCode === '401') {
+            auth.toJumpLogin();
+          }
           // 用户不存在
           if (permissionCode === 10003) {
             setStorage('userStatus', USER_STATUS.NO_USER);
@@ -209,7 +222,19 @@ class Request {
     }
     const { status, data } = error.response;
     const auth = useAuthStore();
+    const bizCode = getApiErrorCode(data);
     let message = getApiErrorMessage(data?.message);
+    if (bizCode === '401' && status !== 401) {
+      const serverMsg = getApiErrorMessage(data?.message, '');
+      message = serverMsg || '未登录或登录已过期，请重新登录';
+      showErrorMessage(message);
+      auth.toJumpLogin();
+      return new RequestError(message, {
+        status,
+        code: bizCode,
+        isNotified: true,
+      });
+    }
     switch (status) {
       case 401: {
         const serverMsg = getApiErrorMessage(data?.message, '');
@@ -218,18 +243,24 @@ class Request {
         auth.toJumpLogin();
         break;
       }
-      case 403:
-        message = '没有权限访问该资源';
+      case 403: {
+        const serverMsg = getApiErrorMessage(data?.message, '');
+        message = serverMsg || '没有权限访问该资源';
         showErrorMessage(message);
         break;
-      case 404:
-        message = '请求地址不存在';
+      }
+      case 404: {
+        const serverMsg = getApiErrorMessage(data?.message, '');
+        message = serverMsg || '请求地址不存在';
         showErrorMessage(message);
         break;
-      case 500:
-        message = '服务器内部错误';
+      }
+      case 500: {
+        const serverMsg = getApiErrorMessage(data?.message, '');
+        message = serverMsg || '服务器内部错误';
         showErrorMessage(message);
         break;
+      }
       default: {
         showErrorMessage(message);
         break;

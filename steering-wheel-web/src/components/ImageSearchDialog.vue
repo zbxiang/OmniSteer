@@ -22,11 +22,11 @@
         <div class="upload-area__icon">
           <el-icon><UploadFilled /></el-icon>
         </div>
-        <div class="upload-area__title">
-          点击或拖拽上传产品图片
-        </div>
+        <div class="upload-area__title">点击或拖拽上传产品图片</div>
         <small>支持 JPG、PNG、WEBP，最大 5MB</small>
-        <span v-if="imageSearchFileName" class="upload-area__file">{{ imageSearchFileName }}</span>
+        <span v-if="imageSearchFileName" class="upload-area__file">{{
+          imageSearchFileName
+        }}</span>
       </el-upload>
     </div>
 
@@ -42,18 +42,47 @@
         @click="removeSelectedImage"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 7h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-          <path d="M9 4h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-          <path d="M7 7v11a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
-          <path d="M10 11v5M14 11v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          <path
+            d="M4 7h16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+          <path
+            d="M9 4h6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+          <path
+            d="M7 7v11a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M10 11v5M14 11v5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
         </svg>
       </el-button>
       <div class="img-preview__image-wrap">
-        <div v-if="uploading || uploadProgress > 0" class="img-preview__progress img-preview__progress--overlay">
+        <div
+          v-if="uploading || uploadProgress > 0"
+          class="img-preview__progress img-preview__progress--overlay"
+        >
           <div class="img-preview__progress-track">
             <el-progress
               :percentage="uploadProgress"
-              :status="uploadProgress === 100 && !uploading ? 'success' : undefined"
+              :status="
+                uploadProgress === 100 && !uploading ? 'success' : undefined
+              "
               :stroke-width="4"
               :show-text="false"
             />
@@ -61,11 +90,9 @@
         </div>
         <img :src="imageSearchPreview" alt="preview" />
       </div>
-      <p>已选择图片：{{ imageSearchFileName }}</p>
-      <p v-if="uploading || uploadProgress > 0" class="img-preview__upload-status">
-        {{ uploading ? '上传中' : '上传完成' }} · {{ uploadProgress }}%
+      <p v-if="uploadedImageUrl" class="img-preview__uploaded">
+        上传成功，已获取图片地址
       </p>
-      <p v-if="uploadedImageUrl" class="img-preview__uploaded">上传成功，已获取图片地址</p>
       <div v-if="uploadErrorMessage" class="img-preview__error">
         <span>{{ uploadErrorMessage }}</span>
         <el-button
@@ -80,7 +107,10 @@
 
     <template #footer>
       <div class="modal-actions">
-        <el-button class="image-btn image-btn--ghost" :disabled="imageSearching" @click="onClose"
+        <el-button
+          class="image-btn image-btn--ghost"
+          :disabled="imageSearching"
+          @click="onClose"
           >取消</el-button
         >
         <el-button
@@ -117,7 +147,9 @@ const visible = computed({
   set: (value: boolean) => emit('update:modelValue', value),
 });
 
-const viewportWidth = ref<number>(typeof window === 'undefined' ? 1024 : window.innerWidth);
+const viewportWidth = ref<number>(
+  typeof window === 'undefined' ? 1024 : window.innerWidth,
+);
 const dialogWidth = computed<string>(() => {
   if (viewportWidth.value <= 420) return '96vw';
   if (viewportWidth.value <= 768) return '94vw';
@@ -192,9 +224,9 @@ const applySelectedFile = async (file: File): Promise<boolean> => {
     const imageUrl =
       typeof uploadRes?.data === 'string'
         ? uploadRes.data
-        : uploadRes?.data?.imageUrl ??
+        : (uploadRes?.data?.imageUrl ??
           uploadRes?.data?.url ??
-          uploadRes?.data?.fileUrl;
+          uploadRes?.data?.fileUrl);
     if (!imageUrl) {
       uploadErrorMessage.value = '上传成功但未返回图片地址';
       ElMessage.error('上传成功但未返回图片地址');
@@ -224,7 +256,9 @@ const beforeUpload: UploadProps['beforeUpload'] = (): boolean => {
   return false;
 };
 
-const onUploadChange: UploadProps['onChange'] = async (uploadFile): Promise<void> => {
+const onUploadChange: UploadProps['onChange'] = async (
+  uploadFile,
+): Promise<void> => {
   const rawFile = uploadFile.raw as File | undefined;
   if (!rawFile) return;
   await applySelectedFile(rawFile);
@@ -276,15 +310,19 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-
 .image-search__hint {
   margin: 0;
   color: color-mix(in srgb, var(--color-zinc-text) 90%, #fff);
   font-size: 13px;
   line-height: 1.5;
   font-weight: 500;
-  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 92%, var(--color-primary-amber-06));
-  border: 1px solid color-mix(in srgb, var(--color-primary-amber-16) 60%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 92%,
+    var(--color-primary-amber-06)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary-amber-16) 60%, transparent);
   border-radius: 8px;
   padding: 9px 12px;
   box-shadow: none;
@@ -304,11 +342,16 @@ onUnmounted(() => {
 }
 
 :deep(.upload-area .el-upload-dragger) {
-  border: 1px dashed color-mix(in srgb, var(--color-primary-amber-35) 72%, transparent);
+  border: 1px dashed
+    color-mix(in srgb, var(--color-primary-amber-35) 72%, transparent);
   border-radius: 10px;
   padding: 1rem;
   text-align: center;
-  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 94%, var(--color-primary-amber-05));
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 94%,
+    var(--color-primary-amber-05)
+  );
   color: var(--color-zinc-text);
   transition:
     border-color 0.2s ease,
@@ -327,7 +370,8 @@ onUnmounted(() => {
 :deep(.upload-area.is-dragover .el-upload-dragger) {
   border-color: var(--color-primary-amber-55);
   box-shadow:
-    0 10px 20px color-mix(in srgb, var(--color-primary-amber-18) 56%, transparent),
+    0 10px 20px
+      color-mix(in srgb, var(--color-primary-amber-18) 56%, transparent),
     inset 0 0 0 1px var(--color-primary-amber-24);
 }
 
@@ -341,10 +385,15 @@ onUnmounted(() => {
   margin-bottom: 8px;
   color: color-mix(in srgb, var(--color-primary-amber) 88%, #fff);
   font-size: 18px;
-  background: color-mix(in srgb, var(--color-primary-amber-16) 66%, rgba(255, 255, 255, 0.06));
+  background: color-mix(
+    in srgb,
+    var(--color-primary-amber-16) 66%,
+    rgba(255, 255, 255, 0.06)
+  );
   border: 1px solid var(--color-primary-amber-30);
   box-shadow:
-    0 4px 10px color-mix(in srgb, var(--color-primary-amber-16) 52%, transparent),
+    0 4px 10px
+      color-mix(in srgb, var(--color-primary-amber-16) 52%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
@@ -368,7 +417,11 @@ onUnmounted(() => {
   padding: 3px 11px;
   border-radius: 8px;
   border: 1px solid var(--color-primary-amber-26);
-  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 82%, var(--color-primary-amber-12));
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 82%,
+    var(--color-primary-amber-12)
+  );
   color: color-mix(in srgb, var(--color-zinc-text) 94%, #fff);
   font-size: 12px;
   max-width: 90%;
@@ -380,7 +433,11 @@ onUnmounted(() => {
 .upload-area small {
   display: block;
   margin-top: 0.45rem;
-  color: color-mix(in srgb, var(--color-zinc-text) 72%, var(--color-zinc-muted));
+  color: color-mix(
+    in srgb,
+    var(--color-zinc-text) 72%,
+    var(--color-zinc-muted)
+  );
   font-size: 12px;
 }
 
@@ -391,7 +448,11 @@ onUnmounted(() => {
   border-radius: 10px;
   padding: 0.75rem;
   text-align: center;
-  background: color-mix(in srgb, var(--color-cockpit-bg-mid-97) 93%, var(--color-primary-amber-06));
+  background: color-mix(
+    in srgb,
+    var(--color-cockpit-bg-mid-97) 93%,
+    var(--color-primary-amber-06)
+  );
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
   &__image-wrap {
