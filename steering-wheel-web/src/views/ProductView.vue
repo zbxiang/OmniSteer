@@ -190,6 +190,7 @@ import ImageSearchDialog from '@/components/ImageSearchDialog.vue';
 import TopBar from '@/components/topBar.vue';
 import { createWowController } from '@/utils/wow';
 import { PRODUCT_VIEW_CONSTANTS } from '@/constants/productView';
+import { copyTextToClipboard } from '@/utils/clipboard';
 
 const route = useRoute();
 const keyword = ref<string>('');
@@ -313,10 +314,10 @@ const clearImageFilterAndSearch = (): void => {
 
 const copyImageUrl = async (): Promise<void> => {
   if (!imageUrlFilter.value) return;
-  try {
-    await navigator.clipboard.writeText(imageUrlFilter.value);
+  const ok = await copyTextToClipboard(imageUrlFilter.value);
+  if (ok) {
     ElMessage.success('已复制图片链接');
-  } catch {
+  } else {
     ElMessage.warning('复制失败，请手动复制');
   }
 };
